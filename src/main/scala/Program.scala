@@ -1,10 +1,12 @@
 package xyz.hyperreal.prolog
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 
 class Program {
 
+  val code = new ArrayBuffer[Instruction]
   val procedures = new mutable.HashMap[Functor, Procedure]
 
 //  def print: Unit = {
@@ -36,20 +38,17 @@ class Program {
 //    }
 //  }
 
-  def procedure( name: String, arity: Int ) = {
-    val f = Functor( Symbol(name), arity )
-
-    procedures get f match {
-      case None =>
-        val p = Procedure( f )
-
-        procedures(f) = p
-        p
-      case Some( p ) => p
-    }
-  }
-
-  def clause( name: String, arity: Int, vars: Int, entry: Int ): Unit =
-    procedure( name, arity ).clauses += Clause( vars, entry )
+//  def procedure( name: String, arity: Int ) = {
+//    val f = Functor( Symbol(name), arity )
+//
+//    procedures get f match {
+//      case None =>
+//        val p = Procedure( f )
+//
+//        procedures(f) = p
+//        p
+//      case Some( p ) => p
+//    }
+//  }
 
 }

@@ -29,31 +29,31 @@ object Compiler {
     ast match {
       case SourceAST( clauses ) => clauses foreach compile
       case ClauseAST( CompoundAST(r, ":-", List(CompoundAST(h, f, args), body)) ) =>
-        val code = (args.flatMap( compileTerm ) :+ EnterInstruction) ++ compileConjunct( body ) :+ ExitInstruction
+        val code = args.flatMap( compileHead ) ++ compileConjunct( body ) :+ ReturnInst
 
         prog.procedure( f, args.length ).clauses += Clause( vars.count, code )
       case ClauseAST( CompoundAST(r, ":-", List(AtomAST(h, name), body)) ) =>
-        val code = EnterInstruction +: compileConjunct( body ) :+ ExitInstruction
+        val code = compileConjunct( body ) :+ ReturnInst
 
         prog.procedure( name, 0 ).clauses += Clause( vars.count, code )
       case ClauseAST( CompoundAST(r, fact, args) ) =>
-        val code = args.flatMap( compileTerm ) :+ ExitInstruction
+        val code = args.flatMap( compileTerm ) :+ ReturnInst
 
         prog.procedure( fact, args.length ).clauses += Clause( vars.count, code )
       case AtomAST( r, name ) =>
-        prog.procedure( name, 0 ).clauses += Clause( vars.count, List(ExitInstruction) )
+        prog.procedure( name, 0 ).clauses += Clause( vars.count, List(ReturnInst) )
     }
   }
 
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
     term match {
       case CompoundAST( pos, name, args ) =>
-        FunctorInstruction( Functor(Symbol(name), args.length) ) :: (args.flatMap( compileTerm ) :+ PopInstruction)
-      case AtomAST( pos, name ) => List( ConstInstruction(AtomData(Symbol(name))) )
+        args.flatMap( compileTerm ) :+ CompoundInst( Functor(Symbol(name), args.length) )
+      case AtomAST( pos, name ) => List( PushInst(AtomData(Symbol(name))) )
       case WildcardAST( pos ) => Nil
-      case VariableAST( pos, name ) => List( VarInstruction(vars.num(name)) )
-      case IntegerAST( pos, v ) => List( ConstInstruction(IntegerData(v)) )
-      case FloatAST( pos, v ) => List( ConstInstruction(FloatData(v)) )
+      case VariableAST( pos, name ) => List( VarInst(vars.num(name)) )
+      case IntegerAST( pos, v ) => List( PushInst(IntegerData(v)) )
+      case FloatAST( pos, v ) => List( PushInst(FloatData(v)) )
     }
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
