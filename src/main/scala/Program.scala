@@ -1,13 +1,31 @@
 package xyz.hyperreal.prolog
 
+import scala.collection.generic.Growable
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 
-class Program {
+class Program extends Growable[Instruction] {
 
   val code = new ArrayBuffer[Instruction]
   val procedures = new mutable.HashMap[Functor, Procedure]
+
+  def pointer = code.length
+
+  def patch( p: => Instruction )( c: => Unit ): Unit = {
+    val ptr = pointer
+
+    code += null
+    c
+    code(ptr) = p
+  }
+
+  def +=( inst: Instruction ) = {
+    code += inst
+    this
+  }
+
+  def clear = code.clear
 
 //  def print: Unit = {
 //    for (Procedure( Functor(Symbol(name), arity), clauses ) <- procedures.values.toList.sorted) {

@@ -1,5 +1,7 @@
 package xyz.hyperreal.prolog
 
+import xyz.hyperreal.pattern_matcher.Reader
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -43,6 +45,100 @@ object Compiler {
       case AtomAST( r, name ) =>
         prog.procedure( name, 0 ).clauses += Clause( vars.count, List(ReturnInst) )
     }
+  }
+
+  private def compileHead( term: TermAST, pos: Reader, vars: Vars ): Unit = {
+    def compileHead( term: TermAST, pos: Reader ): Unit =
+      term match {
+//        case TupleStructureAST( _, args ) =>
+//          code += TypeCheckInst( struc, pos )
+//
+//          args.zipWithIndex foreach {
+//            case (e, i) =>
+//              if (i < args.length - 1)
+//                code += DupInst
+//
+//              code += TupleElementInst( i )
+//              compileHead( e, pos, namespaces )
+//          }
+//        case NilStructureAST =>
+//          code += TypeCheckInst( term, pos )
+//          code += DropInst
+//        case ListStructureAST( _, l ) =>
+//          code += TypeCheckInst( term, pos )
+//
+//          l foreach { e =>
+//            code += DupInst
+//            code += EmptyInst
+//            code += BranchIfNotInst( 1 )
+//            code += FailInst
+//            code += DupInst
+//            code += ListHeadInst
+//            compileHead( e, pos, namespaces )
+//            code += ListTailInst
+//          }
+//
+//          code += EmptyInst
+//          code += BranchIfInst( 1 )
+//          code += FailInst
+//        case ConsStructureAST( _, head, tail ) =>
+//          code += TypeCheckInst( term, pos )
+//          code += DupInst
+//          code += ListHeadInst
+//          compileHead( head, pos, namespaces )
+//          code += ListTailInst
+//          compileHead( tail, pos, namespaces )
+//        case VariableStructureAST( _, "_", _ ) => code += DropInst
+        case AtomAST( p, n, _ ) if variable(n, namespaces).isInstanceOf[RecordDecl] =>
+          code += TypeCheckInst( RecordStructureAST(p, n, Vector()), pos )
+        case VariableStructureAST( _, n, _ ) =>
+          val VarDecl( idx, _, _ ) = variable( n, namespaces )
+
+          if (vars contains n)
+            code += MatchBindingInst( idx )
+          else {
+            vars += n
+            code += BindingInst
+          }
+//        case NamedStructureAST( _, _, s ) =>
+//          code += DupInst
+//          code += BindingInst
+//          compileHead( s, pos, namespaces )
+        case RecordStructureAST( _, _, args ) =>
+          code += TypeCheckInst( term, pos )
+
+          args.zipWithIndex foreach { case (e, i) =>
+            if (i < args.length - 1)
+              code += DupInst
+
+            code += TupleElementInst( i )
+            compileHead( e, pos, namespaces )
+          }
+//        case AlternationStructureAST( l ) =>
+//          val jumps = new ArrayBuffer[Int]
+//
+//          for (s <- l.init) {
+//            val backptr = code.length
+//
+//            code += null
+//            compileHead( s, pos, namespaces )
+//            jumps += code.length
+//            code += null
+//            code(backptr) = ChoiceInst( code.length - backptr - 1 )
+//          }
+//
+//          compileHead( l.last, pos, namespaces )
+//
+//          for (b <- jumps)
+//            code(b) = BranchInst( code.length - b - 1 )
+        case LiteralStructureAST( lit ) =>
+          code += PushInst( lit )
+          code += EqInst
+          code += BranchIfInst( 1 )
+          code += FailInst
+      }
+
+    compileHead( term, pos )
   }
 
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
