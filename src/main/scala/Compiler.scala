@@ -47,7 +47,7 @@ object Compiler {
     }
   }
 
-  private def compileHead( term: TermAST, pos: Reader, vars: Vars ): Unit = {
+  private def compileHead( term: TermAST, pos: Reader )( implicit prog: Program, vars: Vars ): Unit = {
     def compileHead( term: TermAST, pos: Reader ): Unit =
       term match {
 //        case TupleStructureAST( _, args ) =>
@@ -89,29 +89,29 @@ object Compiler {
 //          code += ListTailInst
 //          compileHead( tail, pos, namespaces )
 //        case VariableStructureAST( _, "_", _ ) => code += DropInst
-        case AtomAST( p, n, _ ) if variable(n, namespaces).isInstanceOf[RecordDecl] =>
-          code += TypeCheckInst( RecordStructureAST(p, n, Vector()), pos )
-        case VariableStructureAST( _, n, _ ) =>
-          val VarDecl( idx, _, _ ) = variable( n, namespaces )
-
-          if (vars contains n)
-            code += MatchBindingInst( idx )
-          else {
-            vars += n
-            code += BindingInst
-          }
+        case AtomAST( _, n ) =>
+          prog += AtomMatchInst( Symbol(n) )
+//        case VariableAST( _, n, _ ) =>
+//          val VarDecl( idx, _, _ ) = variable( n, namespaces )
+//
+//          if (vars contains n)
+//            code += MatchBindingInst( idx )
+//          else {
+//            vars += n
+//            code += BindingInst
+//          }
 //        case NamedStructureAST( _, _, s ) =>
 //          code += DupInst
 //          code += BindingInst
 //          compileHead( s, pos, namespaces )
-        case RecordStructureAST( _, _, args ) =>
-          code += TypeCheckInst( term, pos )
+        case CompoundAST( _, name, args ) =>
+          prog += FunctorMatchInst( Functor(Symbol(name), args.length) )
 
           args.zipWithIndex foreach { case (e, i) =>
             if (i < args.length - 1)
-              code += DupInst
+              prog += DupInst
 
-            code += TupleElementInst( i )
+            prog += ElementInst( i )
             compileHead( e, pos, namespaces )
           }
 //        case AlternationStructureAST( l ) =>
@@ -154,51 +154,51 @@ object Compiler {
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
     ast match {
-      case CompoundAST( pos, "is", List(VariableAST(r, name), expr) ) =>
-        val exprvars = new mutable.HashSet[(Int, Int)]
-
-        def addvar( term: TermAST )( implicit vars: Vars ): Unit =
-          term match {
-            case v@VariableAST( r, name ) =>
-              vars get name match {
-                case None => r.error( s"variable 'name' does not occur previously in the clause" )
-                case Some( n ) =>
-                  v.name += '\''
-                  exprvars += (n -> vars.num( v.name ))
-              }
-            case CompoundAST( r, name, args ) => args foreach addvar
-            case _ =>
-          }
-
-        addvar( expr )
-
-        val buf = new ListBuffer[Instruction]
-
-        for ((v, v1) <- exprvars)
-          buf += EvalInstruction( v, v1 )
-
-        compileExpression( expr, buf )
-        buf += ResultInstruction( vars.num(name) )
-        buf.toList
+//      case CompoundAST( pos, "is", List(VariableAST(r, name), expr) ) =>
+//        val exprvars = new mutable.HashSet[(Int, Int)]
+//
+//        def addvar( term: TermAST )( implicit vars: Vars ): Unit =
+//          term match {
+//            case v@VariableAST( r, name ) =>
+//              vars get name match {
+//                case None => r.error( s"variable 'name' does not occur previously in the clause" )
+//                case Some( n ) =>
+//                  v.name += '\''
+//                  exprvars += (n -> vars.num( v.name ))
+//              }
+//            case CompoundAST( r, name, args ) => args foreach addvar
+//            case _ =>
+//          }
+//
+//        addvar( expr )
+//
+//        val buf = new ListBuffer[Instruction]
+//
+//        for ((v, v1) <- exprvars)
+//          buf += EvalInstruction( v, v1 )
+//
+//        compileExpression( expr, buf )
+//        buf += ResultInstruction( vars.num(name) )
+//        buf.toList
       case CompoundAST( pos, "is", List(head, expr) ) => head.pos.error( s"variable was expected" )
       case CompoundAST( pos, name, args ) =>
         args.flatMap( compileTerm ) :+ CallInstruction( prog.procedure(name, args.length) )
       case AtomAST( pos, name ) => List( CallInstruction(prog.procedure(name, 0)) )
     }
 
-  def compileExpression( expr: TermAST, buf: ListBuffer[Instruction] )( implicit vars: Vars ): Unit =
-    expr match {
-      case x: NumericAST => buf += PushNumInstruction( x.n )
-      case VariableAST( pos, name ) => buf += PushVarInstruction( vars.num(name) )
-      case CompoundAST( pos, op@("+"|"-"), List(left, right) ) =>
-        compileExpression( left, buf )
-        compileExpression( right, buf )
-        buf +=
-          (op match {
-            case "+" => AddInstruction
-            case "-" => SubInstruction
-          })
-    }
+//  def compileExpression( expr: TermAST, buf: ListBuffer[Instruction] )( implicit vars: Vars ): Unit =
+//    expr match {
+//      case x: NumericAST => buf += PushNumInstruction( x.n )
+//      case VariableAST( pos, name ) => buf += PushVarInstruction( vars.num(name) )
+//      case CompoundAST( pos, op@("+"|"-"), List(left, right) ) =>
+//        compileExpression( left, buf )
+//        compileExpression( right, buf )
+//        buf +=
+//          (op match {
+//            case "+" => AddInstruction
+//            case "-" => SubInstruction
+//          })
+//    }
 
   def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
     ast match {
