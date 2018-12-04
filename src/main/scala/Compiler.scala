@@ -112,7 +112,7 @@ object Compiler {
               prog += DupInst
 
             prog += ElementInst( i )
-            compileHead( e, pos, namespaces )
+            compileHead( e, pos )
           }
 //        case AlternationStructureAST( l ) =>
 //          val jumps = new ArrayBuffer[Int]
@@ -131,11 +131,8 @@ object Compiler {
 //
 //          for (b <- jumps)
 //            code(b) = BranchInst( code.length - b - 1 )
-        case LiteralStructureAST( lit ) =>
-          code += PushInst( lit )
-          code += EqInst
-          code += BranchIfInst( 1 )
-          code += FailInst
+        case IntegerAST( _, n ) =>
+          prog += IntegerMatchInst( n )
       }
 
     compileHead( term, pos )

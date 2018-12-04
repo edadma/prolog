@@ -8,6 +8,8 @@ case object ReturnInst extends Instruction
 case class CompoundInst( f: Functor ) extends Instruction
 case class AtomMatchInst( a: Symbol ) extends Instruction
 case class FunctorMatchInst( f: Functor ) extends Instruction
+case class IntegerMatchInst( n: Int ) extends Instruction
+case class FloatMatchInst( n: Double ) extends Instruction
 case object DupInst extends Instruction
 case class ElementInst( n: Int ) extends Instruction
 case object EqInst extends Instruction
