@@ -14,4 +14,7 @@ package object prolog {
   case class Procedure( func: Functor, var entry: Int, clauses: ListBuffer[Clause] = new ListBuffer )
 
   case class Clause( var vars: Int, ast: TermAST )
+
+  def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
+
 }

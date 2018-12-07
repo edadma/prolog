@@ -61,8 +61,12 @@ class Program extends Growable[Instruction] {
 //    }
 //  }
 
+  def get( name: String, arity: Int ) = get( functor(name, arity) )
+
+  def get( f: Functor ) = procedureMap get f
+
   def procedure( name: String, arity: Int ) = {
-    val f = Functor( Symbol(name), arity )
+    val f = functor( name, arity )
 
     procedureMap get f match {
       case None =>
