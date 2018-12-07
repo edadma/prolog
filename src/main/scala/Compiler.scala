@@ -3,7 +3,6 @@ package xyz.hyperreal.prolog
 import xyz.hyperreal.pattern_matcher.Reader
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 
 object Compiler {
@@ -25,17 +24,42 @@ object Compiler {
     def get( name: String ) = vars get name
   }
 
-  def compile( ast: PrologAST )( implicit prog: Program ) {
-    implicit val vars = new Vars
+  def compile( ast: PrologAST )( implicit prog: Program ): Unit = {
+    phase1( ast )
+    phase2( prog )
+  }
+
+  def phase1( ast: PrologAST )( implicit prog: Program ) {
+    ast match {
+      case SourceAST( clauses ) => clauses foreach phase1
+      case ClauseAST( clause@CompoundAST(r, ":-", List(CompoundAST(h, f, args), body)) ) =>
+        prog.procedure( f, args.length ).clauses += clause
+      case ClauseAST( clause@CompoundAST(r, ":-", List(AtomAST(h, name), body)) ) =>
+        prog.procedure( name, 0 ).clauses += clause
+      case ClauseAST( clause@CompoundAST(r, fact, args) ) =>
+        prog.procedure( fact, args.length ).clauses += clause
+//      case ClauseAST( clause@AtomAST(r, name) ) =>
+//        prog.procedure( name, 0 ).clauses += clause
+    }
+  }
+
+  def phase2( prog: Program ) {
 
     ast match {
-      case SourceAST( clauses ) => clauses foreach compile
+      case SourceAST( clauses ) => clauses foreach phase1
       case ClauseAST( CompoundAST(r, ":-", List(CompoundAST(h, f, args), body)) ) =>
-        val code = args.flatMap( compileHead ) ++ compileConjunct( body ) :+ ReturnInst
+        val ptr = prog.pointer
+
+        args foreach compileHead
+        compileConjunct( body )
+        prog += ReturnInst
 
         prog.procedure( f, args.length ).clauses += Clause( vars.count, code )
       case ClauseAST( CompoundAST(r, ":-", List(AtomAST(h, name), body)) ) =>
-        val code = compileConjunct( body ) :+ ReturnInst
+        val ptr = prog.pointer
+
+        compileConjunct( body )
+        prog += ReturnInst
 
         prog.procedure( name, 0 ).clauses += Clause( vars.count, code )
       case ClauseAST( CompoundAST(r, fact, args) ) =>
@@ -47,8 +71,8 @@ object Compiler {
     }
   }
 
-  private def compileHead( term: TermAST, pos: Reader )( implicit prog: Program, vars: Vars ): Unit = {
-    def compileHead( term: TermAST, pos: Reader ): Unit =
+  private def compileHead( term: TermAST )( implicit prog: Program, vars: Vars ): Unit = {
+    def compileHead( term: TermAST ): Unit =
       term match {
 //        case TupleStructureAST( _, args ) =>
 //          code += TypeCheckInst( struc, pos )
@@ -112,7 +136,7 @@ object Compiler {
               prog += DupInst
 
             prog += ElementInst( i )
-            compileHead( e, pos )
+            compileHead( e )
           }
 //        case AlternationStructureAST( l ) =>
 //          val jumps = new ArrayBuffer[Int]
@@ -132,10 +156,13 @@ object Compiler {
 //          for (b <- jumps)
 //            code(b) = BranchInst( code.length - b - 1 )
         case IntegerAST( _, n ) =>
-          prog += IntegerMatchInst( n )
+          prog += PushInst( IntegerData(n) )
+          prog += EqInst
+          prog += BranchIfInst( 1 )
+          prog += FailInst
       }
 
-    compileHead( term, pos )
+    compileHead( term )
   }
 
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): List[Instruction] =

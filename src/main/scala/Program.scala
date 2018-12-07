@@ -25,7 +25,10 @@ class Program extends Growable[Instruction] {
     this
   }
 
-  def clear = code.clear
+  def clear = {
+    code.clear
+    procedures.clear
+  }
 
 //  def print: Unit = {
 //    for (Procedure( Functor(Symbol(name), arity), clauses ) <- procedures.values.toList.sorted) {
@@ -56,17 +59,17 @@ class Program extends Growable[Instruction] {
 //    }
 //  }
 
-//  def procedure( name: String, arity: Int ) = {
-//    val f = Functor( Symbol(name), arity )
-//
-//    procedures get f match {
-//      case None =>
-//        val p = Procedure( f )
-//
-//        procedures(f) = p
-//        p
-//      case Some( p ) => p
-//    }
-//  }
+  def procedure( name: String, arity: Int ) = {
+    val f = Functor( Symbol(name), arity )
+
+    procedures get f match {
+      case None =>
+        val p = Procedure( f, 0 )
+
+        procedures(f) = p
+        p
+      case Some( p ) => p
+    }
+  }
 
 }
