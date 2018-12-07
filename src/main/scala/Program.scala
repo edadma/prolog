@@ -8,16 +8,18 @@ import scala.collection.mutable.ArrayBuffer
 class Program extends Growable[Instruction] {
 
   val code = new ArrayBuffer[Instruction]
-  val procedures = new mutable.HashMap[Functor, Procedure]
+  val procedureMap = new mutable.HashMap[Functor, Procedure]
+
+  def procedures = procedureMap.values
 
   def pointer = code.length
 
-  def patch( p: => Instruction )( c: => Unit ): Unit = {
+  def patch( f: (Int, Int) => Instruction )( c: => Unit ): Unit = {
     val ptr = pointer
 
     code += null
     c
-    code(ptr) = p
+    code(ptr) = f( ptr, code.length )
   }
 
   def +=( inst: Instruction ) = {
@@ -27,7 +29,7 @@ class Program extends Growable[Instruction] {
 
   def clear = {
     code.clear
-    procedures.clear
+    procedureMap.clear
   }
 
 //  def print: Unit = {
@@ -62,11 +64,11 @@ class Program extends Growable[Instruction] {
   def procedure( name: String, arity: Int ) = {
     val f = Functor( Symbol(name), arity )
 
-    procedures get f match {
+    procedureMap get f match {
       case None =>
         val p = Procedure( f, 0 )
 
-        procedures(f) = p
+        procedureMap(f) = p
         p
       case Some( p ) => p
     }

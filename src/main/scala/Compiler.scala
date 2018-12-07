@@ -44,17 +44,23 @@ object Compiler {
   }
 
   def phase2( prog: Program ) {
+    prog.procedures foreach {
+      case Procedure( func, entry, clauses ) =>
+        for (t <- clauses.init) {
+          prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) {
 
+          }
+        }
+    }
+
+  def compileClause( ast: TermAST )( implicit prog: Program ) =
     ast match {
-      case SourceAST( clauses ) => clauses foreach phase1
-      case ClauseAST( CompoundAST(r, ":-", List(CompoundAST(h, f, args), body)) ) =>
+      case CompoundAST( r, ":-", List(CompoundAST(h, f, args), body) ) =>
         val ptr = prog.pointer
 
         args foreach compileHead
         compileConjunct( body )
         prog += ReturnInst
-
-        prog.procedure( f, args.length ).clauses += Clause( vars.count, code )
       case ClauseAST( CompoundAST(r, ":-", List(AtomAST(h, name), body)) ) =>
         val ptr = prog.pointer
 
@@ -71,7 +77,7 @@ object Compiler {
     }
   }
 
-  private def compileHead( term: TermAST )( implicit prog: Program, vars: Vars ): Unit = {
+  private def compileHead( term: TermAST )( implicit prog: Program ): Unit = {
     def compileHead( term: TermAST ): Unit =
       term match {
 //        case TupleStructureAST( _, args ) =>
@@ -165,7 +171,7 @@ object Compiler {
     compileHead( term )
   }
 
-  def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
+  def compileTerm( term: TermAST )( implicit prog: Program ): List[Instruction] =
     term match {
       case CompoundAST( pos, name, args ) =>
         args.flatMap( compileTerm ) :+ CompoundInst( Functor(Symbol(name), args.length) )
@@ -176,7 +182,7 @@ object Compiler {
       case FloatAST( pos, v ) => List( PushInst(FloatData(v)) )
     }
 
-  def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
+  def compileCall( ast: PrologAST )( implicit prog: Program ): List[Instruction] =
     ast match {
 //      case CompoundAST( pos, "is", List(VariableAST(r, name), expr) ) =>
 //        val exprvars = new mutable.HashSet[(Int, Int)]
@@ -224,7 +230,7 @@ object Compiler {
 //          })
 //    }
 
-  def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
+  def compileConjunct( ast: PrologAST )( implicit prog: Program ): List[Instruction] =
     ast match {
       case CompoundAST( r, ",", List(head, tail) ) => compileCall( head ) ++ compileConjunct( tail )
       case t => compileCall( t )

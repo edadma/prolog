@@ -15,3 +15,4 @@ case class ElementInst( n: Int ) extends Instruction
 case object EqInst extends Instruction
 case class BranchIfInst( n: Int ) extends Instruction
 case object FailInst extends Instruction
+case class ChoiceInst( disp: Int ) extends Instruction
