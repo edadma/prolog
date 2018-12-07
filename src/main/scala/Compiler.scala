@@ -24,60 +24,62 @@ object Compiler {
     def get( name: String ) = vars get name
   }
 
-  def compile( ast: PrologAST )( implicit prog: Program ): Unit = {
-    phase1( ast )
+  def compile( ast: PrologAST, prog: Program ): Unit = {
+    phase1( ast, prog )
     phase2( prog )
   }
 
-  def phase1( ast: PrologAST )( implicit prog: Program ) {
+  def phase1( ast: PrologAST, prog: Program ) {
     ast match {
-      case SourceAST( clauses ) => clauses foreach phase1
+      case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
       case ClauseAST( clause@CompoundAST(r, ":-", List(CompoundAST(h, f, args), body)) ) =>
-        prog.procedure( f, args.length ).clauses += clause
+        prog.procedure( f, args.length ).clauses += Clause( 0, clause )
       case ClauseAST( clause@CompoundAST(r, ":-", List(AtomAST(h, name), body)) ) =>
-        prog.procedure( name, 0 ).clauses += clause
+        prog.procedure( name, 0 ).clauses += Clause( 0, clause )
       case ClauseAST( clause@CompoundAST(r, fact, args) ) =>
-        prog.procedure( fact, args.length ).clauses += clause
-//      case ClauseAST( clause@AtomAST(r, name) ) =>
-//        prog.procedure( name, 0 ).clauses += clause
+        prog.procedure( fact, args.length ).clauses += Clause( 0, clause )
+      case ClauseAST( clause@AtomAST(r, name) ) =>
+        prog.procedure( name, 0 ).clauses += Clause( 0, clause )
     }
   }
 
-  def phase2( prog: Program ) {
+  def phase2( implicit prog: Program ) {
     prog.procedures foreach {
-      case Procedure( func, entry, clauses ) =>
-        for (t <- clauses.init) {
-          prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) {
+      case proc@Procedure( _, _, clauses ) =>
+        proc.entry = prog.pointer
 
+        for (c <- clauses.init) {
+          prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) {
+            c.vars = compileClause( c.ast )
           }
         }
-    }
 
-  def compileClause( ast: TermAST )( implicit prog: Program ) =
+        clauses.last.vars = compileClause( clauses.last.ast )
+    }
+  }
+
+  def compileClause( ast: TermAST )( implicit prog: Program ) = {
+    implicit val vars = new Vars
+
     ast match {
       case CompoundAST( r, ":-", List(CompoundAST(h, f, args), body) ) =>
-        val ptr = prog.pointer
-
         args foreach compileHead
         compileConjunct( body )
         prog += ReturnInst
-      case ClauseAST( CompoundAST(r, ":-", List(AtomAST(h, name), body)) ) =>
-        val ptr = prog.pointer
-
+      case CompoundAST( r, ":-", List(AtomAST(h, name), body) ) =>
         compileConjunct( body )
         prog += ReturnInst
-
-        prog.procedure( name, 0 ).clauses += Clause( vars.count, code )
-      case ClauseAST( CompoundAST(r, fact, args) ) =>
-        val code = args.flatMap( compileTerm ) :+ ReturnInst
-
-        prog.procedure( fact, args.length ).clauses += Clause( vars.count, code )
+      case CompoundAST( r, fact, args ) =>
+        args foreach compileHead
+        prog += ReturnInst
       case AtomAST( r, name ) =>
-        prog.procedure( name, 0 ).clauses += Clause( vars.count, List(ReturnInst) )
+        prog += ReturnInst
     }
+
+    vars.count
   }
 
-  private def compileHead( term: TermAST )( implicit prog: Program ): Unit = {
+  private def compileHead( term: TermAST )( implicit prog: Program, vars: Vars ): Unit = {
     def compileHead( term: TermAST ): Unit =
       term match {
 //        case TupleStructureAST( _, args ) =>
@@ -121,15 +123,8 @@ object Compiler {
 //        case VariableStructureAST( _, "_", _ ) => code += DropInst
         case AtomAST( _, n ) =>
           prog += AtomMatchInst( Symbol(n) )
-//        case VariableAST( _, n, _ ) =>
-//          val VarDecl( idx, _, _ ) = variable( n, namespaces )
-//
-//          if (vars contains n)
-//            code += MatchBindingInst( idx )
-//          else {
-//            vars += n
-//            code += BindingInst
-//          }
+        case VariableAST( _, n ) =>
+          prog += VarInst( vars.num(n) )
 //        case NamedStructureAST( _, _, s ) =>
 //          code += DupInst
 //          code += BindingInst
@@ -171,7 +166,7 @@ object Compiler {
     compileHead( term )
   }
 
-  def compileTerm( term: TermAST )( implicit prog: Program ): List[Instruction] =
+  def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
     term match {
       case CompoundAST( pos, name, args ) =>
         args.flatMap( compileTerm ) :+ CompoundInst( Functor(Symbol(name), args.length) )
@@ -182,7 +177,7 @@ object Compiler {
       case FloatAST( pos, v ) => List( PushInst(FloatData(v)) )
     }
 
-  def compileCall( ast: PrologAST )( implicit prog: Program ): List[Instruction] =
+  def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
     ast match {
 //      case CompoundAST( pos, "is", List(VariableAST(r, name), expr) ) =>
 //        val exprvars = new mutable.HashSet[(Int, Int)]
@@ -212,8 +207,8 @@ object Compiler {
 //        buf.toList
       case CompoundAST( pos, "is", List(head, expr) ) => head.pos.error( s"variable was expected" )
       case CompoundAST( pos, name, args ) =>
-        args.flatMap( compileTerm ) :+ CallInstruction( prog.procedure(name, args.length) )
-      case AtomAST( pos, name ) => List( CallInstruction(prog.procedure(name, 0)) )
+        args.flatMap( compileTerm ) :+ CallInstruction( prog.procedure(name, args.length).entry )
+      case AtomAST( pos, name ) => List( CallInstruction(prog.procedure(name, 0).entry) )
     }
 
 //  def compileExpression( expr: TermAST, buf: ListBuffer[Instruction] )( implicit vars: Vars ): Unit =
@@ -230,7 +225,7 @@ object Compiler {
 //          })
 //    }
 
-  def compileConjunct( ast: PrologAST )( implicit prog: Program ): List[Instruction] =
+  def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
     ast match {
       case CompoundAST( r, ",", List(head, tail) ) => compileCall( head ) ++ compileConjunct( tail )
       case t => compileCall( t )

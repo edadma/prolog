@@ -16,3 +16,4 @@ case object EqInst extends Instruction
 case class BranchIfInst( n: Int ) extends Instruction
 case object FailInst extends Instruction
 case class ChoiceInst( disp: Int ) extends Instruction
+case class CallInstruction( entry: Int ) extends Instruction
