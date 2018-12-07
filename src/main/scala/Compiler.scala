@@ -1,7 +1,5 @@
 package xyz.hyperreal.prolog
 
-import xyz.hyperreal.pattern_matcher.Reader
-
 import scala.collection.mutable
 
 
@@ -123,8 +121,9 @@ object Compiler {
 //        case VariableStructureAST( _, "_", _ ) => code += DropInst
         case AtomAST( _, n ) =>
           prog += AtomMatchInst( Symbol(n) )
+        case WildcardAST( _ ) => prog += DropInst
         case VariableAST( _, n ) =>
-          prog += VarInst( vars.num(n) )
+          prog += VarMatchInst( vars.num(n) )
 //        case NamedStructureAST( _, _, s ) =>
 //          code += DupInst
 //          code += BindingInst
@@ -132,12 +131,13 @@ object Compiler {
         case CompoundAST( _, name, args ) =>
           prog += FunctorMatchInst( Functor(Symbol(name), args.length) )
 
-          args.zipWithIndex foreach { case (e, i) =>
-            if (i < args.length - 1)
-              prog += DupInst
+          args.zipWithIndex foreach {
+            case (e, i) =>
+              if (i < args.length - 1)
+                prog += DupInst
 
-            prog += ElementInst( i )
-            compileHead( e )
+              prog += ElementInst( i )
+              compileHead( e )
           }
 //        case AlternationStructureAST( l ) =>
 //          val jumps = new ArrayBuffer[Int]
@@ -157,7 +157,7 @@ object Compiler {
 //          for (b <- jumps)
 //            code(b) = BranchInst( code.length - b - 1 )
         case IntegerAST( _, n ) =>
-          prog += PushInst( IntegerData(n) )
+          prog += PushAtomicInst( IntegerData(n) )
           prog += EqInst
           prog += BranchIfInst( 1 )
           prog += FailInst
@@ -166,20 +166,22 @@ object Compiler {
     compileHead( term )
   }
 
-  def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
+  def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     term match {
       case CompoundAST( pos, name, args ) =>
-        args.flatMap( compileTerm ) :+ CompoundInst( Functor(Symbol(name), args.length) )
-      case AtomAST( pos, name ) => List( PushInst(AtomData(Symbol(name))) )
-      case WildcardAST( pos ) => Nil
-      case VariableAST( pos, name ) => List( VarInst(vars.num(name)) )
-      case IntegerAST( pos, v ) => List( PushInst(IntegerData(v)) )
-      case FloatAST( pos, v ) => List( PushInst(FloatData(v)) )
+        args foreach compileTerm
+        prog += PushCompoundInst( Functor(Symbol(name), args.length) )
+      case AtomAST( pos, name ) =>
+        prog += PushAtomicInst( AtomData(Symbol(name)) )
+      case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
+      case VariableAST( pos, name ) => PushVarInstruction( vars.num(name) )
+      case IntegerAST( pos, v ) => PushAtomicInst( IntegerData(v) )
+      case FloatAST( pos, v ) => PushAtomicInst( FloatData(v) )
     }
 
-  def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
+  def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
-//      case CompoundAST( pos, "is", List(VariableAST(r, name), expr) ) =>
+      case CompoundAST( pos, "is", List(VariableAST(r, name), expr) ) =>
 //        val exprvars = new mutable.HashSet[(Int, Int)]
 //
 //        def addvar( term: TermAST )( implicit vars: Vars ): Unit =
@@ -205,10 +207,14 @@ object Compiler {
 //        compileExpression( expr, buf )
 //        buf += ResultInstruction( vars.num(name) )
 //        buf.toList
-      case CompoundAST( pos, "is", List(head, expr) ) => head.pos.error( s"variable was expected" )
-      case CompoundAST( pos, name, args ) =>
-        args.flatMap( compileTerm ) :+ CallInstruction( prog.procedure(name, args.length).entry )
-      case AtomAST( pos, name ) => List( CallInstruction(prog.procedure(name, 0).entry) )
+      case CompoundAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
+      case CompoundAST( _, name, args ) if prog.exists( name, args.length ) =>
+        args foreach compileTerm
+        prog += CallInstruction( prog.procedure(name, args.length).entry )
+      case CompoundAST( pos, name, args ) => pos.error( s"procedure $name/${args.length} not defined" )
+      case AtomAST( _, name ) if prog.exists( name, 0 ) =>
+        prog += CallInstruction(prog.procedure( name, 0).entry )
+      case AtomAST( pos, name ) => pos.error( s"procedure $name/0 not defined" )
     }
 
 //  def compileExpression( expr: TermAST, buf: ListBuffer[Instruction] )( implicit vars: Vars ): Unit =
@@ -225,9 +231,11 @@ object Compiler {
 //          })
 //    }
 
-  def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): List[Instruction] =
+  def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
-      case CompoundAST( r, ",", List(head, tail) ) => compileCall( head ) ++ compileConjunct( tail )
+      case CompoundAST( r, ",", List(head, tail) ) =>
+        compileCall( head )
+        compileConjunct( tail )
       case t => compileCall( t )
     }
 
