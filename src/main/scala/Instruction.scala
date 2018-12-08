@@ -11,7 +11,7 @@ case class VarBindInst( n: Int ) extends Instruction
 case class FunctorInst( f: Functor ) extends Instruction
 case object DupInst extends Instruction
 case object EqInst extends Instruction
-case class BranchIfInst( n: Int ) extends Instruction
+case class BranchIfInst( disp: Int ) extends Instruction
 case object FailInst extends Instruction
 case class ChoiceInst( disp: Int ) extends Instruction
 case class CallInst( entry: Int ) extends Instruction

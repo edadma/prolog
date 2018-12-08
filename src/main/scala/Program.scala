@@ -10,6 +10,8 @@ class Program extends Growable[Instruction] {
   val code = new ArrayBuffer[Instruction]
   val procedureMap = new mutable.HashMap[Functor, Procedure]
 
+  def apply( n: Int ) = code(n)
+
   def procedures = procedureMap.values
 
   def pointer = code.length

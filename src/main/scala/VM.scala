@@ -7,9 +7,13 @@ class VM( prog: Program ) {
 
   case class State( dataStack: List[Data], pc: Int, frame: Int )
 
+  class Frame( size: Int ) {
+    val vars = new Array[Any]( size )
+  }
+
   val choiceStack = new ArrayStack[State]
 
-  var dataStack: List[Data] = Nil
+  var dataStack: List[Any] = Nil
   var pc = 0
   var frame = 0
 
@@ -43,7 +47,7 @@ class VM( prog: Program ) {
     val args = new Array[Data]( f.arity )
 
     for (i <- f.arity - 1 to 0 by -1)
-      args(i) = pop
+      args(i) = popData
 
     push( CompoundData(f, args.toVector) )
   }
@@ -57,7 +61,9 @@ class VM( prog: Program ) {
     res
   }
 
-  def push( d: Data ): Unit = dataStack = d :: dataStack
+  def popData = pop.asInstanceOf[Data]
+
+  def push( d: Any ): Unit = dataStack = d :: dataStack
 
   def call( entry: Int ): Unit = {
 
@@ -67,7 +73,11 @@ class VM( prog: Program ) {
 
   }
 
-  def execute( inst: Instruction ) =
+  def execute {
+    val inst = prog(pc)
+
+    pc += 1
+
     inst match {
       case PushAtomicInst( d ) => push( d )
       case PushVarInst( n ) =>
@@ -81,6 +91,13 @@ class VM( prog: Program ) {
           case _ => fail
         }
       case DupInst => push( top )
+      case EqInst => pop == pop
+      case BranchIfInst( disp ) => pc += disp
+      case FailInst => fail
+      case ChoiceInst( disp ) =>
+      case CallInst( entry ) => call( entry )
+      case DropInst => pop
     }
+  }
 
 }
