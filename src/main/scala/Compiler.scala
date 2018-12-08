@@ -1,26 +1,7 @@
 package xyz.hyperreal.prolog
 
-import scala.collection.mutable
-
 
 object Compiler {
-
-  class Vars {
-    val vars = new mutable.LinkedHashMap[String, Int]
-
-    def count = vars.size
-
-    def num( name: String ) = {
-      vars get name match {
-        case None =>
-          vars(name) = count + 1
-          count
-        case Some( n ) => n
-      }
-    }
-
-    def get( name: String ) = vars get name
-  }
 
   def compile( ast: PrologAST, prog: Program ): Unit = {
     phase1( ast, prog )
@@ -120,10 +101,13 @@ object Compiler {
 //          compileHead( tail, pos, namespaces )
 //        case VariableStructureAST( _, "_", _ ) => code += DropInst
         case AtomAST( _, n ) =>
-          prog += AtomMatchInst( Symbol(n) )
+          prog += PushAtomicInst( AtomData(Symbol(n)) )
+          prog += EqInst
+          prog += BranchIfInst( 1 )
+          prog += FailInst
         case WildcardAST( _ ) => prog += DropInst
         case VariableAST( _, n ) =>
-          prog += VarMatchInst( vars.num(n) )
+          prog += VarBindInst( vars.num(n) )
 //        case NamedStructureAST( _, _, s ) =>
 //          code += DupInst
 //          code += BindingInst
@@ -136,7 +120,7 @@ object Compiler {
               if (i < args.length - 1)
                 prog += DupInst
 
-              prog += ElementInst( i )
+              prog += PushElementInst( i )
               compileHead( e )
           }
 //        case AlternationStructureAST( l ) =>
@@ -210,10 +194,10 @@ object Compiler {
       case CompoundAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
       case CompoundAST( _, name, args ) if prog.exists( name, args.length ) =>
         args foreach compileTerm
-        prog += CallInstruction( prog.procedure(name, args.length).entry )
+        prog += CallInst( prog.procedure(name, args.length).entry )
       case CompoundAST( pos, name, args ) => pos.error( s"procedure $name/${args.length} not defined" )
       case AtomAST( _, name ) if prog.exists( name, 0 ) =>
-        prog += CallInstruction(prog.procedure( name, 0).entry )
+        prog += CallInst(prog.procedure( name, 0).entry )
       case AtomAST( pos, name ) => pos.error( s"procedure $name/0 not defined" )
     }
 

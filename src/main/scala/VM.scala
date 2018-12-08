@@ -3,7 +3,9 @@ package xyz.hyperreal.prolog
 
 class VM( prog: Program ) {
 
-  def interp( goal: TermAST ): Unit =
+  def interp( goal: TermAST ) {
+    implicit val vars = new Vars
+
     goal match {
       case CompoundAST( _, name, args ) if prog.exists( name, args.length ) =>
         args foreach interpTerm
@@ -13,8 +15,9 @@ class VM( prog: Program ) {
         call( prog.procedure( name, 0).entry )
       case AtomAST( pos, name ) => pos.error( s"procedure $name/0 not defined" )
     }
+  }
 
-  def interpTerm( term: TermAST ): Unit =
+  def interpTerm( term: TermAST )( implicit vars: Vars ): Unit =
     term match {
       case CompoundAST( pos, name, args ) =>
         args foreach interpTerm

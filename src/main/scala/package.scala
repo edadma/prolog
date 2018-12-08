@@ -1,5 +1,6 @@
 package xyz.hyperreal
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 
@@ -16,5 +17,22 @@ package object prolog {
   case class Clause( var vars: Int, ast: TermAST )
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
+
+  class Vars {
+    val vars = new mutable.LinkedHashMap[String, Int]
+
+    def count = vars.size
+
+    def num( name: String ) = {
+      vars get name match {
+        case None =>
+          vars(name) = count + 1
+          count
+        case Some( n ) => n
+      }
+    }
+
+    def get( name: String ) = vars get name
+  }
 
 }
