@@ -158,7 +158,7 @@ object Compiler {
       case AtomAST( pos, name ) =>
         prog += PushAtomicInst( AtomData(Symbol(name)) )
       case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
-      case VariableAST( pos, name ) => PushVarInstruction( vars.num(name) )
+      case VariableAST( pos, name ) => PushVarInst( vars.num(name) )
       case IntegerAST( pos, v ) => PushAtomicInst( IntegerData(v) )
       case FloatAST( pos, v ) => PushAtomicInst( FloatData(v) )
     }
@@ -195,10 +195,10 @@ object Compiler {
       case CompoundAST( _, name, args ) if prog.exists( name, args.length ) =>
         args foreach compileTerm
         prog += CallInst( prog.procedure(name, args.length).entry )
-      case CompoundAST( pos, name, args ) => pos.error( s"procedure $name/${args.length} not defined" )
+      case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
       case AtomAST( _, name ) if prog.exists( name, 0 ) =>
         prog += CallInst(prog.procedure( name, 0).entry )
-      case AtomAST( pos, name ) => pos.error( s"procedure $name/0 not defined" )
+      case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
     }
 
 //  def compileExpression( expr: TermAST, buf: ListBuffer[Instruction] )( implicit vars: Vars ): Unit =

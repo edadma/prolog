@@ -3,7 +3,7 @@ package xyz.hyperreal.prolog
 
 abstract class Instruction
 case class PushAtomicInst( d: Data ) extends Instruction
-case class PushVarInstruction( n: Int ) extends Instruction
+case class PushVarInst( n: Int ) extends Instruction
 case class PushCompoundInst( f: Functor ) extends Instruction
 case class PushElementInst( n: Int ) extends Instruction
 case object ReturnInst extends Instruction
