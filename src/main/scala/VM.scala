@@ -63,9 +63,24 @@ class VM( prog: Program ) {
 
   }
 
+  def fail: Unit = {
+
+  }
+
   def execute( inst: Instruction ) =
     inst match {
       case PushAtomicInst( d ) => push( d )
+      case PushVarInst( n ) =>
+      case PushCompoundInst( f ) => pushCompound( f )
+      case PushElementInst( n ) => push( pop.asInstanceOf[Compound].element(n) )
+      case ReturnInst =>
+      case VarBindInst( n ) =>
+      case FunctorInst( f ) =>
+        top match {
+          case c: CompoundData if c.functor == f =>
+          case _ => fail
+        }
+      case DupInst => push( top )
     }
 
 }

@@ -5,8 +5,14 @@ abstract class Data {
   def isAtomic: Boolean
 }
 
-case class CompoundData( functor: Functor, args: Vector[Data] ) extends Data {
+trait Compound {
+  def element( n: Int ): Data
+
   val isAtomic = false
+}
+
+case class CompoundData( functor: Functor, args: Vector[Data] ) extends Data with Compound {
+  def element( n: Int ) = args( n )
 }
 
 trait Atomic {

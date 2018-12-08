@@ -113,7 +113,7 @@ object Compiler {
 //          code += BindingInst
 //          compileHead( s, pos, namespaces )
         case CompoundAST( _, name, args ) =>
-          prog += FunctorMatchInst( Functor(Symbol(name), args.length) )
+          prog += FunctorInst( Functor(Symbol(name), args.length) )
 
           args.zipWithIndex foreach {
             case (e, i) =>
