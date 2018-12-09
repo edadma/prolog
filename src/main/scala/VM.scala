@@ -30,7 +30,7 @@ class VM( prog: Program ) {
 
   var dataStack: List[Any] = Nil
   var pc = 0
-  var frame: Frame = _
+  var frame: Frame = new Frame( 0, -1 )
 
   def interp( goal: TermAST ) {
     implicit val vars = new VarMap
@@ -39,18 +39,19 @@ class VM( prog: Program ) {
       case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
         args foreach interpTerm
         call( prog.procedure(name, args.length).entry )
+        run
       case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
         args foreach interpTerm
-        Builtins.predicates( functor(name, args.length) )
+        Builtins.predicates(functor(name, args.length))( this )
       case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
-      case AtomAST( _, name ) if prog.defined( name, 0 ) => call( prog.procedure( name, 0).entry )
+      case AtomAST( _, name ) if prog.defined( name, 0 ) =>
+        call( prog.procedure( name, 0).entry )
+        run
       case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
-        Builtins.predicates( functor( name, 0) )
+        Builtins.predicates(functor( name, 0))( this )
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
       case _ => goal.pos.error( "expected a rule" )
     }
-
-    run
   }
 
   def interpTerm( term: TermAST )( implicit vars: VarMap ): Unit =

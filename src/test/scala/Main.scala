@@ -5,16 +5,27 @@ import xyz.hyperreal.pattern_matcher.StringReader
 
 object Main extends App {
 
-  val input =
+  val code =
     """
-      |write( hello )
+      |asdf( a ).
     """.stripMargin
+  val query =
+    """
+      |asdf( a )
+    """.stripMargin
+  val prog = new Program
 
-  Parser.query( new StringReader(input) ) match {
+  Parser.source( new StringReader(code) ) match {
+    case Parser.Match( ast, _ ) =>
+      println( ast )
+      Compiler.compile( ast, prog )
+    case m: Parser.Mismatch => m.error
+  }
+
+  Parser.query( new StringReader(query) ) match {
     case Parser.Match( ast, _ ) =>
       println( ast )
 
-      val prog = new Program
       val vm = new VM( prog )
 
       vm.interp( ast )
