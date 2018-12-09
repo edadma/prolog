@@ -63,11 +63,11 @@ class Program extends Growable[Instruction] {
 //    }
 //  }
 
-  def exists( name: String, arity: Int ) = procedureMap contains functor( name, arity )
+  def defined( name: String, arity: Int ) = procedureMap contains functor( name, arity )
 
-  def get( name: String, arity: Int ) = get( functor(name, arity) )
-
-  def get( f: Functor ) = procedureMap get f
+//  def get( name: String, arity: Int ) = get( functor(name, arity) )
+//
+//  def get( f: Functor ) = procedureMap get f
 
   def procedure( name: String, arity: Int ) = {
     val f = functor( name, arity )

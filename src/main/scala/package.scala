@@ -17,27 +17,27 @@ package object prolog {
   case class Clause( var vars: Int, ast: TermAST )
 
   class Variable {
-    var bound = false
+    var instantiated = false
     var value: Any = _
     var binding: Variable = _
 
     def bind( v: Variable ): Unit = {
-      bound = false
+      instantiated = false
       binding = v
     }
 
     def bind( v: Any ): Unit = {
-      bound = true
+      instantiated = true
       value = v
     }
 
     def unbind: Unit = {
-      bound = false
+      instantiated = false
       binding = null
     }
 
     def eval: Any =
-      if (bound)
+      if (instantiated)
         value
       else if (binding ne null)
         binding.eval

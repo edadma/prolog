@@ -9,15 +9,21 @@ class VM( prog: Program ) {
   class VarMap {
     val vars = new mutable.HashMap[String, Variable]
 
-    def apply( name: String ) = {
+    def apply( name: String ) =
+      vars get name match {
+        case None =>
+          val v = new Variable
 
-    }
+          vars(name) = v
+          v
+        case Some( v ) => v
+      }
   }
 
   case class State( dataStack: List[Any], pc: Int, frame: Frame )
 
   class Frame( size: Int, val ret: Int ) {
-    val vars = new Array[Any]( size )
+    val vars = new Array[Variable]( size )
   }
 
   val choiceStack = new ArrayStack[State]
@@ -27,14 +33,19 @@ class VM( prog: Program ) {
   var frame: Frame = _
 
   def interp( goal: TermAST ) {
-    implicit val vars = new mutable.HashMap[String, Variable]
+    implicit val vars = new VarMap
 
     goal match {
-      case CompoundAST( _, name, args ) if prog.exists( name, args.length ) =>
+      case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
         args foreach interpTerm
         call( prog.procedure(name, args.length).entry )
+      case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
+        args foreach interpTerm
+        Builtins.predicates( functor(name, args.length) )
       case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
-      case AtomAST( _, name ) if prog.exists( name, 0 ) => call( prog.procedure( name, 0).entry )
+      case AtomAST( _, name ) if prog.defined( name, 0 ) => call( prog.procedure( name, 0).entry )
+      case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
+        Builtins.predicates( functor( name, 0) )
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
       case _ => goal.pos.error( "expected a rule" )
     }
@@ -42,14 +53,14 @@ class VM( prog: Program ) {
     run
   }
 
-  def interpTerm( term: TermAST )( implicit vars: mutable.HashMap[String, Variable] ): Unit =
+  def interpTerm( term: TermAST )( implicit vars: VarMap ): Unit =
     term match {
       case CompoundAST( pos, name, args ) =>
         args foreach interpTerm
         pushCompound( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) => push( AtomData(Symbol(name)) )
       case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
-      case VariableAST( pos, name ) => push( vars.lookup(name) )
+      case VariableAST( pos, name ) => push( vars(name) )
       case IntegerAST( pos, v ) => push( IntegerData(v) )
       case FloatAST( pos, v ) => push( FloatData(v) )
     }
@@ -72,7 +83,13 @@ class VM( prog: Program ) {
     res
   }
 
-  def popData = pop.asInstanceOf[Data]
+  def popValue =
+    pop match {
+      case v: Variable => v.eval
+      case v => v
+    }
+
+  def popData = popValue.asInstanceOf[Data]
 
   def popInt = pop.asInstanceOf[Int]
 
@@ -103,12 +120,26 @@ class VM( prog: Program ) {
     inst match {
       case PushAtomicInst( d ) => push( d )
       case PushVarInst( n ) =>
+        push(
+          frame.vars(n) match {
+            case null =>
+              val v = new Variable
+
+              frame.vars(n) = v
+              v
+            case v => v
+          }
+        )
       case PushCompoundInst( f ) => pushCompound( f )
-      case PushElementInst( n ) => push( pop.asInstanceOf[Compound].element(n) )
+      case PushElementInst( n ) => push( popValue.asInstanceOf[Compound].element(n) )
       case ReturnInst =>
         pc = frame.ret
         frame = pop.asInstanceOf[Frame]
       case VarBindInst( n ) =>
+        popValue match {
+          case v: Variable => push( v )
+          case v =>
+        }
       case FunctorInst( f ) =>
         top match {
           case c: CompoundData if c.functor == f =>
@@ -126,6 +157,7 @@ class VM( prog: Program ) {
 
         push( frame )
         frame = new Frame( vars, ret )
+      case PredicateInst( pred ) => pred( this )
     }
   }
 

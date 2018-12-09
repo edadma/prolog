@@ -192,12 +192,17 @@ object Compiler {
 //        buf += ResultInstruction( vars.num(name) )
 //        buf.toList
       case CompoundAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
-      case CompoundAST( _, name, args ) if prog.exists( name, args.length ) =>
+      case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
         args foreach compileTerm
         prog += CallInst( prog.procedure(name, args.length).entry )
+      case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
+        args foreach compileTerm
+        prog += PredicateInst( Builtins.predicates(functor(name, args.length)) )
       case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
-      case AtomAST( _, name ) if prog.exists( name, 0 ) =>
+      case AtomAST( _, name ) if prog.defined( name, 0 ) =>
         prog += CallInst(prog.procedure( name, 0).entry )
+      case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
+        prog += PredicateInst( Builtins.predicates(functor( name, 0)) )
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
     }
 
