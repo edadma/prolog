@@ -16,6 +16,35 @@ package object prolog {
 
   case class Clause( var vars: Int, ast: TermAST )
 
+  class Variable {
+    var bound = false
+    var value: Any = _
+    var binding: Variable = _
+
+    def bind( v: Variable ): Unit = {
+      bound = false
+      binding = v
+    }
+
+    def bind( v: Any ): Unit = {
+      bound = true
+      value = v
+    }
+
+    def unbind: Unit = {
+      bound = false
+      binding = null
+    }
+
+    def eval: Any =
+      if (bound)
+        value
+      else if (binding ne null)
+        binding.eval
+      else
+        this
+  }
+
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 
   class Vars {
