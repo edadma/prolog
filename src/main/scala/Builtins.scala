@@ -5,7 +5,7 @@ object Builtins {
 
   val predicates =
     Map[Functor, VM => Unit] (
-      functor( "write", 2 ) -> write,
+      functor( "write", 1 ) -> write,
       functor( "nl", 0 ) -> nl
     )
 
