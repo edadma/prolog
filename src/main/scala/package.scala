@@ -16,7 +16,14 @@ package object prolog {
 
   case class Clause( var vars: Int, ast: TermAST )
 
+  object Variable {
+    private var count = 0
+  }
+
   class Variable {
+    Variable.count += 1
+
+    val num = Variable.count
     var instantiated = false
     var value: Any = _
     var binding: Variable = _
@@ -43,6 +50,8 @@ package object prolog {
         binding.eval
       else
         this
+
+    override def toString: String = s"_V$num"
   }
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )

@@ -7,7 +7,6 @@ import scala.collection.mutable.ArrayStack
 class VM( prog: Program ) {
 
   var trace = false
-
   var success = true
 
   class VarMap {
@@ -22,6 +21,8 @@ class VM( prog: Program ) {
           v
         case Some( v ) => v
       }
+
+    def map = vars map { case (k, v) => (k, v.eval) } toMap
   }
 
   case class State( dataStack: List[Any], pc: Int, frame: Frame )
@@ -61,7 +62,10 @@ class VM( prog: Program ) {
       case _ => goal.pos.error( "expected a rule" )
     }
 
-    success
+    if (success)
+      Some( vars.map )
+    else
+      None
   }
 
   def interpTerm( term: TermAST )( implicit vars: VarMap ): Unit =
@@ -175,6 +179,13 @@ class VM( prog: Program ) {
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case PredicateInst( pred ) => pred( this )
+      case UnifyInst =>
+        val const = popData
+
+        popValue match {
+          case v: Variable => v bind const
+          case v => if (v != const) fail
+        }
     }
   }
 

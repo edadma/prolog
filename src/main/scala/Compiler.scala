@@ -108,9 +108,7 @@ object Compiler {
 //        case VariableStructureAST( _, "_", _ ) => code += DropInst
         case AtomAST( _, n ) =>
           prog += PushAtomicInst( AtomData(Symbol(n)) )
-          prog += EqInst
-          prog += BranchIfInst( 1 )
-          prog += FailInst
+          prog += UnifyInst
         case WildcardAST( _ ) => prog += DropInst
         case VariableAST( _, n ) =>
           prog += VarBindInst( vars.num(n) )
@@ -148,9 +146,7 @@ object Compiler {
 //            code(b) = BranchInst( code.length - b - 1 )
         case IntegerAST( _, n ) =>
           prog += PushAtomicInst( IntegerData(n) )
-          prog += EqInst
-          prog += BranchIfInst( 1 )
-          prog += FailInst
+          prog += UnifyInst
       }
 
     compileHead( term )
