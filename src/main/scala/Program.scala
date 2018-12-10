@@ -34,34 +34,39 @@ class Program extends Growable[Instruction] {
     procedureMap.clear
   }
 
-//  def print: Unit = {
-//    for (Procedure( Functor(Symbol(name), arity), clauses ) <- procedures.values.toList.sorted) {
-//      println( s"$name/$arity" )
-//
-//      if (clauses isEmpty)
-//        println( "  undefined\n" )
-//      else
-//        for (c <- clauses) {
-//          for (ins <- c.code)
-//            println( "  " + (ins match {
-//              case EnterInstruction => "enter"
-//              case ExitInstruction => "exit"
-//              case PopInstruction => "pop"
-//              case VarInstruction( n ) => s"var $n"
-//              case CallInstruction( Procedure(Functor(Symbol(name), arity), _) ) => s"call $name/$arity"
-//              case ConstInstruction( AtomData(Symbol(name)) ) => s"const '$name'"
-//              case ConstInstruction( IntegerData(n) ) => s"const $n"
-//              case EvalInstruction( v, v1 ) => s"eval $v, $v1"
-//              case PushVarInstruction( n ) => s"pushv $n"
-//              case PushNumInstruction( n ) => s"push $n"
-//              case AddInstruction => "add"
-//              case ResultInstruction( n ) => s"result $n"
-//            }) )
-//
-//          println
-//        }
-//    }
-//  }
+  def print: Unit = {
+    for (Procedure( Functor(Symbol(name), arity), entry, end, clauses ) <- procedureMap.values.toList.sorted) {
+      println( s"$name/$arity" )
+
+      if (clauses isEmpty)
+        println( "  undefined\n" )
+      else
+        for (i <- entry until end) {
+          println( "  " + (code(i) match {
+            case PushAtomicInst( d ) => s"push $d"
+            case PushVarInst( n ) => s"pushv $n"
+            case PushCompoundInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
+            case PushElementInst( n ) => s"pushe $n"
+            case ReturnInst => s"return"
+            case VarBindInst( n ) => s"bind $n"
+            case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"
+            case DupInst => "dup"
+            case EqInst => "eq"
+            case BranchIfInst( disp ) => s"branchif $disp"
+            case FailInst => "fail"
+            case ChoiceInst( disp ) => s"choice $disp"
+            case CallInst( entry ) => s"call $entry"
+            case DropInst => "drop"
+            case PushFrameInst => "pushf"
+            case FrameInst( vars ) => s"frame $vars"
+            case PredicateInst( pred ) => s"pred $pred"
+            case UnifyInst => "unify"
+          }) )
+        }
+
+      println
+    }
+  }
 
   def defined( name: String, arity: Int ) = procedureMap contains functor( name, arity )
 
@@ -74,7 +79,7 @@ class Program extends Growable[Instruction] {
 
     procedureMap get f match {
       case None =>
-        val p = Procedure( f, 0 )
+        val p = Procedure( f, 0, 0 )
 
         procedureMap(f) = p
         p

@@ -20,6 +20,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       println( ast )
       Compiler.compile( ast, prog )
+      prog.print
     case m: Parser.Mismatch => m.error
   }
 
@@ -30,6 +31,7 @@ object Main extends App {
       val vm = new VM( prog ) {trace = true}
 
       println( vm.interp(ast) )
+      vm.fail
       println( vm.run )
     case m: Parser.Mismatch => m.error
   }

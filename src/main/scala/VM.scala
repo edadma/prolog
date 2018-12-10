@@ -187,6 +187,7 @@ class VM( prog: Program ) {
   }
 
   def run = {
+    println(pc)
     if (pc >= 0)
       while (pc >= 0) {
         execute

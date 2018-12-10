@@ -24,16 +24,18 @@ object Compiler {
 
   def phase2( implicit prog: Program ) {
     prog.procedures foreach {
-      case proc@Procedure( _, _, clauses ) =>
+      case proc@Procedure( _, _, _, clauses ) =>
         proc.entry = prog.pointer
 
         for (c <- clauses.init) {
-          prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) {
+          prog.patch( (ptr, len) => ChoiceInst(len - ptr - 1) ) {
+            println(c.ast)
             c.vars = compileClause( c.ast )
           }
         }
 
         clauses.last.vars = compileClause( clauses.last.ast )
+        proc.end = prog.pointer
     }
   }
 
