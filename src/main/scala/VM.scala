@@ -110,7 +110,7 @@ class VM( prog: Program ) {
 
   def popBoolean = pop.asInstanceOf[Boolean]
 
-  def push( d: Any ): Unit = dataStack = d :: dataStack
+  def push( d: Any ): Unit = dataStack ::= d
 
   def call( entry: Int ): Unit = {
     push( pc )
