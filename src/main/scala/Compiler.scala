@@ -29,7 +29,6 @@ object Compiler {
 
         for (c <- clauses.init) {
           prog.patch( (ptr, len) => ChoiceInst(len - ptr - 1) ) {
-            println(c.ast)
             c.vars = compileClause( c.ast )
           }
         }

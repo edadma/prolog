@@ -51,7 +51,11 @@ package object prolog {
       else
         this
 
-    override def toString: String = s"_V$num"
+    override def toString: String =
+      eval match {
+        case v: Variable => s"_V${v.num}"
+        case v => v.toString
+      }
   }
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )

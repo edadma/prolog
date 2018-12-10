@@ -18,17 +18,17 @@ object Main extends App {
 
   Parser.source( new StringReader(code) ) match {
     case Parser.Match( ast, _ ) =>
-      println( ast )
+      //println( ast )
       Compiler.compile( ast, prog )
-      prog.print
+      //prog.print
     case m: Parser.Mismatch => m.error
   }
 
   Parser.query( new StringReader(query) ) match {
     case Parser.Match( ast, _ ) =>
-      println( ast )
+      //println( ast )
 
-      val vm = new VM( prog ) {trace = true}
+      val vm = new VM( prog ) //{trace = true}
 
       println( vm.interp(ast) )
       vm.fail
