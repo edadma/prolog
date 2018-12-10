@@ -8,6 +8,7 @@ object Main extends App {
   val code =
     """
       |asdf( a ).
+      |asdf( b ).
     """.stripMargin
   val query =
     """
@@ -29,6 +30,7 @@ object Main extends App {
       val vm = new VM( prog ) {trace = true}
 
       println( vm.interp(ast) )
+      println( vm.run )
     case m: Parser.Mismatch => m.error
   }
 

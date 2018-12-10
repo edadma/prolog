@@ -8,6 +8,7 @@ class VM( prog: Program ) {
 
   var trace = false
   var success = true
+  implicit var vars: VarMap = _
 
   class VarMap {
     val vars = new mutable.HashMap[String, Variable]
@@ -38,9 +39,8 @@ class VM( prog: Program ) {
   var frame: Frame = new Frame( 0, -1 )
 
   def interp( goal: TermAST ) = {
-    implicit val vars = new VarMap
-
     success = true
+    vars = new VarMap
 
     goal match {
       case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
@@ -51,21 +51,18 @@ class VM( prog: Program ) {
       case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
         args foreach interpTerm
         Builtins.predicates(functor(name, args.length))( this )
+        Some( vars.map )
       case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
         pushFrame
         call( prog.procedure( name, 0).entry )
         run
       case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
-        Builtins.predicates(functor( name, 0))( this )
+        Builtins.predicates(functor(name, 0))( this )
+        Some( vars.map )
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
       case _ => goal.pos.error( "expected a rule" )
     }
-
-    if (success)
-      Some( vars.map )
-    else
-      None
   }
 
   def interpTerm( term: TermAST )( implicit vars: VarMap ): Unit =
@@ -189,15 +186,21 @@ class VM( prog: Program ) {
     }
   }
 
-  def run: Unit = {
-    success = true
-
-    while (pc >= 0) {
-      execute
-    }
+  def run = {
+    if (pc >= 0)
+      while (pc >= 0) {
+        execute
+      }
+    else
+      success = false
 
     if (trace)
       println( dataStack )
+
+    if (success)
+      Some( vars.map )
+    else
+      None
   }
 
 }
