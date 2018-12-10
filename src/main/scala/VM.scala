@@ -131,6 +131,9 @@ class VM( prog: Program ) {
             p.head.unbind
             p = p.tail
           }
+
+          _trail.head.unbind
+          trail = _trail
       }
     else
       success = false
@@ -140,7 +143,7 @@ class VM( prog: Program ) {
     val inst = prog(pc)
 
     if (trace)
-      println( inst, dataStack )
+      println( pc, inst, dataStack )
 
     pc += 1
 
@@ -195,12 +198,9 @@ class VM( prog: Program ) {
   }
 
   def run = {
-    if (pc >= 0 && success)
-      while (pc >= 0) {
-        execute
-      }
-    else
-      success = false
+    while (pc >= 0 && success) {
+      execute
+    }
 
     if (trace)
       println( dataStack )
