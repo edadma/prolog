@@ -11,7 +11,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-      |asdf( a )
+      |asdf( X )
     """.stripMargin
   val prog = new Program
 
@@ -26,9 +26,9 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       println( ast )
 
-      val vm = new VM( prog )
+      val vm = new VM( prog ) {trace = true}
 
-      vm.interp( ast )
+      println( vm.interp(ast) )
     case m: Parser.Mismatch => m.error
   }
 

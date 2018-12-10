@@ -42,14 +42,20 @@ object Compiler {
 
     ast match {
       case CompoundAST( r, ":-", List(CompoundAST(h, f, args), body) ) =>
-        args foreach compileHead
-        compileConjunct( body )
+        prog.patch( (_, _) => FrameInst(vars.count) ) {
+          args foreach compileHead
+          compileConjunct( body )
+        }
+
         prog += ReturnInst
       case CompoundAST( r, ":-", List(AtomAST(h, name), body) ) =>
         compileConjunct( body )
         prog += ReturnInst
       case CompoundAST( r, fact, args ) =>
-        args foreach compileHead
+        prog.patch( (_, _) => FrameInst(vars.count) ) {
+          args foreach compileHead
+        }
+
         prog += ReturnInst
       case AtomAST( r, name ) =>
         prog += ReturnInst
@@ -193,6 +199,7 @@ object Compiler {
 //        buf.toList
       case CompoundAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
       case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
+        PushFrameInst
         args foreach compileTerm
         prog += CallInst( prog.procedure(name, args.length).entry )
       case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
@@ -200,6 +207,7 @@ object Compiler {
         prog += PredicateInst( Builtins.predicates(functor(name, args.length)) )
       case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
+        PushFrameInst
         prog += CallInst(prog.procedure( name, 0).entry )
       case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
         prog += PredicateInst( Builtins.predicates(functor( name, 0)) )

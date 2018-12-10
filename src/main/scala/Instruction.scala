@@ -18,3 +18,4 @@ case class CallInst( entry: Int ) extends Instruction
 case object DropInst extends Instruction
 case class FrameInst( vars: Int ) extends Instruction
 case class PredicateInst( pred: VM => Unit ) extends Instruction
+case object PushFrameInst extends Instruction
