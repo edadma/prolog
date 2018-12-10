@@ -8,6 +8,7 @@ class VM( prog: Program ) {
 
   var trace = false
   var success = true
+  var trail: List[Variable] = Nil
   implicit var vars: VarMap = _
 
   class VarMap {
@@ -26,7 +27,7 @@ class VM( prog: Program ) {
     def map = vars map { case (k, v) => (k, v.eval) } toMap
   }
 
-  case class State( dataStack: List[Any], pc: Int, frame: Frame )
+  case class State( dataStack: List[Any], pc: Int, frame: Frame, trail: List[Variable] )
 
   class Frame( size: Int, val ret: Int ) {
     val vars = new Array[Variable]( size )
@@ -119,10 +120,17 @@ class VM( prog: Program ) {
   def fail: Unit = {
     if (choiceStack nonEmpty)
       choiceStack pop match {
-        case State( _dataStack, _pc, _frame ) =>
+        case State( _dataStack, _pc, _frame, _trail ) =>
           dataStack = _dataStack
           pc = _pc
           frame = _frame
+
+          var p = trail
+
+          while (p.head ne _trail.head) {
+            p.head.unbind
+            p = p.tail
+          }
       }
     else
       success = false
@@ -170,7 +178,7 @@ class VM( prog: Program ) {
         if (popBoolean)
           pc += disp
       case FailInst => fail
-      case ChoiceInst( disp ) => choiceStack push State( dataStack, pc + disp, frame )
+      case ChoiceInst( disp ) => choiceStack push State( dataStack, pc + disp, frame, trail )
       case CallInst( entry ) => call( entry )
       case DropInst => pop
       case PushFrameInst => pushFrame
@@ -201,6 +209,49 @@ class VM( prog: Program ) {
       Some( vars.map )
     else
       None
+  }
+
+  object Variable {
+    private var count = 0
+  }
+
+  class Variable {
+    Variable.count += 1
+    trail ::= this
+
+    val num = Variable.count
+    var instantiated = false
+    var value: Any = _
+    var binding: Variable = _
+
+    def bind( v: Variable ): Unit = {
+      instantiated = false
+      binding = v
+    }
+
+    def bind( v: Any ): Unit = {
+      instantiated = true
+      value = v
+    }
+
+    def unbind: Unit = {
+      instantiated = false
+      binding = null
+    }
+
+    def eval: Any =
+      if (instantiated)
+        value
+      else if (binding ne null)
+        binding.eval
+      else
+        this
+
+    override def toString: String =
+      eval match {
+        case v: Variable => s"_V${v.num}"
+        case v => v.toString
+      }
   }
 
 }
