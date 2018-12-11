@@ -42,23 +42,25 @@ object Compiler {
     implicit val vars = new Vars
 
     ast match {
-      case CompoundAST( r, ":-", List(CompoundAST(h, f, args), body) ) =>
+      case CompoundAST( r, ":-", List(CompoundAST(_, f, args), body) ) =>
         prog.patch( (_, _) => FrameInst(vars.count) ) {
-          args foreach compileHead
+          args.reverse foreach compileHead
           compileConjunct( body )
         }
 
         prog += ReturnInst
-      case CompoundAST( r, ":-", List(AtomAST(h, name), body) ) =>
+      case CompoundAST( r, ":-", List(AtomAST(_, _), body) ) =>
+        prog += FrameInst( 0 )
         compileConjunct( body )
         prog += ReturnInst
-      case CompoundAST( r, fact, args ) =>
+      case CompoundAST( _, _, args ) =>
         prog.patch( (_, _) => FrameInst(vars.count) ) {
-          args foreach compileHead
+          args.reverse foreach compileHead
         }
 
         prog += ReturnInst
       case AtomAST( r, name ) =>
+        prog += FrameInst( 0 )
         prog += ReturnInst
     }
 
@@ -120,7 +122,7 @@ object Compiler {
         case CompoundAST( _, name, args ) =>
           prog += FunctorInst( Functor(Symbol(name), args.length) )
 
-          args.zipWithIndex foreach {
+          args.zipWithIndex.reverse foreach {
             case (e, i) =>
               if (i < args.length - 1)
                 prog += DupInst

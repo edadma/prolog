@@ -7,12 +7,15 @@ object Main extends App {
 
   val code =
     """
-      |asdf( a ).
-      |asdf( b ).
+      |eats(fred,oranges).                           /* "Fred eats oranges" */
+      |eats(fred,t_bone_steaks).                     /* "Fred eats T-bone steaks" */
+      |eats(tony,apples).                            /* "Tony eats apples" */
+      |eats(john,apples).                            /* "John eats apples" */
+      |//eats(john,grapefruit).                        /* "John eats grapefruit" */
     """.stripMargin
   val query =
     """
-      |asdf( X )
+      |eats(W, F)
     """.stripMargin
   val prog = new Program
 
@@ -30,6 +33,8 @@ object Main extends App {
 
       val vm = new VM( prog ) //{trace = true}
 
+      println( "-----" )
+
       vm.interp( ast ) match {
         case Some( r ) =>
           def results( res: Any ): Unit = {
@@ -45,6 +50,8 @@ object Main extends App {
           results( r )
         case None =>
       }
+
+      println( "-----" )
     case m: Parser.Mismatch => m.error
   }
 
