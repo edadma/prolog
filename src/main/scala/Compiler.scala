@@ -204,7 +204,7 @@ object Compiler {
       case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
         args foreach compileTerm
         prog += PredicateInst( Builtins.predicates(functor(name, args.length)) )
-      case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
+      case CompoundAST( pos, name, args ) =>
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
         PushFrameInst
         prog += CallInst(prog.procedure( name, 0).entry )

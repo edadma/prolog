@@ -26,8 +26,10 @@ package object prolog {
     def num( name: String ) = {
       vars get name match {
         case None =>
-          vars(name) = count + 1
-          count
+          val n = count
+
+          vars(name) = n
+          n
         case Some( n ) => n
       }
     }

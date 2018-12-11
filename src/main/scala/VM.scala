@@ -183,6 +183,11 @@ class VM( prog: Program ) {
       case FailInst => fail
       case ChoiceInst( disp ) => choiceStack push State( dataStack, pc + disp, frame, trail )
       case CallInst( entry ) => call( entry )
+      case CallProcedureInst( pos, f@Functor(Symbol(name), arity) ) =>
+        prog get f match {
+          case None => pos.error( s"rule $name/$arity not defined" )
+          case Some( p ) => call( p.entry )
+        }
       case DropInst => pop
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
