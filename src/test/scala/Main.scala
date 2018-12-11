@@ -7,25 +7,44 @@ object Main extends App {
 
   val code =
     """
-      |eats(tony,apples).                            /* "Tony eats apples" */
-      |eats(fred,oranges).                           /* "Fred eats oranges" */
-      |eats(fred,t_bone_steaks).                     /* "Fred eats T-bone steaks" */
-      |eats(john,apples).                            /* "John eats apples" */
-      |eats(john,grapefruit).                        /* "John eats grapefruit" */
+      |/*
+      |eats(tony,apples).                            // "Tony eats apples"
+      |eats(fred,oranges).                           // "Fred eats oranges"
+      |eats(fred,t_bone_steaks).                     // "Fred eats T-bone steaks"
+      |eats(john,apples).                            // "John eats apples"
+      |eats(john,grapefruit).                        // "John eats grapefruit"
       |
-      |age(john,32).                 /*  John is 32 years old */
-      |age(agnes,41).                /*  Agnes is 41 */
-      |age(george,72).               /*  George is 72 */
-      |age(ian,2).                   /*  Ian is 2 */
-      |age(thomas,25).               /*  Thomas is 25 */
+      |
+      |age(john,32).                 //  John is 32 years old
+      |age(agnes,41).                //  Agnes is 41
+      |age(george,72).               //  George is 72
+      |age(ian,2).                   //  Ian is 2
+      |age(thomas,25).               //  Thomas is 25
+      |
       |
       |mortal(X) :- human(X).
       |
       |human(socrates).
+      |*/
+      |
+      |fun(X) :-
+      |    red(X),
+      |    car(X).
+      |
+      |fun(X) :-
+      |    blue(X),
+      |    bike(X).
+      |
+      |car(vw_beatle).
+      |car(ford_escort).
+      |bike(harley_davidson).
+      |red(vw_beatle).
+      |red(ford_escort).
+      |blue(harley_davidson).
     """.stripMargin
   val query =
     """
-      |mortal(socrates)
+      |fun(harley_davidson)
     """.stripMargin
   val prog = new Program
 
