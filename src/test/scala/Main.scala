@@ -7,15 +7,15 @@ object Main extends App {
 
   val code =
     """
+      |eats(tony,apples).                            /* "Tony eats apples" */
       |eats(fred,oranges).                           /* "Fred eats oranges" */
       |eats(fred,t_bone_steaks).                     /* "Fred eats T-bone steaks" */
-      |eats(tony,apples).                            /* "Tony eats apples" */
       |eats(john,apples).                            /* "John eats apples" */
-      |//eats(john,grapefruit).                        /* "John eats grapefruit" */
+      |eats(john,grapefruit).                        /* "John eats grapefruit" */
     """.stripMargin
   val query =
     """
-      |eats(W, F)
+      |eats(W, apples)
     """.stripMargin
   val prog = new Program
 

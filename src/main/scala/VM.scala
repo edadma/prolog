@@ -42,6 +42,7 @@ class VM( prog: Program ) {
   def interp( goal: TermAST ) = {
     success = true
     vars = new VarMap
+    trail = Nil
 
     goal match {
       case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
@@ -127,12 +128,11 @@ class VM( prog: Program ) {
 
           var p = trail
 
-          while (p.head ne _trail.head) {
+          while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
             p.head.unbind
             p = p.tail
           }
 
-          _trail.head.unbind
           trail = _trail
       }
     else
@@ -217,35 +217,25 @@ class VM( prog: Program ) {
 
   class Variable {
     Variable.count += 1
-    trail ::= this
 
     val num = Variable.count
-    var instantiated = false
-    var value: Any = _
-    var binding: Variable = _
-
-    def bind( v: Variable ): Unit = {
-      instantiated = false
-      binding = v
-    }
+    var binding: Any = _
 
     def bind( v: Any ): Unit = {
-      instantiated = true
-      value = v
+      binding = v
+      trail ::= this
     }
 
     def unbind: Unit = {
-      instantiated = false
       binding = null
     }
 
     def eval: Any =
-      if (instantiated)
-        value
-      else if (binding ne null)
-        binding.eval
-      else
-        this
+      binding match {
+        case v: Variable => v.eval
+        case null => this
+        case v => v
+      }
 
     override def toString: String =
       eval match {
