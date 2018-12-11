@@ -163,9 +163,9 @@ object Compiler {
       case AtomAST( pos, name ) =>
         prog += PushAtomicInst( AtomData(Symbol(name)) )
       case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
-      case VariableAST( pos, name ) => PushVarInst( vars.num(name) )
-      case IntegerAST( pos, v ) => PushAtomicInst( IntegerData(v) )
-      case FloatAST( pos, v ) => PushAtomicInst( FloatData(v) )
+      case VariableAST( pos, name ) => prog += PushVarInst( vars.num(name) )
+      case IntegerAST( pos, v ) => prog += PushAtomicInst( IntegerData(v) )
+      case FloatAST( pos, v ) => prog += PushAtomicInst( FloatData(v) )
     }
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
@@ -197,16 +197,20 @@ object Compiler {
 //        buf += ResultInstruction( vars.num(name) )
 //        buf.toList
       case CompoundAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
-      case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
-        PushFrameInst
+      case c@CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
+        println(c)
+        prog += PushFrameInst
         args foreach compileTerm
         prog += CallInst( prog.procedure(name, args.length).entry )
       case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
         args foreach compileTerm
         prog += PredicateInst( Builtins.predicates(functor(name, args.length)) )
       case CompoundAST( pos, name, args ) =>
+        prog += PushFrameInst
+        args foreach compileTerm
+        prog += CallProcedureInst( pos, functor(name, args.length) )
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
-        PushFrameInst
+        prog += PushFrameInst
         prog += CallInst(prog.procedure( name, 0).entry )
       case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
         prog += PredicateInst( Builtins.predicates(functor( name, 0)) )
