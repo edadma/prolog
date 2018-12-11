@@ -197,8 +197,7 @@ object Compiler {
 //        buf += ResultInstruction( vars.num(name) )
 //        buf.toList
       case CompoundAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
-      case c@CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
-        println(c)
+      case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
         prog += PushFrameInst
         args foreach compileTerm
         prog += CallInst( prog.procedure(name, args.length).entry )

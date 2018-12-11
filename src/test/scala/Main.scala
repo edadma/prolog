@@ -41,7 +41,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
 
-      val vm = new VM( prog ) {trace = true}
+      val vm = new VM( prog ) //{trace = true}
 
       println( "-----" )
 
