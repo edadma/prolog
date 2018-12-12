@@ -46,10 +46,10 @@ class Program extends Growable[Instruction] {
       else
         for (i <- entry until end) {
           println( "  " + (code(i) match {
-            case PushAtomicInst( d ) => s"push $d"
-            case PushVarInst( n ) => s"pushv $n"
-            case PushCompoundInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
-            case PushElementInst( n ) => s"pushe $n"
+            case PushInst( d ) => s"push $d"
+            case VarInst( n ) => s"pushv $n"
+            case StructureInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
+            case ElementInst( n ) => s"pushe $n"
             case ReturnInst => s"return"
 //            case BindInst( n ) => s"bind $n"
             case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"

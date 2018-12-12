@@ -71,7 +71,7 @@ class VM( prog: Program ) {
     term match {
       case CompoundAST( pos, name, args ) =>
         args foreach interpTerm
-        pushCompound( Functor(Symbol(name), args.length) )
+        pushStructure( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) => push( Symbol(name) )
       case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
       case VariableAST( pos, name ) => push( vars(name) )
@@ -81,7 +81,7 @@ class VM( prog: Program ) {
 
   def pushFrame = push( frame )
 
-  def pushCompound( f: Functor ): Unit = {
+  def pushStructure(f: Functor ): Unit = {
     val args = new Array[Any]( f.arity )
 
     for (i <- f.arity - 1 to 0 by -1)
@@ -146,10 +146,10 @@ class VM( prog: Program ) {
     pc += 1
 
     inst match {
-      case PushAtomicInst( d ) => push( d )
-      case PushVarInst( n ) => push( frame.vars(n).eval )
-      case PushCompoundInst( f ) => pushCompound( f )
-      case PushElementInst( n ) => push( popValue.asInstanceOf[Product].productElement(n) )
+      case PushInst( d ) => push( d )
+      case VarInst( n ) => push( frame.vars(n) )
+      case StructureInst( f ) => pushStructure( f )
+      case ElementInst( n ) => push( popValue.asInstanceOf[Product].productElement(n) )
       case ReturnInst =>
         pc = frame.ret
         frame = pop.asInstanceOf[Frame]
@@ -171,7 +171,7 @@ class VM( prog: Program ) {
       case FailInst => fail
       case ChoiceInst( disp ) => choiceStack push State( dataStack, pc + disp, frame, trail )
       case CallInst( entry ) => call( entry )
-      case CallProcedureInst( pos, f@Functor(Symbol(name), arity) ) =>
+      case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {
           case None => pos.error( s"rule $name/$arity not defined" )
           case Some( p ) => call( p.entry )
