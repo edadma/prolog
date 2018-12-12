@@ -25,7 +25,7 @@ object Main extends App {
       |mortal(X) :- human(X).
       |
       |human(socrates).
-      |*/
+      |
       |
       |fun(X) :-
       |    red(X),
@@ -35,18 +35,30 @@ object Main extends App {
       |    blue(X),
       |    bike(X).
       |
-      |car(honda).
       |car(vw_beatle).
       |car(ford_escort).
       |bike(harley_davidson).
       |red(vw_beatle).
       |red(ford_escort).
       |blue(harley_davidson).
-      |red(honda).
+      |*/
+      |
+      |likes(john,mary).
+      |likes(john,trains).
+      |likes(peter,fast_cars).
+      |
+      |likes(Person1,Person2):-
+      |    hobby(Person1,Hobby),
+      |    hobby(Person2,Hobby).
+      |
+      |hobby(john,trainspotting).
+      |hobby(tim,sailing).
+      |hobby(helen,trainspotting).
+      |hobby(simon,sailing).
     """.stripMargin
   val query =
     """
-      |fun(honda)
+      |likes(john, What)
     """.stripMargin
   val prog = new Program
 
