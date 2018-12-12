@@ -50,17 +50,17 @@ class VM( prog: Program ) {
         args foreach interpTerm
         call( prog.procedure(name, args.length).entry )
         run
-      case StructureAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
+      case StructureAST( _, name, args ) if Builtin exists functor( name, args.length ) =>
         args foreach interpTerm
-        Builtins.predicates(functor(name, args.length))( this )
+        Builtin.predicate(functor(name, args.length))( this )
         Some( vars.map )
       case StructureAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
         pushFrame
         call( prog.procedure( name, 0).entry )
         run
-      case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
-        Builtins.predicates(functor(name, 0))( this )
+      case AtomAST( _, name ) if Builtin exists functor( name, 0 ) =>
+        Builtin.predicate(functor(name, 0))( this )
         Some( vars.map )
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
       case _ => goal.pos.error( "expected a rule" )
@@ -192,6 +192,7 @@ class VM( prog: Program ) {
 
   def unify( a: Any, b: Any ): Unit = {
     (a, b) match {
+      case (Wildcard, _) | (_, Wildcard) =>
       case (a: Variable, _) => a bind b
       case (_, b: Variable) => b bind a
       case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
@@ -200,7 +201,6 @@ class VM( prog: Program ) {
             unify( args1(i), args2(i) )
         else
           fail
-      case (Wildcard, _) | (_, Wildcard) =>
       case _ =>
         if (a != b)
           fail

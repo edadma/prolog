@@ -70,7 +70,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-      |ancestor( X, Y )
+      |write( asdf(1, 2, a) )
     """.stripMargin
   val prog = new Program
 
@@ -78,7 +78,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      prog.print
+      //prog.print
     case m: Parser.Mismatch => m.error
   }
 

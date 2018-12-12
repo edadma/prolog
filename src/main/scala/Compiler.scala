@@ -243,9 +243,9 @@ object Compiler {
           case -1 => prog.fixup( f )
           case entry => prog += CallInst( entry )
         }
-      case StructureAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
+      case StructureAST( _, name, args ) if Builtin exists functor( name, args.length ) =>
         args foreach compileTerm
-        prog += PredicateInst( Builtins.predicates(functor(name, args.length)) )
+        prog += PredicateInst( Builtin.predicate(functor(name, args.length)) )
       case StructureAST( pos, name, args ) =>
         prog += PushFrameInst
         args foreach compileTerm
@@ -259,8 +259,8 @@ object Compiler {
           case -1 => prog.fixup( f )
           case entry => prog += CallInst( entry )
         }
-      case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
-        prog += PredicateInst( Builtins.predicates(functor( name, 0)) )
+      case AtomAST( _, name ) if Builtin exists functor( name, 0 ) =>
+        prog += PredicateInst( Builtin.predicate(functor( name, 0)) )
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
     }
 
