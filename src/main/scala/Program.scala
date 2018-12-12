@@ -51,7 +51,7 @@ class Program extends Growable[Instruction] {
             case PushCompoundInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
             case PushElementInst( n ) => s"pushe $n"
             case ReturnInst => s"return"
-            case VarBindInst( n ) => s"bind $n"
+            case BindInst( n ) => s"bind $n"
             case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"
             case DupInst => "dup"
             case EqInst => "eq"

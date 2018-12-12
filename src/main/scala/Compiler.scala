@@ -117,7 +117,7 @@ object Compiler {
           prog += UnifyInst
         case WildcardAST( _ ) => prog += DropInst
         case VariableAST( _, n ) =>
-          prog += VarBindInst( vars.num(n) )
+          prog += BindInst( vars.num(n) )
 //        case NamedStructureAST( _, _, s ) =>
 //          code += DupInst
 //          code += BindingInst

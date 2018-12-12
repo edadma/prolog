@@ -9,7 +9,7 @@ case class PushVarInst( n: Int ) extends Instruction
 case class PushCompoundInst( f: Functor ) extends Instruction
 case class PushElementInst( n: Int ) extends Instruction
 case object ReturnInst extends Instruction
-case class VarBindInst( n: Int ) extends Instruction
+case class BindInst( n: Int ) extends Instruction
 case class FunctorInst( f: Functor ) extends Instruction
 case object DupInst extends Instruction
 case object EqInst extends Instruction

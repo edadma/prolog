@@ -30,7 +30,7 @@ class VM( prog: Program ) {
   case class State( dataStack: List[Any], pc: Int, frame: Frame, trail: List[Variable] )
 
   class Frame( size: Int, val ret: Int ) {
-    val vars = new Array[Variable]( size )
+    val vars = Array.fill[Variable]( size )( new Variable )
   }
 
   val choiceStack = new ArrayStack[State]
@@ -147,27 +147,17 @@ class VM( prog: Program ) {
 
     inst match {
       case PushAtomicInst( d ) => push( d )
-      case PushVarInst( n ) =>
-        push(
-          frame.vars(n) match {
-            case null =>
-              val v = new Variable
-
-              frame.vars(n) = v
-              v
-            case v => v
-          }
-        )
+      case PushVarInst( n ) => push( frame.vars(n).eval )
       case PushCompoundInst( f ) => pushCompound( f )
       case PushElementInst( n ) => push( popValue.asInstanceOf[Compound].element(n) )
       case ReturnInst =>
         pc = frame.ret
         frame = pop.asInstanceOf[Frame]
-      case VarBindInst( n ) =>
-        popValue match {
-          case v: Variable => frame.vars(n) = v
-          case v => frame.vars(n) = new Variable {bind( v )}
-        }
+      case BindInst( n ) =>
+        if (frame.vars(n).bound)
+          unify( frame.vars(n).eval, popValue )
+        else
+          frame.vars(n).bind( popValue )
       case FunctorInst( f ) =>
         top match {
           case c: Structure if c.functor == f =>
@@ -200,6 +190,10 @@ class VM( prog: Program ) {
     }
   }
 
+  def unify( a: Any, b: Any ): Unit = {
+
+  }
+
   def run = {
     while (pc >= 0 && success) {
       execute
@@ -223,22 +217,26 @@ class VM( prog: Program ) {
 
     val num = Variable.count
     var binding: Any = _
+    var bound = false
 
     def bind( v: Any ): Unit = {
       binding = v
+      bound = true
       trail ::= this
     }
 
     def unbind: Unit = {
-      binding = null
+      bound = false
     }
 
     def eval: Any =
-      binding match {
-        case v: Variable => v.eval
-        case null => this
-        case v => v
-      }
+      if (bound)
+        binding match {
+          case v: Variable => v.eval
+          case v => v
+        }
+      else
+        this
 
     override def toString: String =
       eval match {

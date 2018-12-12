@@ -41,7 +41,7 @@ object Main extends App {
       |red(vw_beatle).
       |red(ford_escort).
       |blue(harley_davidson).
-      |*/
+      |
       |
       |likes(john,mary).
       |likes(john,trains).
@@ -55,10 +55,22 @@ object Main extends App {
       |hobby(tim,sailing).
       |hobby(helen,trainspotting).
       |hobby(simon,sailing).
+      |*/
+      |
+      |parent(john,paul).             // paul is john's parent
+      |parent(paul,tom).              // tom is paul's parent
+      |parent(tom,mary).              // mary is tom's parent
+      |
+      |ancestor(X,Y):- parent(X,Y).   // someone is your ancestor if there are your parent
+      |ancestor(X,Y):- parent(X,Z),   // or somebody is your ancestor if they are the parent
+      |    ancestor(Z,Y).             // of someone who is your ancestor
+      |
+      |
+      |eq( X, X ).
     """.stripMargin
   val query =
     """
-      |likes(tim,helen)
+      |ancestor( X, Y )
     """.stripMargin
   val prog = new Program
 
@@ -66,7 +78,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      //prog.print
+      prog.print
     case m: Parser.Mismatch => m.error
   }
 
