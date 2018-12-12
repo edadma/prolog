@@ -181,14 +181,22 @@ class VM( prog: Program ) {
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case PredicateInst( pred ) => pred( this )
       case UnifyInst => unify( popValue, popValue )
-//        val const = popValue
-//
-//        popValue match {
-//          case v: Variable => v bind const
-//          case v => if (v != const) fail
-//        }
+      case EvalInst( v1, v2 ) =>
+
     }
   }
+
+  def eval( term: Any ): Number =
+    term match {
+      case n: Number => n
+      case Structure( Functor(Symbol(operator@("+"|"-")), arity), List(left, right) ) =>
+        val l = eval( left )
+        val r = eval( right )
+
+        operator match {
+          case "+" =>
+        }
+    }
 
   def unify( a: Any, b: Any ): Unit = {
     (a, b) match {

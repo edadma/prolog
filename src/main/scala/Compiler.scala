@@ -206,32 +206,30 @@ object Compiler {
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
-      case StructureAST( pos, "is", List(VariableAST(r, name), expr) ) =>
-//        val exprvars = new mutable.HashSet[(Int, Int)]
-//
-//        def addvar( term: TermAST )( implicit vars: Vars ): Unit =
-//          term match {
-//            case v@VariableAST( r, name ) =>
-//              vars get name match {
-//                case None => r.error( s"variable 'name' does not occur previously in the clause" )
-//                case Some( n ) =>
-//                  v.name += '\''
-//                  exprvars += (n -> vars.num( v.name ))
-//              }
-//            case CompoundAST( r, name, args ) => args foreach addvar
-//            case _ =>
-//          }
-//
-//        addvar( expr )
-//
-//        val buf = new ListBuffer[Instruction]
-//
-//        for ((v, v1) <- exprvars)
-//          buf += EvalInstruction( v, v1 )
-//
-//        compileExpression( expr, buf )
-//        buf += ResultInstruction( vars.num(name) )
-//        buf.toList
+      case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
+        val exprvars = new mutable.HashSet[(Int, Int)]
+
+        def addvar( term: TermAST )( implicit vars: Vars ): Unit =
+          term match {
+            case v@VariableAST( r, name ) =>
+              vars get name match {
+                case None => r.error( s"variable '$name' does not occur previously in the clause" )
+                case Some( n ) =>
+                  v.name += '\''
+                  exprvars += (n -> vars.num( v.name ))
+              }
+            case StructureAST( _, _, args ) => args foreach addvar
+            case _ =>
+          }
+
+        addvar( expr )
+
+        for ((v, v1) <- exprvars)
+          prog += EvalInst( v, v1 )
+
+        compileExpression( expr )
+        prog += VarInst( vars.num(rname) )
+        prog += UnifyInst
       case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
       case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
         prog += PushFrameInst
@@ -264,19 +262,19 @@ object Compiler {
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
     }
 
-//  def compileExpression( expr: TermAST, buf: ListBuffer[Instruction] )( implicit vars: Vars ): Unit =
-//    expr match {
-//      case x: NumericAST => buf += PushNumInstruction( x.n )
-//      case VariableAST( pos, name ) => buf += PushVarInstruction( vars.num(name) )
-//      case CompoundAST( pos, op@("+"|"-"), List(left, right) ) =>
-//        compileExpression( left, buf )
-//        compileExpression( right, buf )
-//        buf +=
-//          (op match {
-//            case "+" => AddInstruction
-//            case "-" => SubInstruction
-//          })
-//    }
+  def compileExpression( expr: TermAST )( implicit prog: Program, vars: Vars ): Unit =
+    expr match {
+      case x: NumericAST => prog += PushInst( x.v )
+      case VariableAST( pos, name ) => prog += VarInst( vars.num(name) )
+      case StructureAST( pos, op@("+"|"-"), List(left, right) ) =>
+        compileExpression( left )
+        compileExpression( right )
+        prog +=
+          (op match {
+            case "+" => AddInst
+            case "-" => SubInst
+          })
+    }
 
   def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
