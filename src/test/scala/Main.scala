@@ -35,16 +35,18 @@ object Main extends App {
       |    blue(X),
       |    bike(X).
       |
+      |car(honda).
       |car(vw_beatle).
       |car(ford_escort).
       |bike(harley_davidson).
       |red(vw_beatle).
       |red(ford_escort).
       |blue(harley_davidson).
+      |red(honda).
     """.stripMargin
   val query =
     """
-      |fun(harley_davidson)
+      |fun(honda)
     """.stripMargin
   val prog = new Program
 
@@ -52,7 +54,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      //prog.print
+      prog.print
     case m: Parser.Mismatch => m.error
   }
 

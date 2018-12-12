@@ -36,6 +36,9 @@ object Compiler {
         clauses.last.vars = compileClause( clauses.last.ast )
         proc.end = prog.pointer
     }
+    
+    for ((addr, f) <- prog.fixups)
+      prog(addr) = CallInst( prog.procedure(f).entry )
   }
 
   def compileClause( ast: TermAST )( implicit prog: Program ) = {
@@ -200,7 +203,13 @@ object Compiler {
       case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
         prog += PushFrameInst
         args foreach compileTerm
-        prog += CallInst( prog.procedure(name, args.length).entry )
+
+        val f = functor( name, args.length )
+
+        prog.procedure( f ).entry match {
+          case -1 => prog.fixup( f )
+          case entry => prog += CallInst( entry )
+        }
       case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
         args foreach compileTerm
         prog += PredicateInst( Builtins.predicates(functor(name, args.length)) )
@@ -210,7 +219,13 @@ object Compiler {
         prog += CallProcedureInst( pos, functor(name, args.length) )
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
         prog += PushFrameInst
-        prog += CallInst(prog.procedure( name, 0).entry )
+
+        val f = functor( name, 0 )
+
+        prog.procedure( f ).entry match {
+          case -1 => prog.fixup( f )
+          case entry => prog += CallInst( entry )
+        }
       case AtomAST( _, name ) if Builtins.predicates contains functor( name, 0 ) =>
         prog += PredicateInst( Builtins.predicates(functor( name, 0)) )
       case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )

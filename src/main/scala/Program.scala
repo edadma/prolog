@@ -9,8 +9,11 @@ class Program extends Growable[Instruction] {
 
   val code = new ArrayBuffer[Instruction]
   val procedureMap = new mutable.HashMap[Functor, Procedure]
+  var fixups = new ArrayBuffer[(Int, Functor)]
 
   def apply( n: Int ) = code(n)
+
+  def update( n: Int, inst: Instruction ) = code(n) = inst
 
   def procedures = procedureMap.values
 
@@ -57,7 +60,7 @@ class Program extends Growable[Instruction] {
             case ChoiceInst( disp ) => s"choice $disp"
             case CallInst( entry ) => s"call $entry"
             case DropInst => "drop"
-            case PushFrameInst => "pushf"
+            case PushFrameInst => "pushfr"
             case FrameInst( vars ) => s"frame $vars"
             case PredicateInst( pred ) => s"pred $pred"
             case UnifyInst => "unify"
@@ -72,17 +75,21 @@ class Program extends Growable[Instruction] {
 
   def get( f: Functor ) = procedureMap get f
 
-  def procedure( name: String, arity: Int ) = {
-    val f = functor( name, arity )
+  def fixup( f: Functor ) {
+    fixups += ((pointer, f))
+    code += null
+  }
 
+  def procedure( name: String, arity: Int ): Procedure = procedure( functor(name, arity) )
+
+  def procedure( f: Functor ) =
     procedureMap get f match {
       case None =>
-        val p = Procedure( f, 0, 0 )
+        val p = Procedure( f, -1, 0 )
 
         procedureMap(f) = p
         p
       case Some( p ) => p
     }
-  }
 
 }
