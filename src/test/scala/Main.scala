@@ -66,11 +66,11 @@ object Main extends App {
       |    ancestor(Z,Y).             // of someone who is your ancestor
       |
       |
-      |eq( X, X ).
+      |X = X.
     """.stripMargin
   val query =
     """
-      |write( asdf(1, 2, a) )
+      |A = 123
     """.stripMargin
   val prog = new Program
 
