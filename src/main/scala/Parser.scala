@@ -26,8 +26,8 @@ object Parser extends Matchers[StringReader] {
     ".", "[", "|", "]", "(", ")"
   )
 
-  def unary( pos: Reader, o: String, x: TermAST ) = CompoundAST( pos, o, List(x) )
-  def binary( pos: Reader, o: String, x: TermAST, y: TermAST ) = CompoundAST( pos, o, List(x, y) )
+  def unary( pos: Reader, o: String, x: TermAST ) = StructureAST( pos, o, List(x) )
+  def binary( pos: Reader, o: String, x: TermAST, y: TermAST ) = StructureAST( pos, o, List(x, y) )
 
   def mkterm( result: Any ) =
     result match {
@@ -89,7 +89,7 @@ object Parser extends Matchers[StringReader] {
     pos ~ integerLit ^^ { case p ~ n => IntegerAST( p, n ) } |
       "(" ~> term <~ ")" |
       pos ~ identOrReserved ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
-        case p ~ n ~ _ ~ a ~ _ => CompoundAST( p, n, a ) } |
+        case p ~ n ~ _ ~ a ~ _ => StructureAST( p, n, a ) } |
       pos ~ identOrReserved ^^ {
         case p ~ "_" => WildcardAST( p )
         case p ~ a if a.head.isLower => AtomAST( p, a )

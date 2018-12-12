@@ -32,11 +32,11 @@ object Compiler {
   def phase1( ast: PrologAST, prog: Program ) {
     ast match {
       case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
-      case ClauseAST( clause@CompoundAST(r, ":-", List(CompoundAST(h, f, args), body)) ) =>
+      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, f, args), body)) ) =>
         prog.procedure( f, args.length ).clauses += Clause( 0, clause )
-      case ClauseAST( clause@CompoundAST(r, ":-", List(AtomAST(h, name), body)) ) =>
+      case ClauseAST( clause@StructureAST(r, ":-", List(AtomAST(h, name), body)) ) =>
         prog.procedure( name, 0 ).clauses += Clause( 0, clause )
-      case ClauseAST( clause@CompoundAST(r, fact, args) ) =>
+      case ClauseAST( clause@StructureAST(r, fact, args) ) =>
         prog.procedure( fact, args.length ).clauses += Clause( 0, clause )
       case ClauseAST( clause@AtomAST(r, name) ) =>
         prog.procedure( name, 0 ).clauses += Clause( 0, clause )
@@ -66,18 +66,18 @@ object Compiler {
     implicit val vars = new Vars
 
     ast match {
-      case CompoundAST( r, ":-", List(CompoundAST(_, f, args), body) ) =>
+      case StructureAST( r, ":-", List(StructureAST(_, f, args), body) ) =>
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
           compileConjunct( body )
         }
 
         prog += ReturnInst
-      case CompoundAST( r, ":-", List(AtomAST(_, _), body) ) =>
+      case StructureAST( r, ":-", List(AtomAST(_, _), body) ) =>
         prog += FrameInst( 0 )
         compileConjunct( body )
         prog += ReturnInst
-      case CompoundAST( _, _, args ) =>
+      case StructureAST( _, _, args ) =>
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
         }
@@ -91,9 +91,8 @@ object Compiler {
     vars.count
   }
 
-  private def compileHead( term: TermAST )( implicit prog: Program, vars: Vars ): Unit = {
-    def compileHead( term: TermAST ): Unit =
-      term match {
+  def compileHead( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
+    term match {
 //        case TupleStructureAST( _, args ) =>
 //          code += TypeCheckInst( struc, pos )
 //
@@ -133,29 +132,30 @@ object Compiler {
 //          code += ListTailInst
 //          compileHead( tail, pos, namespaces )
 //        case VariableStructureAST( _, "_", _ ) => code += DropInst
-        case AtomAST( _, n ) =>
-          prog += PushInst( Symbol(n) )
-          prog += UnifyInst
-        case WildcardAST( _ ) => prog += DropInst
-        case VariableAST( _, name ) =>
-          prog += VarInst( vars.num(name) )
-          prog += UnifyInst
+      case AtomAST( _, n ) =>
+        prog += PushInst( Symbol(n) )
+        prog += UnifyInst
+      case WildcardAST( _ ) => prog += DropInst
+      case VariableAST( _, name ) =>
+        prog += VarInst( vars.num(name) )
+        prog += UnifyInst
 //          prog += BindInst( vars.num(n) )
 //        case NamedStructureAST( _, _, s ) =>
 //          code += DupInst
 //          code += BindingInst
 //          compileHead( s, pos, namespaces )
-        case CompoundAST( _, name, args ) =>
-          prog += FunctorInst( Functor(Symbol(name), args.length) )
+      case StructureAST( _, name, args ) =>
+        prog += FunctorInst( Functor(Symbol(name), args.length) )
 
-          args.zipWithIndex.reverse foreach {
-            case (e, i) =>
-              if (i < args.length - 1)
-                prog += DupInst
+        args.zipWithIndex foreach {
+          case (e, i) =>
+            if (i < args.length - 1)
+              prog += DupInst
 
-              prog += ElementInst( i )
-              compileHead( e )
-          }
+            prog += ElementInst( i )
+            compileHead( e )
+            prog += UnifyInst
+        }
 //        case AlternationStructureAST( l ) =>
 //          val jumps = new ArrayBuffer[Int]
 //
@@ -173,33 +173,42 @@ object Compiler {
 //
 //          for (b <- jumps)
 //            code(b) = BranchInst( code.length - b - 1 )
-        case IntegerAST( _, n ) =>
-          prog += PushInst( n )
-          prog += UnifyInst
-        case FloatAST( _, n ) =>
-          prog += PushInst( n )
-          prog += UnifyInst
-      }
+      case n: NumericAST =>
+        prog += PushInst( n.v )
+        prog += UnifyInst
+    }
 
-    compileHead( term )
-  }
+  def ground( term: TermAST ): Boolean =
+    term match {
+      case StructureAST( _, _, args ) => args forall ground
+      case AtomAST( _, _ ) | _: NumericAST => true
+      case WildcardAST( _ ) | VariableAST( _, _ ) => false
+    }
+
+  def constant( term: TermAST ): Any =
+    term match {
+      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toVector )
+      case AtomAST( _, name ) => Symbol( name )
+      case n: NumericAST => n.v
+    }
 
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     term match {
-      case CompoundAST( pos, name, args ) =>
+      case s: StructureAST if ground( s ) =>
+        prog += PushInst( constant(s) )
+      case StructureAST( _, name, args ) =>
         args foreach compileTerm
-        prog += StructureInst( Functor(Symbol(name), args.length) )
+        prog += StructureInst( functor(name, args.length) )
       case AtomAST( pos, name ) =>
         prog += PushInst( Symbol(name) )
       case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
-      case VariableAST( pos, name ) => prog += VarInst( vars.num(name) )
-      case IntegerAST( pos, v ) => prog += PushInst( v )
-      case FloatAST( pos, v ) => prog += PushInst( v )
+      case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
+      case n: NumericAST => prog += PushInst( n.v )
     }
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
-      case CompoundAST( pos, "is", List(VariableAST(r, name), expr) ) =>
+      case StructureAST( pos, "is", List(VariableAST(r, name), expr) ) =>
 //        val exprvars = new mutable.HashSet[(Int, Int)]
 //
 //        def addvar( term: TermAST )( implicit vars: Vars ): Unit =
@@ -225,8 +234,8 @@ object Compiler {
 //        compileExpression( expr, buf )
 //        buf += ResultInstruction( vars.num(name) )
 //        buf.toList
-      case CompoundAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
-      case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
+      case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
+      case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
         prog += PushFrameInst
         args foreach compileTerm
 
@@ -236,10 +245,10 @@ object Compiler {
           case -1 => prog.fixup( f )
           case entry => prog += CallInst( entry )
         }
-      case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
+      case StructureAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
         args foreach compileTerm
         prog += PredicateInst( Builtins.predicates(functor(name, args.length)) )
-      case CompoundAST( pos, name, args ) =>
+      case StructureAST( pos, name, args ) =>
         prog += PushFrameInst
         args foreach compileTerm
         prog += CallIndirectInst( pos, functor(name, args.length) )
@@ -273,7 +282,7 @@ object Compiler {
 
   def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
-      case CompoundAST( r, ",", List(head, tail) ) =>
+      case StructureAST( r, ",", List(head, tail) ) =>
         compileCall( head )
         compileConjunct( tail )
       case t => compileCall( t )

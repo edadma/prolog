@@ -45,16 +45,16 @@ class VM( prog: Program ) {
     trail = Nil
 
     goal match {
-      case CompoundAST( _, name, args ) if prog.defined( name, args.length ) =>
+      case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
         pushFrame
         args foreach interpTerm
         call( prog.procedure(name, args.length).entry )
         run
-      case CompoundAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
+      case StructureAST( _, name, args ) if Builtins.predicates contains functor( name, args.length ) =>
         args foreach interpTerm
         Builtins.predicates(functor(name, args.length))( this )
         Some( vars.map )
-      case CompoundAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
+      case StructureAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
         pushFrame
         call( prog.procedure( name, 0).entry )
@@ -69,7 +69,7 @@ class VM( prog: Program ) {
 
   def interpTerm( term: TermAST )( implicit vars: VarMap ): Unit =
     term match {
-      case CompoundAST( pos, name, args ) =>
+      case StructureAST( pos, name, args ) =>
         args foreach interpTerm
         pushStructure( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) => push( Symbol(name) )
@@ -246,7 +246,6 @@ class VM( prog: Program ) {
     def eval: Any =
       if (bound)
         binding match {
-          case v: Variable if v eq this => sys.error( "self binding" )
           case v: Variable => v.eval
           case v => v
         }
