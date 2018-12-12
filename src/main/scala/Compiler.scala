@@ -194,14 +194,12 @@ object Compiler {
 
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     term match {
-      case s: StructureAST if ground( s ) =>
-        prog += PushInst( constant(s) )
+      case s: StructureAST if ground( s ) => prog += PushInst( constant(s) )
       case StructureAST( _, name, args ) =>
         args foreach compileTerm
         prog += StructureInst( functor(name, args.length) )
-      case AtomAST( pos, name ) =>
-        prog += PushInst( Symbol(name) )
-      case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
+      case AtomAST( pos, name ) => prog += PushInst( Symbol(name) )
+      case WildcardAST( pos ) => prog += PushInst( Wildcard )
       case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
       case n: NumericAST => prog += PushInst( n.v )
     }

@@ -73,7 +73,7 @@ class VM( prog: Program ) {
         args foreach interpTerm
         pushStructure( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) => push( Symbol(name) )
-      case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
+      case WildcardAST( pos ) => push( Wildcard )
       case VariableAST( pos, name ) => push( vars(name) )
       case IntegerAST( pos, v ) => push( v )
       case FloatAST( pos, v ) => push( v )
@@ -200,6 +200,7 @@ class VM( prog: Program ) {
             unify( args1(i), args2(i) )
         else
           fail
+      case (Wildcard, _) | (_, Wildcard) =>
       case _ =>
         if (a != b)
           fail
@@ -207,9 +208,8 @@ class VM( prog: Program ) {
   }
 
   def run = {
-    while (pc >= 0 && success) {
+    while (pc >= 0 && success)
       execute
-    }
 
     if (trace)
       println( dataStack )
@@ -225,13 +225,14 @@ class VM( prog: Program ) {
   }
 
   class Variable {
+    val num = Variable.count
+
     Variable.count += 1
 
-    val num = Variable.count
     var binding: Any = _
     var bound = false
 
-    def unbound = ! bound
+    def unbound = !bound
 
     def bind( v: Any ): Unit = {
       binding = v
@@ -254,9 +255,16 @@ class VM( prog: Program ) {
 
     override def toString: String =
       eval match {
-        case v: Variable => s"_V${v.num}"
+        case v: Variable => s"#${v.num}"
         case v => v.toString
       }
   }
+
+//  object Wildcard extends Variable {
+//    override def bind( v: Any ) {}
+//    override def unbind {}
+//    override def eval = this
+//    override def toString = "_"
+//  }
 
 }

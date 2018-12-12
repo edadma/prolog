@@ -23,4 +23,6 @@ package object prolog {
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 
+  case object Wildcard
+
 }
