@@ -72,22 +72,22 @@ class VM( prog: Program ) {
       case CompoundAST( pos, name, args ) =>
         args foreach interpTerm
         pushCompound( Functor(Symbol(name), args.length) )
-      case AtomAST( pos, name ) => push( AtomData(Symbol(name)) )
+      case AtomAST( pos, name ) => push( Symbol(name) )
       case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
       case VariableAST( pos, name ) => push( vars(name) )
-      case IntegerAST( pos, v ) => push( IntegerData(v) )
-      case FloatAST( pos, v ) => push( FloatData(v) )
+      case IntegerAST( pos, v ) => push( v )
+      case FloatAST( pos, v ) => push( v )
     }
 
   def pushFrame = push( frame )
 
   def pushCompound( f: Functor ): Unit = {
-    val args = new Array[Data]( f.arity )
+    val args = new Array[Any]( f.arity )
 
     for (i <- f.arity - 1 to 0 by -1)
-      args(i) = popData
+      args(i) = popValue
 
-    push( CompoundData(f, args.toVector) )
+    push( Structure(f, args.toVector) )
   }
 
   def top = dataStack.head
@@ -104,8 +104,6 @@ class VM( prog: Program ) {
       case v: Variable => v.eval
       case v => v
     }
-
-  def popData = popValue.asInstanceOf[Data]
 
   def popInt = pop.asInstanceOf[Int]
 
@@ -172,11 +170,11 @@ class VM( prog: Program ) {
         }
       case FunctorInst( f ) =>
         top match {
-          case c: CompoundData if c.functor == f =>
+          case c: Structure if c.functor == f =>
           case _ => fail
         }
       case DupInst => push( top )
-      case EqInst => push( popData == popData )
+      case EqInst => push( popValue == popValue )
       case BranchIfInst( disp ) =>
         if (popBoolean)
           pc += disp
@@ -193,7 +191,7 @@ class VM( prog: Program ) {
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case PredicateInst( pred ) => pred( this )
       case UnifyInst =>
-        val const = popData
+        val const = popValue
 
         popValue match {
           case v: Variable => v bind const

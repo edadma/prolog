@@ -36,7 +36,7 @@ object Compiler {
         clauses.last.vars = compileClause( clauses.last.ast )
         proc.end = prog.pointer
     }
-    
+
     for ((addr, f) <- prog.fixups)
       prog(addr) = CallInst( prog.procedure(f).entry )
   }
@@ -113,7 +113,7 @@ object Compiler {
 //          compileHead( tail, pos, namespaces )
 //        case VariableStructureAST( _, "_", _ ) => code += DropInst
         case AtomAST( _, n ) =>
-          prog += PushAtomicInst( AtomData(Symbol(n)) )
+          prog += PushAtomicInst( Symbol(n) )
           prog += UnifyInst
         case WildcardAST( _ ) => prog += DropInst
         case VariableAST( _, n ) =>
@@ -151,7 +151,7 @@ object Compiler {
 //          for (b <- jumps)
 //            code(b) = BranchInst( code.length - b - 1 )
         case IntegerAST( _, n ) =>
-          prog += PushAtomicInst( IntegerData(n) )
+          prog += PushAtomicInst( n )
           prog += UnifyInst
       }
 
@@ -164,11 +164,11 @@ object Compiler {
         args foreach compileTerm
         prog += PushCompoundInst( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) =>
-        prog += PushAtomicInst( AtomData(Symbol(name)) )
+        prog += PushAtomicInst( Symbol(name) )
       case WildcardAST( pos ) => pos.error( "wildcard not allowed here" )
       case VariableAST( pos, name ) => prog += PushVarInst( vars.num(name) )
-      case IntegerAST( pos, v ) => prog += PushAtomicInst( IntegerData(v) )
-      case FloatAST( pos, v ) => prog += PushAtomicInst( FloatData(v) )
+      case IntegerAST( pos, v ) => prog += PushAtomicInst( v )
+      case FloatAST( pos, v ) => prog += PushAtomicInst( v )
     }
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =

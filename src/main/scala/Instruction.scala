@@ -4,7 +4,7 @@ import xyz.hyperreal.pattern_matcher.Reader
 
 
 abstract class Instruction
-case class PushAtomicInst( d: Data ) extends Instruction
+case class PushAtomicInst( a: Any ) extends Instruction
 case class PushVarInst( n: Int ) extends Instruction
 case class PushCompoundInst( f: Functor ) extends Instruction
 case class PushElementInst( n: Int ) extends Instruction
