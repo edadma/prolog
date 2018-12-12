@@ -149,15 +149,15 @@ class VM( prog: Program ) {
       case PushAtomicInst( d ) => push( d )
       case PushVarInst( n ) => push( frame.vars(n).eval )
       case PushCompoundInst( f ) => pushCompound( f )
-      case PushElementInst( n ) => push( popValue.asInstanceOf[Compound].element(n) )
+      case PushElementInst( n ) => push( popValue.asInstanceOf[Product].productElement(n) )
       case ReturnInst =>
         pc = frame.ret
         frame = pop.asInstanceOf[Frame]
-      case BindInst( n ) =>
-        if (frame.vars(n).bound)
-          unify( frame.vars(n).eval, popValue )
-        else
-          frame.vars(n).bind( popValue )
+//      case BindInst( n ) =>
+//        if (frame.vars(n).bound)
+//          unify( frame.vars(n).eval, popValue )
+//        else
+//          frame.vars(n).bind( popValue )
       case FunctorInst( f ) =>
         top match {
           case c: Structure if c.functor == f =>
@@ -180,18 +180,30 @@ class VM( prog: Program ) {
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case PredicateInst( pred ) => pred( this )
-      case UnifyInst =>
-        val const = popValue
-
-        popValue match {
-          case v: Variable => v bind const
-          case v => if (v != const) fail
-        }
+      case UnifyInst => unify( popValue, popValue )
+//        val const = popValue
+//
+//        popValue match {
+//          case v: Variable => v bind const
+//          case v => if (v != const) fail
+//        }
     }
   }
 
   def unify( a: Any, b: Any ): Unit = {
-
+    (a, b) match {
+      case (a: Variable, _) => a bind b
+      case (_, b: Variable) => b bind a
+      case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
+        if (n1 == n2 && a1 == a2)
+          for (i <- 0 until a1)
+            unify( args1(i), args2(i) )
+        else
+          fail
+      case _ =>
+        if (a != b)
+          fail
+    }
   }
 
   def run = {
@@ -219,6 +231,8 @@ class VM( prog: Program ) {
     var binding: Any = _
     var bound = false
 
+    def unbound = ! bound
+
     def bind( v: Any ): Unit = {
       binding = v
       bound = true
@@ -232,6 +246,7 @@ class VM( prog: Program ) {
     def eval: Any =
       if (bound)
         binding match {
+          case v: Variable if v eq this => sys.error( "self binding" )
           case v: Variable => v.eval
           case v => v
         }

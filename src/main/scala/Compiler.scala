@@ -1,7 +1,28 @@
 package xyz.hyperreal.prolog
 
+import scala.collection.mutable
+
 
 object Compiler {
+
+  class Vars {
+    val vars = new mutable.LinkedHashMap[String, Int]
+
+    def count = vars.size
+
+    def num( name: String ) = {
+      vars get name match {
+        case None =>
+          val n = count
+
+          vars(name) = n
+          n
+        case Some( n ) => n
+      }
+    }
+
+    def get( name: String ) = vars get name
+  }
 
   def compile( ast: PrologAST, prog: Program ): Unit = {
     phase1( ast, prog )
@@ -116,8 +137,10 @@ object Compiler {
           prog += PushAtomicInst( Symbol(n) )
           prog += UnifyInst
         case WildcardAST( _ ) => prog += DropInst
-        case VariableAST( _, n ) =>
-          prog += BindInst( vars.num(n) )
+        case VariableAST( _, name ) =>
+          prog += PushVarInst( vars.num(name) )
+          prog += UnifyInst
+//          prog += BindInst( vars.num(n) )
 //        case NamedStructureAST( _, _, s ) =>
 //          code += DupInst
 //          code += BindingInst
@@ -151,6 +174,9 @@ object Compiler {
 //          for (b <- jumps)
 //            code(b) = BranchInst( code.length - b - 1 )
         case IntegerAST( _, n ) =>
+          prog += PushAtomicInst( n )
+          prog += UnifyInst
+        case FloatAST( _, n ) =>
           prog += PushAtomicInst( n )
           prog += UnifyInst
       }
