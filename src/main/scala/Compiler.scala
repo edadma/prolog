@@ -141,11 +141,6 @@ object Compiler {
       case VariableAST( _, name ) =>
         prog += VarInst( vars.num(name) )
         prog += UnifyInst
-//          prog += BindInst( vars.num(n) )
-//        case NamedStructureAST( _, _, s ) =>
-//          code += DupInst
-//          code += BindingInst
-//          compileHead( s, pos, namespaces )
       case StructureAST( _, name, args ) =>
         prog += FunctorInst( Functor(Symbol(name), args.length) )
 

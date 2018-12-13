@@ -6,6 +6,7 @@ import xyz.hyperreal.pattern_matcher.Reader
 abstract class Instruction
 case class PushInst( a: Any ) extends Instruction
 case class VarInst( n: Int ) extends Instruction
+case class VarUnifyInst( n: Int ) extends Instruction
 case class StructureInst( f: Functor ) extends Instruction
 case class ElementInst( n: Int ) extends Instruction
 case object ReturnInst extends Instruction

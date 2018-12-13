@@ -2,7 +2,6 @@ package xyz.hyperreal.prolog
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayStack
-
 import xyz.hyperreal.lia
 
 
@@ -41,6 +40,28 @@ class VM( prog: Program ) {
   var pc = -1
   var frame: Frame = new Frame( 0, -1 )
 
+  def interpall( goal: TermAST ) = {
+    val resultset = new mutable.HashSet[Map[String, Any]]
+
+    interp( goal ) match {
+      case Some( r ) =>
+        def results( res: Map[String, Any] ): Unit = {
+          resultset += res
+          fail
+
+          run match {
+            case Some( r1 ) => results( r1 )
+            case None =>
+          }
+        }
+
+        results( r )
+      case None =>
+    }
+
+    resultset.toSet
+  }
+
   def interp( goal: TermAST ) = {
     success = true
     vars = new VarMap
@@ -76,7 +97,7 @@ class VM( prog: Program ) {
         pushStructure( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) => push( Symbol(name) )
       case WildcardAST( pos ) => push( Wildcard )
-      case VariableAST( pos, name ) => push( vars(name) )
+      case VariableAST( pos, name ) => push( vars(name).eval )
       case IntegerAST( pos, v ) => push( v )
       case FloatAST( pos, v ) => push( v )
     }
@@ -101,11 +122,11 @@ class VM( prog: Program ) {
     res
   }
 
-  def popValue =
-    pop match {
-      case v: Variable => v.eval
-      case v => v
-    }
+  def popValue = pop
+//    pop match {
+//      case v: Variable => v.eval
+//      case v => v
+//    }
 
   def popInt = pop.asInstanceOf[Int]
 
@@ -149,7 +170,8 @@ class VM( prog: Program ) {
 
     inst match {
       case PushInst( d ) => push( d )
-      case VarInst( n ) => push( frame.vars(n) )
+      case VarInst( n ) => push( frame.vars(n).eval )
+      case VarUnifyInst( n ) => unify( frame.vars(n).eval, popValue )
       case StructureInst( f ) => pushStructure( f )
       case ElementInst( n ) => push( popValue.asInstanceOf[Product].productElement(n) )
       case ReturnInst =>

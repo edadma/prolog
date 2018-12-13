@@ -79,7 +79,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      prog.print
+      //prog.print
     case m: Parser.Mismatch => m.error
   }
 
@@ -89,25 +89,7 @@ object Main extends App {
 
       val vm = new VM( prog ) //{trace = true}
 
-      println( "-----" )
-
-      vm.interp( ast ) match {
-        case Some( r ) =>
-          def results( res: Any ): Unit = {
-            println( res )
-            vm.fail
-
-            vm.run match {
-              case Some( r1 ) => results( r1 )
-              case None =>
-            }
-          }
-
-          results( r )
-        case None =>
-      }
-
-      println( "-----" )
+      println( vm.interpall(ast) )
     case m: Parser.Mismatch => m.error
   }
 
