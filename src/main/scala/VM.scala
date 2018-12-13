@@ -178,7 +178,11 @@ class VM( prog: Program ) {
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case PredicateInst( pred ) => pred( this )
       case UnifyInst => unify( popValue, popValue )
-      case EvalInst( v1, v2 ) => unify( eval(frame.vars(v1).eval), frame.vars(v2) )
+      case EvalInst( pos, name, v1, v2 ) =>
+        frame.vars(v1).eval match {
+          case _: Variable => pos.error( s"variable '$name' is unbound" )
+          case t => unify( eval(t), frame.vars(v2) )
+        }
       case AddInst => push( Math('+, popValue, popValue) )
       case SubInst =>
         val r = popValue

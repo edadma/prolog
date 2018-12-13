@@ -23,6 +23,6 @@ case class PredicateInst( pred: VM => Unit ) extends Instruction
 case object PushFrameInst extends Instruction
 case object UnifyInst extends Instruction
 
-case class EvalInst( v1: Int, v2: Int ) extends Instruction
+case class EvalInst( pos: Reader, name: String, v1: Int, v2: Int ) extends Instruction
 case object AddInst extends Instruction
 case object SubInst extends Instruction

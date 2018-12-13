@@ -1,5 +1,7 @@
 package xyz.hyperreal.prolog
 
+import xyz.hyperreal.pattern_matcher.Reader
+
 import scala.collection.mutable
 
 
@@ -207,7 +209,7 @@ object Compiler {
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
       case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
-        val exprvars = new mutable.HashSet[(Int, Int)]
+        val exprvars = new mutable.HashSet[(Reader, String, Int, Int)]
 
         def addvar( term: TermAST )( implicit vars: Vars ): Unit =
           term match {
@@ -216,7 +218,7 @@ object Compiler {
                 case None => r.error( s"variable '$name' does not occur previously in the clause" )
                 case Some( n ) =>
                   v.name += '\''
-                  exprvars += (n -> vars.num( v.name ))
+                  exprvars += ((r, name, n, vars.num( v.name )))
               }
             case StructureAST( _, _, args ) => args foreach addvar
             case _ =>
@@ -224,8 +226,8 @@ object Compiler {
 
         addvar( expr )
 
-        for ((v, v1) <- exprvars)
-          prog += EvalInst( v, v1 )
+        for ((r, n, v, v1) <- exprvars)
+          prog += EvalInst( r, n, v, v1 )
 
         compileExpression( expr )
         prog += VarInst( vars.num(rname) )

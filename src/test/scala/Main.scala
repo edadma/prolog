@@ -73,7 +73,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-      |go( 14, 15, Ans )
+      |go( 14, V, Ans )
     """.stripMargin
   val prog = new Program
 
