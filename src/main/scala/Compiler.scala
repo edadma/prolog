@@ -138,9 +138,9 @@ object Compiler {
         prog += PushInst( Symbol(n) )
         prog += UnifyInst
       case WildcardAST( _ ) => prog += DropInst
-      case VariableAST( _, name ) =>
-        prog += VarInst( vars.num(name) )
-        prog += UnifyInst
+      case VariableAST( _, name ) => prog += VarUnifyInst( vars.num(name) )
+//        prog += VarInst( vars.num(name) )
+//        prog += UnifyInst
       case StructureAST( _, name, args ) =>
         prog += FunctorInst( Functor(Symbol(name), args.length) )
 
@@ -203,6 +203,12 @@ object Compiler {
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
+      case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
+        compileTerm( right )
+        prog += VarUnifyInst( vars.num(lname) )
+      case StructureAST( pos, "=", List(left, VariableAST(_, rname)) ) =>
+        compileTerm( left )
+        prog += VarUnifyInst( vars.num(rname) )
       case StructureAST( pos, "=", List(left, right) ) =>
         compileTerm( left )
         compileTerm( right )

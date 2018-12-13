@@ -48,6 +48,7 @@ class Program extends Growable[Instruction] {
           println( "  " + (code(i) match {
             case PushInst( d ) => s"push $d"
             case VarInst( n ) => s"pushv $n"
+            case VarUnifyInst( n ) => s"unifyv $n"
             case StructureInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
             case ElementInst( n ) => s"pushe $n"
             case ReturnInst => s"return"

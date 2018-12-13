@@ -79,7 +79,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      //prog.print
+      prog.print
     case m: Parser.Mismatch => m.error
   }
 
