@@ -13,6 +13,11 @@ case object ReturnInst extends Instruction
 case class FunctorInst( f: Functor ) extends Instruction
 case object DupInst extends Instruction
 case object EqInst extends Instruction
+case object NeInst extends Instruction
+case object LtInst extends Instruction
+case object LeInst extends Instruction
+case object GtInst extends Instruction
+case object GeInst extends Instruction
 case class BranchIfInst( disp: Int ) extends Instruction
 case object FailInst extends Instruction
 case class ChoiceInst( disp: Int ) extends Instruction

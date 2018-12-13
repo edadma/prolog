@@ -28,6 +28,8 @@ object Math {
     def apply( vm: VM ) =
       vm.push( method.invoke( obj, (for (_ <- 1 to method.getParameterCount) yield vm.popValue).reverse.
         toArray.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Number] )
+
+    override def toString(): String = s"<function ${method.getName}/${method.getParameterCount}>"
   }
 
   List(

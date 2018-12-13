@@ -67,11 +67,11 @@ object Main extends App {
       |*/
       |
       |
-      |go( X ) :- X = -5.
+      |go( X, Y ) :- X < Y.
     """.stripMargin
   val query =
     """
-      |go( Ans )
+      |go( 3, 4 )
     """.stripMargin
   val prog = new Program
 
@@ -79,7 +79,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      prog.print
+      //prog.print
     case m: Parser.Mismatch => m.error
   }
 

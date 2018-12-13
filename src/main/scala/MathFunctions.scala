@@ -7,4 +7,6 @@ object MathFunctions {
 
   def abs( a: Number ) = lia.Math.absFunction( a )
 
+  def sqrt( a: Number ) = lia.Math.sqrtFunction( a )
+
 }

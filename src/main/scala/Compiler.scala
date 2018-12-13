@@ -31,7 +31,7 @@ object Compiler {
     phase2( prog )
   }
 
-  def phase1( ast: PrologAST, prog: Program ) {
+  def phase1( ast: PrologAST, prog: Program ): Unit =
     ast match {
       case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
       case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, f, args), body)) ) =>
@@ -43,7 +43,6 @@ object Compiler {
       case ClauseAST( clause@AtomAST(r, name) ) =>
         prog.procedure( name, 0 ).clauses += Clause( 0, clause )
     }
-  }
 
   def phase2( implicit prog: Program ) {
     prog.procedures foreach {
@@ -71,13 +70,13 @@ object Compiler {
       case StructureAST( r, ":-", List(StructureAST(_, f, args), body) ) =>
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
-          compileConjunct( body )
+          compileBody( body )
         }
 
         prog += ReturnInst
       case StructureAST( r, ":-", List(AtomAST(_, _), body) ) =>
         prog += FrameInst( 0 )
-        compileConjunct( body )
+        compileBody( body )
         prog += ReturnInst
       case StructureAST( _, _, args ) =>
         prog.patch( (_, _) => FrameInst(vars.count) ) {
@@ -133,14 +132,11 @@ object Compiler {
 //          compileHead( head, pos, namespaces )
 //          code += ListTailInst
 //          compileHead( tail, pos, namespaces )
-//        case VariableStructureAST( _, "_", _ ) => code += DropInst
       case AtomAST( _, n ) =>
         prog += PushInst( Symbol(n) )
         prog += UnifyInst
       case WildcardAST( _ ) => prog += DropInst
       case VariableAST( _, name ) => prog += VarUnifyInst( vars.num(name) )
-//        prog += VarInst( vars.num(name) )
-//        prog += UnifyInst
       case StructureAST( _, name, args ) =>
         prog += FunctorInst( Functor(Symbol(name), args.length) )
 
@@ -214,30 +210,34 @@ object Compiler {
         compileTerm( right )
         prog += UnifyInst
       case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
-        val exprvars = new mutable.HashSet[(Reader, String, Int, Int)]
-
-        def addvar( term: TermAST )( implicit vars: Vars ): Unit =
-          term match {
-            case v@VariableAST( r, name ) =>
-              vars get name match {
-                case None => r.error( s"variable '$name' does not occur previously in the clause" )
-                case Some( n ) =>
-                  v.name += '\''
-                  exprvars += ((r, name, n, vars.num( v.name )))
-              }
-            case StructureAST( _, _, args ) => args foreach addvar
-            case _ =>
-          }
-
-        addvar( expr )
-
-        for ((r, n, v, v1) <- exprvars)
-          prog += EvalInst( r, n, v, v1 )
-
-        compileExpression( expr )
+        compileArithmetic( expr )
         prog += VarInst( vars.num(rname) )
         prog += UnifyInst
       case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
+      case StructureAST( pos, "=:=", List(left, right) ) =>
+        compileArithmetic( left )
+        compileArithmetic( right )
+        prog += EqInst
+      case StructureAST( pos, "=\\=", List(left, right) ) =>
+        compileArithmetic( left )
+        compileArithmetic( right )
+        prog += NeInst
+      case StructureAST( pos, "<", List(left, right) ) =>
+        compileArithmetic( left )
+        compileArithmetic( right )
+        prog += LtInst
+      case StructureAST( pos, "=<", List(left, right) ) =>
+        compileArithmetic( left )
+        compileArithmetic( right )
+        prog += LeInst
+      case StructureAST( pos, ">", List(left, right) ) =>
+        compileArithmetic( left )
+        compileArithmetic( right )
+        prog += GtInst
+      case StructureAST( pos, ">=", List(left, right) ) =>
+        compileArithmetic( left )
+        compileArithmetic( right )
+        prog += GeInst
       case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
         prog += PushFrameInst
         args foreach compileTerm
@@ -271,6 +271,30 @@ object Compiler {
         prog += CallIndirectInst( pos, functor(name, 0) )
     }
 
+  def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {
+    val exprvars = new mutable.HashSet[(Reader, String, Int, Int)]
+
+    def addvar( term: TermAST )( implicit vars: Vars ): Unit =
+      term match {
+        case v@VariableAST( r, name ) =>
+          vars get name match {
+            case None => r.error( s"variable '$name' does not occur previously in the clause" )
+            case Some( n ) =>
+              v.name += '\''
+              exprvars += ((r, name, n, vars.num( v.name )))
+          }
+        case StructureAST( _, _, args ) => args foreach addvar
+        case _ =>
+      }
+
+    addvar( expr )
+
+    for ((r, n, v, v1) <- exprvars)
+      prog += EvalInst( r, n, v, v1 )
+
+    compileExpression( expr )
+  }
+
   def compileExpression( expr: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     expr match {
       case x: NumericAST => prog += PushInst( x.v )
@@ -298,11 +322,11 @@ object Compiler {
       case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
     }
 
-  def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
+  def compileBody( ast: PrologAST )(implicit prog: Program, vars: Vars ): Unit =
     ast match {
       case StructureAST( r, ",", List(head, tail) ) =>
-        compileCall( head )
-        compileConjunct( tail )
+        compileBody( head )
+        compileBody( tail )
       case t => compileCall( t )
     }
 

@@ -25,11 +25,12 @@ object Builtin {
     }
 
   class Predicate( obj: Any, method: Method ) extends (VM => Unit) {
-    def apply( vm: VM ): Unit = {
+    def apply( vm: VM ): Unit =
       if(!method.invoke( obj, (for (_ <- 1 to method.getParameterCount) yield vm.popValue).reverse.
         toArray.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Boolean])
         vm.fail
-    }
+
+    override def toString(): String = s"<predicate ${method.getName}/${method.getParameterCount}>"
   }
 
   List(

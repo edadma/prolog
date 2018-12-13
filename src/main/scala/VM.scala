@@ -5,7 +5,23 @@ import scala.collection.mutable.ArrayStack
 import xyz.hyperreal.lia
 
 
+object VM {
+
+  val FM_EQ = lia.Math.lookup( '== )
+  val FM_NE = lia.Math.lookup( '!= )
+  val FM_LT = lia.Math.lookup( '< )
+  val FM_LE = lia.Math.lookup( '<= )
+  val FM_GT = lia.Math.lookup( '> )
+  val FM_GE = lia.Math.lookup( '>= )
+
+  val FM_ADD = lia.Math.lookup( '+ )
+  val FM_SUB = lia.Math.lookup( '- )
+
+}
+
 class VM( prog: Program ) {
+
+  import VM._
 
   var trace = false
   var success = true
@@ -183,7 +199,12 @@ class VM( prog: Program ) {
           case _ => fail
         }
       case DupInst => push( top )
-      case EqInst => push( popValue == popValue )
+      case EqInst => if (!lia.Math.predicate( FM_EQ, popValue, popValue )) fail
+      case NeInst => if (!lia.Math.predicate( FM_NE, popValue, popValue )) fail
+      case GtInst => if (!lia.Math.predicate( FM_LT, popValue, popValue )) fail
+      case GeInst => if (!lia.Math.predicate( FM_LE, popValue, popValue )) fail
+      case LtInst => if (!lia.Math.predicate( FM_GT, popValue, popValue )) fail
+      case LeInst => if (!lia.Math.predicate( FM_GE, popValue, popValue )) fail
       case BranchIfInst( disp ) =>
         if (popBoolean)
           pc += disp
@@ -205,11 +226,11 @@ class VM( prog: Program ) {
           case _: Variable => pos.error( s"variable '$name' is unbound" )
           case t => unify( eval(t), frame.vars(v2) )
         }
-      case AddInst => push( lia.Math('+, popValue, popValue) )
+      case AddInst => push( lia.Math(FM_ADD, popValue, popValue) )
       case SubInst =>
         val r = popValue
 
-        push( lia.Math('-, popValue, r) )
+        push( lia.Math(FM_SUB, popValue, r) )
       case NegInst => push( lia.Math('-, popValue) )
     }
   }
@@ -222,7 +243,8 @@ class VM( prog: Program ) {
         val r = eval( right )
 
         operator match {
-          case "+" => lia.Math( '+, l, r ).asInstanceOf[Number]
+          case "+" => lia.Math( FM_ADD, l, r ).asInstanceOf[Number]
+          case "-" => lia.Math( FM_SUB, l, r ).asInstanceOf[Number]
         }
     }
 
