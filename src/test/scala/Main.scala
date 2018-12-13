@@ -55,7 +55,7 @@ object Main extends App {
       |hobby(tim,sailing).
       |hobby(helen,trainspotting).
       |hobby(simon,sailing).
-      |*/
+      |
       |
       |parent(john,paul).             // paul is john's parent
       |parent(paul,tom).              // tom is paul's parent
@@ -67,12 +67,13 @@ object Main extends App {
       |
       |
       |X = X.
+      |*/
       |
-      |go( X ) :- X is 1 + 2.
+      |go( A, B, X ) :- X is A + B.
     """.stripMargin
   val query =
     """
-      |go( X )
+      |go( 14, 15, Ans )
     """.stripMargin
   val prog = new Program
 
@@ -80,7 +81,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      prog.print
+      //prog.print
     case m: Parser.Mismatch => m.error
   }
 

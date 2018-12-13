@@ -155,11 +155,6 @@ class VM( prog: Program ) {
       case ReturnInst =>
         pc = frame.ret
         frame = pop.asInstanceOf[Frame]
-//      case BindInst( n ) =>
-//        if (frame.vars(n).bound)
-//          unify( frame.vars(n).eval, popValue )
-//        else
-//          frame.vars(n).bind( popValue )
       case FunctorInst( f ) =>
         top match {
           case c: Structure if c.functor == f =>
@@ -183,8 +178,12 @@ class VM( prog: Program ) {
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case PredicateInst( pred ) => pred( this )
       case UnifyInst => unify( popValue, popValue )
-      case EvalInst( v1, v2 ) =>
-        unify( eval(frame.vars(v1).eval), v2 )
+      case EvalInst( v1, v2 ) => unify( eval(frame.vars(v1).eval), frame.vars(v2) )
+      case AddInst => push( Math('+, popValue, popValue) )
+      case SubInst =>
+        val r = popValue
+
+        push( Math('-, popValue, r) )
     }
   }
 
