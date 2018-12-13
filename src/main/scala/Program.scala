@@ -51,7 +51,6 @@ class Program extends Growable[Instruction] {
             case StructureInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
             case ElementInst( n ) => s"pushe $n"
             case ReturnInst => s"return"
-//            case BindInst( n ) => s"bind $n"
             case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"
             case DupInst => "dup"
             case EqInst => "eq"
@@ -64,6 +63,8 @@ class Program extends Growable[Instruction] {
             case FrameInst( vars ) => s"frame $vars"
             case PredicateInst( pred ) => s"pred $pred"
             case UnifyInst => "unify"
+            case EvalInst( v1, v2 ) => s"eval $v1 $v2"
+            case AddInst => "add"
           }) )
         }
 

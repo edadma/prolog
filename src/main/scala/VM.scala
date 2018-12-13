@@ -3,6 +3,8 @@ package xyz.hyperreal.prolog
 import scala.collection.mutable
 import scala.collection.mutable.ArrayStack
 
+import xyz.hyperreal.lia.Math
+
 
 class VM( prog: Program ) {
 
@@ -182,19 +184,19 @@ class VM( prog: Program ) {
       case PredicateInst( pred ) => pred( this )
       case UnifyInst => unify( popValue, popValue )
       case EvalInst( v1, v2 ) =>
-
+        unify( eval(frame.vars(v1).eval), v2 )
     }
   }
 
   def eval( term: Any ): Number =
     term match {
       case n: Number => n
-      case Structure( Functor(Symbol(operator@("+"|"-")), arity), List(left, right) ) =>
+      case Structure( Functor(Symbol(operator@("+"|"-")), arity), Vector(left, right) ) =>
         val l = eval( left )
         val r = eval( right )
 
         operator match {
-          case "+" =>
+          case "+" => Math( '+, l, r ).asInstanceOf[Number]
         }
     }
 
