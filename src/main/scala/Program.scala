@@ -61,9 +61,9 @@ class Program extends Growable[Instruction] {
             case DropInst => "drop"
             case PushFrameInst => "pushfr"
             case FrameInst( vars ) => s"frame $vars"
-            case PredicateInst( pred ) => s"pred $pred"
+            case NativeInst( pred ) => s"pred $pred"
             case UnifyInst => "unify"
-            case EvalInst( v1, v2 ) => s"eval $v1 $v2"
+            case EvalInst( _, _, v1, v2 ) => s"eval $v1 $v2"
             case AddInst => "add"
           }) )
         }

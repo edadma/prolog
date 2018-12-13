@@ -3,7 +3,7 @@ package xyz.hyperreal.prolog
 import scala.collection.mutable
 import scala.collection.mutable.ArrayStack
 
-import xyz.hyperreal.lia.Math
+import xyz.hyperreal.lia
 
 
 class VM( prog: Program ) {
@@ -176,18 +176,19 @@ class VM( prog: Program ) {
       case DropInst => pop
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
-      case PredicateInst( pred ) => pred( this )
+      case NativeInst( func ) => func( this )
       case UnifyInst => unify( popValue, popValue )
       case EvalInst( pos, name, v1, v2 ) =>
         frame.vars(v1).eval match {
           case _: Variable => pos.error( s"variable '$name' is unbound" )
           case t => unify( eval(t), frame.vars(v2) )
         }
-      case AddInst => push( Math('+, popValue, popValue) )
+      case AddInst => push( lia.Math('+, popValue, popValue) )
       case SubInst =>
         val r = popValue
 
-        push( Math('-, popValue, r) )
+        push( lia.Math('-, popValue, r) )
+      case NegInst => push( lia.Math('-, popValue) )
     }
   }
 
@@ -199,7 +200,7 @@ class VM( prog: Program ) {
         val r = eval( right )
 
         operator match {
-          case "+" => Math( '+, l, r ).asInstanceOf[Number]
+          case "+" => lia.Math( '+, l, r ).asInstanceOf[Number]
         }
     }
 

@@ -208,6 +208,10 @@ object Compiler {
 
   def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
+      case StructureAST( pos, "=", List(left, right) ) =>
+        compileTerm( left )
+        compileTerm( right )
+        prog += UnifyInst
       case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
         val exprvars = new mutable.HashSet[(Reader, String, Int, Int)]
 
@@ -245,7 +249,7 @@ object Compiler {
         }
       case StructureAST( _, name, args ) if Builtin exists functor( name, args.length ) =>
         args foreach compileTerm
-        prog += PredicateInst( Builtin.predicate(functor(name, args.length)) )
+        prog += NativeInst( Builtin.predicate(functor(name, args.length)) )
       case StructureAST( pos, name, args ) =>
         prog += PushFrameInst
         args foreach compileTerm
@@ -260,8 +264,10 @@ object Compiler {
           case entry => prog += CallInst( entry )
         }
       case AtomAST( _, name ) if Builtin exists functor( name, 0 ) =>
-        prog += PredicateInst( Builtin.predicate(functor( name, 0)) )
-      case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
+        prog += NativeInst( Builtin.predicate(functor( name, 0)) )
+      case AtomAST( pos, name ) =>
+        prog += PushFrameInst
+        prog += CallIndirectInst( pos, functor(name, 0) )
     }
 
   def compileExpression( expr: TermAST )( implicit prog: Program, vars: Vars ): Unit =
@@ -276,6 +282,19 @@ object Compiler {
             case "+" => AddInst
             case "-" => SubInst
           })
+      case StructureAST( pos, op@("-"), List(arg) ) =>
+        compileExpression( arg )
+        prog +=
+          (op match {
+            case "-" => NegInst
+          })
+      case StructureAST( _, name, args ) if Math exists functor( name, args.length ) =>
+        args foreach compileTerm
+        prog += NativeInst( Math.function(functor(name, args.length)) )
+      case StructureAST( pos, name, args ) => pos.error( s"function $name/${args.length} not found" )
+      case AtomAST( _, name ) if Math exists functor( name, 0 ) =>
+        prog += NativeInst( Math.function(functor( name, 0)) )
+      case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
     }
 
   def compileConjunct( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =

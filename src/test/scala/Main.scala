@@ -64,16 +64,14 @@ object Main extends App {
       |ancestor(X,Y) :- parent(X,Y).  // someone is your ancestor if there are your parent
       |ancestor(X,Y) :- parent(X,Z),  // or somebody is your ancestor if they are the parent
       |    ancestor(Z,Y).             // of someone who is your ancestor
-      |
-      |
-      |X = X.
       |*/
       |
-      |go( A, B, X ) :- X is A + B.
+      |
+      |go( X ) :- X = -5.
     """.stripMargin
   val query =
     """
-      |go( 14, V, Ans )
+      |go( Ans )
     """.stripMargin
   val prog = new Program
 
@@ -81,7 +79,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      //prog.print
+      prog.print
     case m: Parser.Mismatch => m.error
   }
 

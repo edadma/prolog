@@ -1,6 +1,7 @@
 package xyz.hyperreal.prolog
 
 import xyz.hyperreal.pattern_matcher._
+import xyz.hyperreal.lia
 
 
 object Parser extends Matchers[StringReader] {
@@ -26,7 +27,13 @@ object Parser extends Matchers[StringReader] {
     ".", "[", "|", "]", "(", ")"
   )
 
-  def unary( pos: Reader, o: String, x: TermAST ) = StructureAST( pos, o, List(x) )
+  def unary( pos: Reader, o: String, x: TermAST ) =
+    (o, x) match {
+      case ("-", IntegerAST( r, v )) => IntegerAST( r, -v )
+      case ("-", FloatAST( r, v )) => FloatAST( r, -v )
+      case _ => StructureAST( pos, o, List(x) )
+    }
+
   def binary( pos: Reader, o: String, x: TermAST, y: TermAST ) = StructureAST( pos, o, List(x, y) )
 
   def mkterm( result: Any ) =
@@ -46,8 +53,8 @@ object Parser extends Matchers[StringReader] {
 
   def p1200 =
     p1100 ~ pos ~ (":-"|"-->") ~ p1100 ^^ mkterm |
-      pos ~ (":-"|"?-") ~ p1100 ^^ mkterm |
-      p1100
+    pos ~ (":-"|"?-") ~ p1100 ^^ mkterm |
+    p1100
 
   def assoc( result: Any ) = {
     result match {
@@ -57,23 +64,23 @@ object Parser extends Matchers[StringReader] {
 
   def p1100: Matcher[TermAST] =
     p1050 ~ ";" ~ p1100 ^^ mkterm |
-      p1050
+    p1050
 
   def p1050: Matcher[TermAST] =
     p1000 ~ pos ~ "->" ~ p1050 ^^ mkterm |
-      p1000
+    p1000
 
   def p1000: Matcher[TermAST] =
     p900 ~ pos ~ "," ~ p1000 ^^ mkterm |
-      p900
+    p900
 
   def p900: Matcher[TermAST] =
     pos ~ "\\+" ~ p900 ^^ mkterm |
-      p700
+    p700
 
   def p700 =
     p500 ~ pos ~ ("="|"\\="|"=="|"\\=="|"@<"|"@=<"|"@>"|"@>="|"=.."|"is"|"=:="|"=\\="|"<"|"=<"|">"|">=") ~ p500 ^^ mkterm |
-      p500
+    p500
 
   def p500 = p400 ~ rep(pos ~ ("+"|"-"|"/\\"|"\\/") ~ p400) ^^ assoc
 
@@ -81,18 +88,18 @@ object Parser extends Matchers[StringReader] {
 
   def p200: Matcher[TermAST] =
     p0 ~ pos ~ "**" ~ p0 ^^ mkterm |
-      p0 ~ pos ~ "^" ~ p200 ^^ mkterm |
-      pos ~ ("-"|"\\") ~ p200 ^^ mkterm |
-      p0
+    p0 ~ pos ~ "^" ~ p200 ^^ mkterm |
+    pos ~ ("-"|"\\") ~ p200 ^^ mkterm |
+    p0
 
   def p0 =
     pos ~ integerLit ^^ { case p ~ n => IntegerAST( p, n ) } |
-      "(" ~> term <~ ")" |
-      pos ~ identOrReserved ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
-        case p ~ n ~ _ ~ a ~ _ => StructureAST( p, n, a ) } |
-      pos ~ identOrReserved ^^ {
-        case p ~ "_" => WildcardAST( p )
-        case p ~ a if a.head.isLower => AtomAST( p, a )
-        case p ~ a => VariableAST( p, a ) }
+    "(" ~> term <~ ")" |
+    pos ~ identOrReserved ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
+      case p ~ n ~ _ ~ a ~ _ => StructureAST( p, n, a ) } |
+    pos ~ identOrReserved ^^ {
+      case p ~ "_" => WildcardAST( p )
+      case p ~ a if a.head.isLower => AtomAST( p, a )
+      case p ~ a => VariableAST( p, a ) }
 
 }

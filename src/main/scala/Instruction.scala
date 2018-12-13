@@ -19,10 +19,11 @@ case class CallInst( entry: Int ) extends Instruction
 case class CallIndirectInst( pos: Reader, f: Functor ) extends Instruction
 case object DropInst extends Instruction
 case class FrameInst( vars: Int ) extends Instruction
-case class PredicateInst( pred: VM => Unit ) extends Instruction
+case class NativeInst( func: VM => Unit ) extends Instruction
 case object PushFrameInst extends Instruction
 case object UnifyInst extends Instruction
 
 case class EvalInst( pos: Reader, name: String, v1: Int, v2: Int ) extends Instruction
 case object AddInst extends Instruction
 case object SubInst extends Instruction
+case object NegInst extends Instruction
