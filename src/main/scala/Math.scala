@@ -26,7 +26,7 @@ object Math {
 
   class Function( obj: Any, method: Method ) extends (VM => Unit) {
     def apply( vm: VM ) =
-      vm.push( method.invoke( obj, (for (_ <- 1 to method.getParameterCount) yield vm.popValue).reverse.
+      vm.push( method.invoke( obj, (for (_ <- 1 to method.getParameterCount) yield vm.pop).reverse.
         toArray.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Number] )
 
     override def toString(): String = s"<function ${method.getName}/${method.getParameterCount}>"

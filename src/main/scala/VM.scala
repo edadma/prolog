@@ -112,7 +112,7 @@ class VM( prog: Program ) {
         args foreach interpTerm
         pushStructure( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) => push( Symbol(name) )
-      case WildcardAST( pos ) => push( Wildcard )
+      case WildcardAST( pos ) => push( WILDCARD )
       case VariableAST( pos, name ) => push( vars(name).eval )
       case IntegerAST( pos, v ) => push( v )
       case FloatAST( pos, v ) => push( v )
@@ -124,9 +124,9 @@ class VM( prog: Program ) {
     val args = new Array[Any]( f.arity )
 
     for (i <- f.arity - 1 to 0 by -1)
-      args(i) = popValue
+      args(i) = pop
 
-    push( Structure(f, args.toVector) )
+    push( Structure(f, args) )
   }
 
   def top = dataStack.head
@@ -137,12 +137,6 @@ class VM( prog: Program ) {
     dataStack = dataStack.tail
     res
   }
-
-  def popValue = pop
-//    pop match {
-//      case v: Variable => v.eval
-//      case v => v
-//    }
 
   def popInt = pop.asInstanceOf[Int]
 
@@ -187,24 +181,37 @@ class VM( prog: Program ) {
     inst match {
       case PushInst( d ) => push( d )
       case VarInst( n ) => push( frame.vars(n).eval )
-      case VarUnifyInst( n ) => unify( frame.vars(n).eval, popValue )
+      case VarUnifyInst( n ) => unify( frame.vars(n).eval, pop )
       case StructureInst( f ) => pushStructure( f )
-      case ElementInst( n ) => push( popValue.asInstanceOf[Product].productElement(n) )
+      case ElementUnifyInst( n ) =>
+        val v = pop
+        val s = pop.asInstanceOf[Compound]
+
+        s productElement n match {
+          case EMPTY => s.update( n, v )
+          case e => unify( e, v )
+        }
       case ReturnInst =>
         pc = frame.ret
         frame = pop.asInstanceOf[Frame]
       case FunctorInst( f ) =>
         top match {
+          case v: Variable =>
+            val s = Structure( f, Array.fill(f.arity)(EMPTY) )
+
+            v bind s
+            pop
+            push( s )
           case c: Structure if c.functor == f =>
           case _ => fail
         }
       case DupInst => push( top )
-      case EqInst => if (!lia.Math.predicate( FM_EQ, popValue, popValue )) fail
-      case NeInst => if (!lia.Math.predicate( FM_NE, popValue, popValue )) fail
-      case GtInst => if (!lia.Math.predicate( FM_LT, popValue, popValue )) fail
-      case GeInst => if (!lia.Math.predicate( FM_LE, popValue, popValue )) fail
-      case LtInst => if (!lia.Math.predicate( FM_GT, popValue, popValue )) fail
-      case LeInst => if (!lia.Math.predicate( FM_GE, popValue, popValue )) fail
+      case EqInst => if (!lia.Math.predicate( FM_EQ, pop, pop )) fail
+      case NeInst => if (!lia.Math.predicate( FM_NE, pop, pop )) fail
+      case GtInst => if (!lia.Math.predicate( FM_LT, pop, pop )) fail
+      case GeInst => if (!lia.Math.predicate( FM_LE, pop, pop )) fail
+      case LtInst => if (!lia.Math.predicate( FM_GT, pop, pop )) fail
+      case LeInst => if (!lia.Math.predicate( FM_GE, pop, pop )) fail
       case BranchIfInst( disp ) =>
         if (popBoolean)
           pc += disp
@@ -220,25 +227,25 @@ class VM( prog: Program ) {
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case NativeInst( func ) => func( this )
-      case UnifyInst => unify( popValue, popValue )
+      case UnifyInst => unify( pop, pop )
       case EvalInst( pos, name, v1, v2 ) =>
         frame.vars(v1).eval match {
           case _: Variable => pos.error( s"variable '$name' is unbound" )
           case t => unify( eval(t), frame.vars(v2) )
         }
-      case AddInst => push( lia.Math(FM_ADD, popValue, popValue) )
+      case AddInst => push( lia.Math(FM_ADD, pop, pop) )
       case SubInst =>
-        val r = popValue
+        val r = pop
 
-        push( lia.Math(FM_SUB, popValue, r) )
-      case NegInst => push( lia.Math('-, popValue) )
+        push( lia.Math(FM_SUB, pop, r) )
+      case NegInst => push( lia.Math('-, pop) )
     }
   }
 
   def eval( term: Any ): Number =
     term match {
       case n: Number => n
-      case Structure( Functor(Symbol(operator@("+"|"-")), arity), Vector(left, right) ) =>
+      case Structure( Functor(Symbol(operator@("+"|"-")), _), Array(left, right) ) =>
         val l = eval( left )
         val r = eval( right )
 
@@ -246,11 +253,12 @@ class VM( prog: Program ) {
           case "+" => lia.Math( FM_ADD, l, r ).asInstanceOf[Number]
           case "-" => lia.Math( FM_SUB, l, r ).asInstanceOf[Number]
         }
+      case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
     }
 
-  def unify( a: Any, b: Any ): Unit = {
+  def unify( a: Any, b: Any ): Unit =
     (a, b) match {
-      case (Wildcard, _) | (_, Wildcard) =>
+      case (WILDCARD, _) | (_, WILDCARD) =>
       case (a: Variable, _) => a bind b
       case (_, b: Variable) => b bind a
       case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
@@ -263,7 +271,6 @@ class VM( prog: Program ) {
         if (a != b)
           fail
     }
-  }
 
   def run = {
     while (pc >= 0 && success)

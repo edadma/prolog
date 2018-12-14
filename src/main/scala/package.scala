@@ -12,32 +12,40 @@ package object prolog {
   val NIL = Symbol( "[]" )
   val CONS = Functor( Symbol("."), 2 )
 
+  case object WILDCARD {
+    override def toString = "_"
+  }
+
+  object EMPTY
+
   case class Functor( name: Symbol, arity: Int )
 
   case class Procedure( func: Functor, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer )
 
   case class Clause( var vars: Int, ast: TermAST )
 
-  case class Structure( functor: Functor, args: Vector[Any] ) extends Product {
+  trait Compound extends Product {
+    def update( n: Int, value: Any )
+  }
+
+  case class Structure( functor: Functor, args: Array[Any] ) extends Compound {
     override def productArity = args.length
 
     override def productElement( n: Int ) = args( n )
+
+    def update( n: Int, v: Any ) = args(n) = v
   }
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 
-  case object Wildcard {
-    override def toString: String = "_"
-  }
-
   def display( a: Any ): String =
     a match {
       case Symbol( s ) => s
-      case Structure( CONS, Vector(_, _) ) =>
+      case Structure( CONS, Array(_, _) ) =>
         def elems( term: Any, buf: StringBuilder = new StringBuilder ): String =
           term match {
             case NIL => buf.toString
-            case Structure( CONS, Vector(hd, tl) ) =>
+            case Structure( CONS, Array(hd, tl) ) =>
               buf ++= display( hd )
 
               tl match {

@@ -145,9 +145,8 @@ object Compiler {
             if (i < args.length - 1)
               prog += DupInst
 
-            prog += ElementInst( i )
-            compileHead( e )
-            prog += UnifyInst
+            compileTerm( e )
+            prog += ElementUnifyInst( i )
         }
 //        case AlternationStructureAST( l ) =>
 //          val jumps = new ArrayBuffer[Int]
@@ -180,7 +179,7 @@ object Compiler {
 
   def constant( term: TermAST ): Any =
     term match {
-      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toVector )
+      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toArray )
       case AtomAST( _, name ) => Symbol( name )
       case n: NumericAST => n.v
     }
@@ -192,7 +191,7 @@ object Compiler {
         args foreach compileTerm
         prog += StructureInst( functor(name, args.length) )
       case AtomAST( pos, name ) => prog += PushInst( Symbol(name) )
-      case WildcardAST( pos ) => prog += PushInst( Wildcard )
+      case WildcardAST( pos ) => prog += PushInst( WILDCARD )
       case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
       case n: NumericAST => prog += PushInst( n.v )
     }

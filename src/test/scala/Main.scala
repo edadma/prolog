@@ -64,14 +64,24 @@ object Main extends App {
       |ancestor(X,Y) :- parent(X,Y).  // someone is your ancestor if there are your parent
       |ancestor(X,Y) :- parent(X,Z),  // or somebody is your ancestor if they are the parent
       |    ancestor(Z,Y).             // of someone who is your ancestor
+      |
+      |
+      |concat( [], L, L ).
+      |
+      |concat( [E | L1], L2, [E | L3] ) :-
+      |  concat( L1, L2, L3 ).
+      |
+      |append( [], E, [E] ).
+      |
+      |append( [A | L1], B, [A | L2] ) :- append( L1, B, L2 ).
       |*/
       |
-      |
-      |go( X ) :- X = [1 | _].
+      |go( a(b, c) ).
     """.stripMargin
   val query =
     """
-      |go( X )
+      |go( a(X, c) )
+      |//append( [], 4, L )
     """.stripMargin
   val prog = new Program
 
@@ -88,10 +98,8 @@ object Main extends App {
       //println( ast )
 
       val vm = new VM( prog ) //{trace = true}
-      val sols =
-        vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)})
 
-      println( sols )
+      println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
     case m: Parser.Mismatch => m.error
   }
 
