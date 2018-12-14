@@ -66,21 +66,19 @@ object Main extends App {
       |    ancestor(Z,Y).             // of someone who is your ancestor
       |*/
       |
-      |concat( [], L, L ).
-      |
-      |concat( [E | L1], L2, [E | L3] ) :-
-      |  concat( L1, L2, L3 ).
-      |
-      |//append( [], E, [E] ).
-      |
-      |//append( [A | L1], B, [A | L2] ) :- append( L1, B, L2 ).
+      |append( [], L, L ).
+      |append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
       |
       |
-      |//go( a(b, c) ).
+      |//member(T,[T|_]).
+      |//member(X,[_|Q]) :- member(X,Q).
+      |
+      |//go( X ) :- X = a( Y ), Y = b.
     """.stripMargin
   val query =
     """
-      |concat( [3], [], L )
+      |//go( R )
+      |append( [1], [], L )
     """.stripMargin
   val prog = new Program
 
@@ -88,7 +86,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      //prog.print
+      prog.print
     case m: Parser.Mismatch => m.error
   }
 
@@ -96,7 +94,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
 
-      val vm = new VM( prog ) //{trace = true}
+      val vm = new VM( prog ) {trace = true}
 
       println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
     case m: Parser.Mismatch => m.error

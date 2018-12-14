@@ -63,12 +63,10 @@ package object prolog {
         s"[${elems( a )}]"
       case Structure( Functor(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
       case v: VM#Variable =>
-        val x = v.eval
-
-        if (x.isInstanceOf[VM#Variable])
-          x.toString
-        else
-          display( x )
+        v.eval match {
+          case x: VM#Variable => x.toString
+          case x => display( x )
+        }
       case _ => a.toString
     }
 

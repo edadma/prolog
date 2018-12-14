@@ -48,6 +48,8 @@ class VM( prog: Program ) {
 
   class Frame( size: Int, val ret: Int ) {
     val vars = Array.fill[Variable]( size )( new Variable )
+
+    override def toString: String = s"[frame size=$size ret=$ret]"
   }
 
   val choiceStack = new ArrayStack[State]
@@ -303,23 +305,34 @@ class VM( prog: Program ) {
     def unbound = !bound
 
     def bind( v: Any ): Unit = {
-      binding = v
-      bound = true
-      trail ::= this
+      val last = end
+
+      last.binding = v
+      last.bound = true
+      trail ::= last
     }
 
     def unbind: Unit = {
       bound = false
     }
 
-    def eval: Any =
+    def end: Variable =
       if (bound)
         binding match {
-          case v: Variable => v.eval
-          case v => v
+          case v: Variable => v.end
+          case _ => this
         }
       else
         this
+
+    def eval = {
+      val last = end
+
+      if (last.bound)
+        last.binding
+      else
+        last
+    }
 
     override def toString: String =
       eval match {
@@ -327,12 +340,5 @@ class VM( prog: Program ) {
         case v => v.toString
       }
   }
-
-//  object Wildcard extends Variable {
-//    override def bind( v: Any ) {}
-//    override def unbind {}
-//    override def eval = this
-//    override def toString = "_"
-//  }
 
 }
