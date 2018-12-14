@@ -67,7 +67,7 @@ object Main extends App {
       |*/
       |
       |
-      |go( X ) :- X = [1 | [2 | [3]]].
+      |go( X ) :- X = [1 | _].
     """.stripMargin
   val query =
     """

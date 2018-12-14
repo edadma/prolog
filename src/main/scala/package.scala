@@ -26,15 +26,17 @@ package object prolog {
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 
-  case object Wildcard
+  case object Wildcard {
+    override def toString: String = "_"
+  }
 
   def display( a: Any ): String =
     a match {
       case Symbol( s ) => s
-      case Structure( Functor(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
       case Structure( CONS, Vector(_, _) ) =>
         def elems( term: Any, buf: StringBuilder = new StringBuilder ): String =
           term match {
+            case NIL => buf.toString
             case Structure( CONS, Vector(hd, tl) ) =>
               buf ++= display( hd )
 
@@ -51,6 +53,7 @@ package object prolog {
           }
 
         s"[${elems( a )}]"
+      case Structure( Functor(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
       case _ => a.toString
     }
 
