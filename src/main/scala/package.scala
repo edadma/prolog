@@ -55,13 +55,20 @@ package object prolog {
               }
 
               elems( tl, buf )
-            case a =>
-              buf ++= display( a )
+            case e =>
+              buf ++= display( e )
               buf.toString
           }
 
         s"[${elems( a )}]"
       case Structure( Functor(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
+      case v: VM#Variable =>
+        val x = v.eval
+
+        if (x.isInstanceOf[VM#Variable])
+          x.toString
+        else
+          display( x )
       case _ => a.toString
     }
 

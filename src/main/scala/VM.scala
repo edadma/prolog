@@ -189,6 +189,9 @@ class VM( prog: Program ) {
 
         s productElement n match {
           case EMPTY => s.update( n, v )
+          case u: Variable =>
+            unify( u, v )
+            s.update( n, u.eval )
           case e => unify( e, v )
         }
       case ReturnInst =>

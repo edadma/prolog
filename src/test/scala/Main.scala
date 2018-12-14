@@ -64,7 +64,7 @@ object Main extends App {
       |ancestor(X,Y) :- parent(X,Y).  // someone is your ancestor if there are your parent
       |ancestor(X,Y) :- parent(X,Z),  // or somebody is your ancestor if they are the parent
       |    ancestor(Z,Y).             // of someone who is your ancestor
-      |
+      |*/
       |
       |concat( [], L, L ).
       |
@@ -74,14 +74,13 @@ object Main extends App {
       |append( [], E, [E] ).
       |
       |append( [A | L1], B, [A | L2] ) :- append( L1, B, L2 ).
-      |*/
       |
-      |go( a(b, c) ).
+      |
+      |//go( a(b, c) ).
     """.stripMargin
   val query =
     """
-      |go( a(X, c) )
-      |//append( [], 4, L )
+      |concat( [3], [4], L )
     """.stripMargin
   val prog = new Program
 
