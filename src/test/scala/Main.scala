@@ -71,16 +71,16 @@ object Main extends App {
       |concat( [E | L1], L2, [E | L3] ) :-
       |  concat( L1, L2, L3 ).
       |
-      |append( [], E, [E] ).
+      |//append( [], E, [E] ).
       |
-      |append( [A | L1], B, [A | L2] ) :- append( L1, B, L2 ).
+      |//append( [A | L1], B, [A | L2] ) :- append( L1, B, L2 ).
       |
       |
       |//go( a(b, c) ).
     """.stripMargin
   val query =
     """
-      |concat( [3], [4], L )
+      |concat( [3], [], L )
     """.stripMargin
   val prog = new Program
 
