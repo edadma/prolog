@@ -93,6 +93,7 @@ object Parser extends Matchers[StringReader] {
     p0
 
   def p0 =
+    pos ~ floatLit ^^ { case p ~ n => FloatAST( p, n ) } |
     pos ~ integerLit ^^ { case p ~ n => IntegerAST( p, n ) } |
     "(" ~> term <~ ")" |
     pos ~ identOrReserved ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
