@@ -67,11 +67,11 @@ object Main extends App {
       |*/
       |
       |
-      |go( X, Y ) :- X < Y.
+      |go( X ) :- X = [1 | [2 | [3]]].
     """.stripMargin
   val query =
     """
-      |go( 3, 4.1 )
+      |go( X )
     """.stripMargin
   val prog = new Program
 
@@ -88,8 +88,10 @@ object Main extends App {
       //println( ast )
 
       val vm = new VM( prog ) //{trace = true}
+      val sols =
+        vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)})
 
-      println( vm.interpall(ast) )
+      println( sols )
     case m: Parser.Mismatch => m.error
   }
 

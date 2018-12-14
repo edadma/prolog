@@ -1,7 +1,6 @@
 package xyz.hyperreal.prolog
 
 import xyz.hyperreal.pattern_matcher._
-import xyz.hyperreal.lia
 
 
 object Parser extends Matchers[StringReader] {
@@ -92,9 +91,19 @@ object Parser extends Matchers[StringReader] {
     pos ~ ("-"|"\\") ~ p200 ^^ mkterm |
     p0
 
+  def mklist( ts: List[TermAST], tl: Option[TermAST] ): TermAST =
+    ts match {
+      case Nil if tl isDefined => tl get
+      case Nil => AtomAST( null, "[]" )
+      case head :: tail => StructureAST( head.pos, ".", List(head, mklist(tail, tl)) )
+    }
+
   def p0 =
     pos ~ floatLit ^^ { case p ~ n => FloatAST( p, n ) } |
     pos ~ integerLit ^^ { case p ~ n => IntegerAST( p, n ) } |
+    pos ~ "[" ~ rep1sep(p900, ",") ~ opt("|" ~> p900) ~ "]" ^^ {
+      case p ~ _ ~ ts ~ tl ~ _ => mklist( ts, tl ) } |
+    pos <~ "[" ~ "]" ^^ (AtomAST( _, "[]" )) |
     "(" ~> term <~ ")" |
     pos ~ identOrReserved ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
       case p ~ n ~ _ ~ a ~ _ => StructureAST( p, n, a ) } |
