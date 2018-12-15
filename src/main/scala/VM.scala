@@ -1,7 +1,7 @@
 package xyz.hyperreal.prolog
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayStack
+import scala.collection.mutable.{ArrayStack, ListBuffer}
 import xyz.hyperreal.lia
 
 
@@ -66,7 +66,7 @@ class VM( prog: Program ) {
     interp( goal ) match {
       case Some( r ) =>
         def results( res: Map[String, Any] ): Unit = {
-          resultset += res
+          resultset += res map { case (k, v) => k -> concrete( v ) }
 
           if (fail)
             run match {
@@ -189,8 +189,9 @@ class VM( prog: Program ) {
     pc += 1
 
     inst match {
-      case DebugInst( msg, null ) if debug => println( msg )
-      case DebugInst( msg, pos ) if debug => println( pos.longErrorText(msg) )
+      case DebugInst( _, _ ) if !debug =>
+      case DebugInst( msg, null ) => println( msg )
+      case DebugInst( msg, pos ) => println( pos.longErrorText(msg) )
       case PushInst( d ) => push( d )
       case VarInst( n ) => push( frame.vars(n).eval )
       case VarUnifyInst( n ) => unify( frame.vars(n).eval, pop )

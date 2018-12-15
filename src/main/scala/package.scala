@@ -34,7 +34,19 @@ package object prolog {
     override def productPrefix = functor.name.name
 
     def update( n: Int, v: Any ) = args(n) = v
+
   }
+
+  def concrete( a: Any ): Any =
+    a match {
+      case Structure( functor, args ) => Structure( functor, args map concrete )
+      case v: VM#Variable =>
+        v eval match {
+          case v: VM#Variable => v.toString
+          case x => x
+        }
+      case _ => a
+    }
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 
