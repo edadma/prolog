@@ -46,6 +46,7 @@ class Program extends Growable[Instruction] {
       else
         for (i <- entry until end) {
           println( "  " + (code(i) match {
+            case DebugInst( msg, null ) => s"-----  $msg"
             case DebugInst( msg, pos ) => s"-----  $msg -- ${pos.line}:${pos.col}"
             case PushInst( d ) => s"push $d"
             case VarInst( n ) => s"pushv $n"

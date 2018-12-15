@@ -67,12 +67,12 @@ class VM( prog: Program ) {
       case Some( r ) =>
         def results( res: Map[String, Any] ): Unit = {
           resultset += res
-          fail
 
-          run match {
-            case Some( r1 ) => results( r1 )
-            case None =>
-          }
+          if (fail)
+            run match {
+              case Some( r1 ) => results( r1 )
+              case None =>
+            }
         }
 
         results( r )
@@ -153,7 +153,10 @@ class VM( prog: Program ) {
     pc = entry
   }
 
-  def fail: Unit = {
+  def fail = {
+    if (trace || debug)
+      println( "*** fail ***" )
+
     if (choiceStack nonEmpty)
       choiceStack pop match {
         case State( _dataStack, _pc, _frame, _trail ) =>
@@ -169,9 +172,12 @@ class VM( prog: Program ) {
           }
 
           trail = _trail
+          true
       }
-    else
+    else {
       success = false
+      false
+    }
   }
 
   def execute {
@@ -183,6 +189,7 @@ class VM( prog: Program ) {
     pc += 1
 
     inst match {
+      case DebugInst( msg, null ) if debug => println( msg )
       case DebugInst( msg, pos ) if debug => println( pos.longErrorText(msg) )
       case PushInst( d ) => push( d )
       case VarInst( n ) => push( frame.vars(n).eval )
@@ -276,15 +283,12 @@ class VM( prog: Program ) {
       case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
         if (n1 == n2 && a1 == a2)
           0 until a1 forall (i => unify( args1(i), args2(i) ))
-        else {
+        else
           fail
-          false
-        }
       case _ =>
-        if (a != b) {
+        if (a != b)
           fail
-          false
-        } else
+        else
           true
     }
 
@@ -324,6 +328,7 @@ class VM( prog: Program ) {
     }
 
     def unbind: Unit = {
+      binding = null
       bound = false
     }
 

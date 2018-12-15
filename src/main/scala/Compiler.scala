@@ -65,7 +65,7 @@ object Compiler {
       prog(addr) = CallInst( prog.procedure(f).entry )
   }
 
-  def debugInst( msg: String, pos: Reader )( implicit prog: Program ) =
+  def dbg(msg: String, pos: Reader )(implicit prog: Program ) =
     if (debug)
       prog += DebugInst( msg, pos )
 
@@ -74,7 +74,7 @@ object Compiler {
 
     ast match {
       case StructureAST( r, ":-", List(StructureAST(pos, f, args), body) ) =>
-        debugInst( s"rule $f/${args.length}", pos )
+        dbg( s"rule $f/${args.length}", pos )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
           compileBody( body )
@@ -82,19 +82,19 @@ object Compiler {
 
         prog += ReturnInst
       case StructureAST( r, ":-", List(AtomAST(pos, n), body) ) =>
-        debugInst( s"rule $n/0", pos )
+        dbg( s"rule $n/0", pos )
         prog += FrameInst( 0 )
         compileBody( body )
         prog += ReturnInst
       case StructureAST( r, f, args ) =>
-        debugInst( s"fact $f/${args.length}", r )
+        dbg( s"fact $f/${args.length}", r )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
         }
 
         prog += ReturnInst
       case AtomAST( r, name ) =>
-        debugInst( s"fact $name/0", r )
+        dbg( s"fact $name/0", r )
         prog += FrameInst( 0 )
         prog += ReturnInst
     }
@@ -142,16 +142,24 @@ object Compiler {
 //          compileHead( head, pos, namespaces )
 //          code += ListTailInst
 //          compileHead( tail, pos, namespaces )
-      case AtomAST( _, n ) =>
+      case AtomAST( r, n ) =>
+        dbg( s"get atom $n", r )
         prog += PushInst( Symbol(n) )
         prog += UnifyInst
-      case WildcardAST( _ ) => prog += DropInst
-      case VariableAST( _, name ) => prog += VarUnifyInst( vars.num(name) )
-      case StructureAST( _, name, args ) =>
+      case WildcardAST( r ) =>
+        dbg( "get anything", r )
+        prog += DropInst
+      case VariableAST( r, name ) =>
+        dbg( s"get variable $name", r )
+        prog += VarUnifyInst( vars.num(name) )
+      case StructureAST( r, name, args ) =>
+        dbg( s"get structure $name/${args.length}", r )
         prog += FunctorInst( Functor(Symbol(name), args.length) )
 
         args.zipWithIndex foreach {
           case (e, i) =>
+            dbg( s"get arg $i", e.pos )
+
             if (i < args.length - 1)
               prog += DupInst
 
@@ -176,6 +184,7 @@ object Compiler {
 //          for (b <- jumps)
 //            code(b) = BranchInst( code.length - b - 1 )
       case n: NumericAST =>
+        dbg( s"get number ${n.v}", n.pos )
         prog += PushInst( n.v )
         prog += UnifyInst
     }
