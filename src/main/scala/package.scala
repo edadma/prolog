@@ -12,11 +12,9 @@ package object prolog {
   val NIL = Symbol( "[]" )
   val CONS = Functor( Symbol("."), 2 )
 
-  case object WILDCARD {
-    override def toString = "_"
-  }
+  case object WILDCARD { override def toString = "_" }
 
-  object EMPTY
+  object EMPTY { override def toString: String = "[empty]" }
 
   case class Functor( name: Symbol, arity: Int )
 
@@ -32,6 +30,8 @@ package object prolog {
     override def productArity = args.length
 
     override def productElement( n: Int ) = args( n )
+
+    override def productPrefix = functor.name.name
 
     def update( n: Int, v: Any ) = args(n) = v
   }

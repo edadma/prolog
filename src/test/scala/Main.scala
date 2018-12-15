@@ -66,19 +66,23 @@ object Main extends App {
       |    ancestor(Z,Y).             // of someone who is your ancestor
       |*/
       |
-      |append( [], L, L ).
-      |append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
+      |//append( [], L, L ).
+      |//append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
+      |
+      |equal( [], [] ).
+      |equal( [H|T1], [H|T2] ) :- equal( T1, T2 ).
       |
       |
       |//member(T,[T|_]).
       |//member(X,[_|Q]) :- member(X,Q).
       |
-      |//go( X ) :- X = a( Y ), Y = b.
+      |//go( a( X, Y ) ) :- X = b, Y = c.
     """.stripMargin
   val query =
     """
       |//go( R )
-      |append( [1], [], L )
+      |//append( [1], [], L )
+      |equal( [1], L )
     """.stripMargin
   val prog = new Program
 

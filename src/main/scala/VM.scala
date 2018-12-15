@@ -261,20 +261,28 @@ class VM( prog: Program ) {
       case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
     }
 
-  def unify( a: Any, b: Any ): Unit =
+  def unify( a: Any, b: Any ): Boolean =
     (a, b) match {
-      case (WILDCARD, _) | (_, WILDCARD) =>
-      case (a: Variable, _) => a bind b
-      case (_, b: Variable) => b bind a
+      case (WILDCARD, _) | (_, WILDCARD) => true
+      case (a: Variable, _) =>
+        a bind b
+        true
+      case (_, b: Variable) =>
+        b bind a
+        true
       case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
         if (n1 == n2 && a1 == a2)
-          for (i <- 0 until a1)
-            unify( args1(i), args2(i) )
-        else
+          0 until a1 forall (i => unify( args1(i), args2(i) ))
+        else {
           fail
+          false
+        }
       case _ =>
-        if (a != b)
+        if (a != b) {
           fail
+          false
+        } else
+          true
     }
 
   def run = {
