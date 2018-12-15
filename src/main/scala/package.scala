@@ -43,7 +43,7 @@ package object prolog {
       case v: VM#Variable =>
         v eval match {
           case v: VM#Variable => v.toString
-          case x => x
+          case x => concrete( x )
         }
       case _ => a
     }

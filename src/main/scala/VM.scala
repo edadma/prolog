@@ -118,8 +118,7 @@ class VM( prog: Program ) {
       case AtomAST( pos, name ) => push( Symbol(name) )
       case WildcardAST( pos ) => push( WILDCARD )
       case VariableAST( pos, name ) => push( vars(name).eval )
-      case IntegerAST( pos, v ) => push( v )
-      case FloatAST( pos, v ) => push( v )
+      case n: NumericAST => push( n.v )
     }
 
   def pushFrame = push( frame )

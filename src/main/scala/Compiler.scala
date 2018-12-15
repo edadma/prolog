@@ -77,21 +77,17 @@ object Compiler {
         dbg( s"rule $f/${args.length}", pos )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
-          compileBody( body )
-        }
-
+          compileBody( body ) }
         prog += ReturnInst
       case StructureAST( r, ":-", List(AtomAST(pos, n), body) ) =>
         dbg( s"rule $n/0", pos )
-        prog += FrameInst( 0 )
-        compileBody( body )
+        prog.patch( (_, _) => FrameInst(vars.count) ) {
+          compileBody( body ) }
         prog += ReturnInst
       case StructureAST( r, f, args ) =>
         dbg( s"fact $f/${args.length}", r )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
-          args.reverse foreach compileHead
-        }
-
+          args.reverse foreach compileHead }
         prog += ReturnInst
       case AtomAST( r, name ) =>
         dbg( s"fact $name/0", r )
