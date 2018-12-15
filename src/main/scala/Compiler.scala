@@ -336,12 +336,14 @@ object Compiler {
       case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
     }
 
-  def compileBody( ast: PrologAST )(implicit prog: Program, vars: Vars ): Unit =
+  def compileBody( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
       case StructureAST( r, ",", List(head, tail) ) =>
         compileBody( head )
         compileBody( tail )
-      case t => compileCall( t )
+      case t =>
+        dbg( s"goal", t.pos )
+        compileCall( t )
     }
 
 }

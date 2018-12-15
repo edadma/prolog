@@ -76,13 +76,11 @@ object Main extends App {
       |//member(T,[T|_]).
       |//member(X,[_|Q]) :- member(X,Q).
       |
-      |//go :- X = b, a(b) = a(X).
+      |go :- append( [3, 4, 5], [6, 7, 8], [3, 4, 5, 6, 7, 8] ).
     """.stripMargin
   val query =
     """
-      |//go
-      |append( [3, 4, 5], [6, 7, 8], [3, 4, 5, 6, 7, 8] )
-      |//equal( [], L )
+      |go
     """.stripMargin
   val prog = new Program
 
@@ -99,7 +97,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
 
-      val vm = new VM( prog ) {trace = false; debug = true}
+      val vm = new VM( prog ) {trace = true; debug = false}
 
       println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
     case m: Parser.Mismatch => m.error

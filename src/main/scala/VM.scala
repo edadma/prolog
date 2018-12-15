@@ -174,6 +174,7 @@ class VM( prog: Program ) {
           true
       }
     else {
+      throw new RuntimeException
       success = false
       false
     }
@@ -271,14 +272,20 @@ class VM( prog: Program ) {
       case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
     }
 
-  def unify( a: Any, b: Any ): Boolean =
-    (a, b) match {
+  def unify( a: Any, b: Any ): Boolean = {
+    def vareval( a: Any ) =
+      a match {
+        case v: Variable => v.eval
+        case _ => a
+      }
+
+    (vareval( a ), vareval( b )) match {
       case (WILDCARD, _) | (_, WILDCARD) => true
-      case (a: Variable, _) =>
-        a bind b
+      case (a1: Variable, b1) =>
+        a1 bind b1
         true
-      case (_, b: Variable) =>
-        b bind a
+      case (a1, b1: Variable) =>
+        b1 bind a1
         true
       case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
         if (n1 == n2 && a1 == a2)
@@ -286,11 +293,14 @@ class VM( prog: Program ) {
         else
           fail
       case _ =>
-        if (a != b)
+        if (a != b) {
+          println( a, b)
           fail
+        }
         else
           true
     }
+  }
 
   def run = {
     while (pc >= 0 && success)
