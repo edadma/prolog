@@ -24,6 +24,8 @@ class VM( prog: Program ) {
   import VM._
 
   var trace = false
+  var debug = false
+
   var success = true
   var trail: List[Variable] = Nil
   implicit var vars: VarMap = _
@@ -181,6 +183,7 @@ class VM( prog: Program ) {
     pc += 1
 
     inst match {
+      case DebugInst( msg, pos ) if debug => println( pos.longErrorText(msg) )
       case PushInst( d ) => push( d )
       case VarInst( n ) => push( frame.vars(n).eval )
       case VarUnifyInst( n ) => unify( frame.vars(n).eval, pop )

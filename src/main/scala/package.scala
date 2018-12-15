@@ -14,9 +14,9 @@ package object prolog {
 
   case object WILDCARD { override def toString = "_" }
 
-  object EMPTY { override def toString: String = "[empty]" }
+  case object EMPTY { override def toString = "[empty]" }
 
-  case class Functor( name: Symbol, arity: Int )
+  case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
 
   case class Procedure( func: Functor, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer )
 

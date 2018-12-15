@@ -89,6 +89,7 @@ object Main extends App {
   Parser.source( new StringReader(code) ) match {
     case Parser.Match( ast, _ ) =>
       //println( ast )
+      Compiler.debug = true
       Compiler.compile( ast, prog )
       prog.print
     case m: Parser.Mismatch => m.error
@@ -98,7 +99,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
 
-      val vm = new VM( prog ) {trace = true}
+      val vm = new VM( prog ) {trace = false; debug = true}
 
       println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
     case m: Parser.Mismatch => m.error

@@ -33,3 +33,5 @@ case class EvalInst( pos: Reader, name: String, v1: Int, v2: Int ) extends Instr
 case object AddInst extends Instruction
 case object SubInst extends Instruction
 case object NegInst extends Instruction
+
+case class DebugInst( msg: String, pos: Reader ) extends Instruction

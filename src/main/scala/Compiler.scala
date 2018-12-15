@@ -7,6 +7,8 @@ import scala.collection.mutable
 
 object Compiler {
 
+  var debug = false
+
   class Vars {
     val vars = new mutable.LinkedHashMap[String, Int]
 
@@ -63,28 +65,36 @@ object Compiler {
       prog(addr) = CallInst( prog.procedure(f).entry )
   }
 
+  def debugInst( msg: String, pos: Reader )( implicit prog: Program ) =
+    if (debug)
+      prog += DebugInst( msg, pos )
+
   def compileClause( ast: TermAST )( implicit prog: Program ) = {
     implicit val vars = new Vars
 
     ast match {
-      case StructureAST( r, ":-", List(StructureAST(_, f, args), body) ) =>
+      case StructureAST( r, ":-", List(StructureAST(pos, f, args), body) ) =>
+        debugInst( s"rule $f/${args.length}", pos )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
           compileBody( body )
         }
 
         prog += ReturnInst
-      case StructureAST( r, ":-", List(AtomAST(_, _), body) ) =>
+      case StructureAST( r, ":-", List(AtomAST(pos, n), body) ) =>
+        debugInst( s"rule $n/0", pos )
         prog += FrameInst( 0 )
         compileBody( body )
         prog += ReturnInst
-      case StructureAST( _, _, args ) =>
+      case StructureAST( r, f, args ) =>
+        debugInst( s"fact $f/${args.length}", r )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
         }
 
         prog += ReturnInst
       case AtomAST( r, name ) =>
+        debugInst( s"fact $name/0", r )
         prog += FrameInst( 0 )
         prog += ReturnInst
     }
