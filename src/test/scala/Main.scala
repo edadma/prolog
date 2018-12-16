@@ -76,7 +76,10 @@ object Main extends App {
       |//member(T,[T|_]).
       |//member(X,[_|Q]) :- member(X,Q).
       |
-      |go( X ) :- append( [3, 4], [6, 7], X ).
+      |a2b([],[]).
+      |a2b([a|L1],[b|L2]):- a2b(L1,L2).
+      |
+      |go( X ) :- a2b( X, [b, b] ).
     """.stripMargin
   val query =
     """
@@ -97,7 +100,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
 
-      val vm = new VM( prog ) {trace = true; debug = false}
+      val vm = new VM( prog ) {trace = false; debug = false}
 
       println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
     case m: Parser.Mismatch => m.error
