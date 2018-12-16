@@ -9,6 +9,13 @@ object Compiler {
 
   var debug = false
 
+  val reserved =
+    Set(
+      functor( "true", 0 ),
+      functor( "fail", 0 ),
+      functor( "is", 2 )
+    )
+
   class Vars {
     val vars = new mutable.LinkedHashMap[String, Int]
 
@@ -41,28 +48,28 @@ object Compiler {
       case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, name, args), body)) ) =>
         val f = functor( name, args.length )
 
-        if (Builtin.exists( f ) || Math.exists( f ))
+        if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
         prog.procedure( f ).clauses += Clause( 0, clause )
       case ClauseAST( clause@StructureAST(r, ":-", List(AtomAST(h, name), body)) ) =>
         val f = functor( name, 0 )
 
-        if (Builtin.exists( f ) || Math.exists( f ))
+        if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
         prog.procedure( f ).clauses += Clause( 0, clause )
       case ClauseAST( clause@StructureAST(r, name, args) ) =>
         val f = functor( name, args.length )
 
-        if (Builtin.exists( f ) || Math.exists( f ))
+        if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
         prog.procedure( f ).clauses += Clause( 0, clause )
       case ClauseAST( clause@AtomAST(r, name) ) =>
         val f = functor( name, 0 )
 
-        if (Builtin.exists( f ) || Math.exists( f ))
+        if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
         prog.procedure( f ).clauses += Clause( 0, clause )
@@ -232,8 +239,70 @@ object Compiler {
       case n: NumericAST => prog += PushInst( n.v )
     }
 
-  def compileCall( ast: PrologAST )( implicit prog: Program, vars: Vars ): Unit =
+  def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {
+    val exprvars = new mutable.HashSet[(Reader, String, Int, Int)]
+
+    def addvar( term: TermAST )( implicit vars: Vars ): Unit =
+      term match {
+        case v@VariableAST( r, name ) =>
+          vars get name match {
+            case None => r.error( s"variable '$name' does not occur previously in the clause" )
+            case Some( n ) =>
+              v.name += '\''
+              exprvars += ((r, name, n, vars.num( v.name )))
+          }
+        case StructureAST( _, _, args ) => args foreach addvar
+        case _ =>
+      }
+
+    addvar( expr )
+
+    for ((r, n, v, v1) <- exprvars)
+      prog += EvalInst( r, n, v, v1 )
+
+    compileExpression( expr )
+  }
+
+  def compileExpression( expr: TermAST )( implicit prog: Program, vars: Vars ): Unit =
+    expr match {
+      case x: NumericAST => prog += PushInst( x.v )
+      case VariableAST( pos, name ) => prog += VarInst( vars.num(name) )
+      case StructureAST( pos, op@("+"|"-"), List(left, right) ) =>
+        compileExpression( left )
+        compileExpression( right )
+        prog +=
+          (op match {
+            case "+" => AddInst
+            case "-" => SubInst
+          })
+      case StructureAST( pos, op@("-"), List(arg) ) =>
+        compileExpression( arg )
+        prog +=
+          (op match {
+            case "-" => NegInst
+          })
+      case StructureAST( _, name, args ) if Math exists functor( name, args.length ) =>
+        args foreach compileTerm
+        prog += NativeInst( Math.function(functor(name, args.length)) )
+      case StructureAST( pos, name, args ) => pos.error( s"function $name/${args.length} not found" )
+      case AtomAST( _, name ) if Math exists functor( name, 0 ) =>
+        prog += NativeInst( Math.function(functor( name, 0)) )
+      case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
+    }
+
+  def compileBody( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
+      case StructureAST( _, ",", List(left, right) ) =>
+        compileBody( left )
+        compileBody( right )
+      case StructureAST( r, ";", List(left, right) ) =>
+        dbg( s"disjunction", r )
+        prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
+          compileBody( left ) }
+        prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
+          compileBody( right ) }
+      case AtomAST( _, "true" ) =>  // no code to emit for true/0
+      case AtomAST( _, "fail" ) => prog += FailInst
       case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
         compileTerm( right )
         prog += VarUnifyInst( vars.num(lname) )
@@ -303,77 +372,13 @@ object Compiler {
           case -1 => prog.fixup( f )
           case entry => prog += CallInst( entry )
         }
-      case AtomAST( _, name ) if Builtin exists functor( name, 0 ) =>
+      case AtomAST( pos, name ) if Builtin exists functor( name, 0 ) =>
+        dbg( s"built-in $name/0", pos )
         prog += NativeInst( Builtin.predicate(functor( name, 0)) )
       case AtomAST( pos, name ) =>
+        dbg( s"goal $name/0", pos )
         prog += PushFrameInst
         prog += CallIndirectInst( pos, functor(name, 0) )
-    }
-
-  def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {
-    val exprvars = new mutable.HashSet[(Reader, String, Int, Int)]
-
-    def addvar( term: TermAST )( implicit vars: Vars ): Unit =
-      term match {
-        case v@VariableAST( r, name ) =>
-          vars get name match {
-            case None => r.error( s"variable '$name' does not occur previously in the clause" )
-            case Some( n ) =>
-              v.name += '\''
-              exprvars += ((r, name, n, vars.num( v.name )))
-          }
-        case StructureAST( _, _, args ) => args foreach addvar
-        case _ =>
-      }
-
-    addvar( expr )
-
-    for ((r, n, v, v1) <- exprvars)
-      prog += EvalInst( r, n, v, v1 )
-
-    compileExpression( expr )
-  }
-
-  def compileExpression( expr: TermAST )( implicit prog: Program, vars: Vars ): Unit =
-    expr match {
-      case x: NumericAST => prog += PushInst( x.v )
-      case VariableAST( pos, name ) => prog += VarInst( vars.num(name) )
-      case StructureAST( pos, op@("+"|"-"), List(left, right) ) =>
-        compileExpression( left )
-        compileExpression( right )
-        prog +=
-          (op match {
-            case "+" => AddInst
-            case "-" => SubInst
-          })
-      case StructureAST( pos, op@("-"), List(arg) ) =>
-        compileExpression( arg )
-        prog +=
-          (op match {
-            case "-" => NegInst
-          })
-      case StructureAST( _, name, args ) if Math exists functor( name, args.length ) =>
-        args foreach compileTerm
-        prog += NativeInst( Math.function(functor(name, args.length)) )
-      case StructureAST( pos, name, args ) => pos.error( s"function $name/${args.length} not found" )
-      case AtomAST( _, name ) if Math exists functor( name, 0 ) =>
-        prog += NativeInst( Math.function(functor( name, 0)) )
-      case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
-    }
-
-  def compileBody( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
-    ast match {
-      case StructureAST( r, ",", List(left, right) ) =>
-        compileBody( left )
-        compileBody( right )
-      case StructureAST( r, ";", List(left, right) ) =>
-        prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
-          compileBody( left ) }
-        prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
-          compileBody( right ) }
-      case t =>
-        dbg( s"goal", t.pos )
-        compileCall( t )
     }
 
 }
