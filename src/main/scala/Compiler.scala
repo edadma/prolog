@@ -36,14 +36,34 @@ object Compiler {
   def phase1( ast: PrologAST, prog: Program ): Unit =
     ast match {
       case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
-      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, f, args), body)) ) =>
-        prog.procedure( f, args.length ).clauses += Clause( 0, clause )
+      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, name, args), body)) ) =>
+        val f = functor( name, args.length )
+
+        if (Builtin.exists( f ) || Math.exists( f ))
+          r.error( s"builtin procedure '$f' can't be redefined" )
+
+        prog.procedure( f ).clauses += Clause( 0, clause )
       case ClauseAST( clause@StructureAST(r, ":-", List(AtomAST(h, name), body)) ) =>
-        prog.procedure( name, 0 ).clauses += Clause( 0, clause )
-      case ClauseAST( clause@StructureAST(r, fact, args) ) =>
-        prog.procedure( fact, args.length ).clauses += Clause( 0, clause )
+        val f = functor( name, 0 )
+
+        if (Builtin.exists( f ) || Math.exists( f ))
+          r.error( s"builtin procedure '$f' can't be redefined" )
+
+        prog.procedure( f ).clauses += Clause( 0, clause )
+      case ClauseAST( clause@StructureAST(r, name, args) ) =>
+        val f = functor( name, args.length )
+
+        if (Builtin.exists( f ) || Math.exists( f ))
+          r.error( s"builtin procedure '$f' can't be redefined" )
+
+        prog.procedure( f ).clauses += Clause( 0, clause )
       case ClauseAST( clause@AtomAST(r, name) ) =>
-        prog.procedure( name, 0 ).clauses += Clause( 0, clause )
+        val f = functor( name, 0 )
+
+        if (Builtin.exists( f ) || Math.exists( f ))
+          r.error( s"builtin procedure '$f' can't be redefined" )
+
+        prog.procedure( f ).clauses += Clause( 0, clause )
     }
 
   def phase2( implicit prog: Program ) {
@@ -51,11 +71,10 @@ object Compiler {
       case proc@Procedure( _, _, _, clauses ) =>
         proc.entry = prog.pointer
 
-        for (c <- clauses.init) {
+        for (c <- clauses.init)
           prog.patch( (ptr, len) => ChoiceInst(len - ptr - 1) ) {
             c.vars = compileClause( c.ast )
           }
-        }
 
         clauses.last.vars = compileClause( clauses.last.ast )
         proc.end = prog.pointer
