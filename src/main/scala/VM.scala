@@ -132,7 +132,7 @@ class VM( prog: Program ) {
     push( Structure(f, args) )
   }
 
-  def top = dataStack.head
+  def top = vareval( dataStack.head )
 
   def pop = {
     val res = top
@@ -216,6 +216,9 @@ class VM( prog: Program ) {
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case NativeInst( func ) => func( this )
       case UnifyInst => unify( pop, pop )
+      case NotUnifiableInst =>
+        if (unifiable( pop, pop ))
+          fail
       case EvalInst( pos, name, v1, v2 ) =>
         frame.vars(v1).eval match {
           case _: Variable => pos.error( s"variable '$name' is unbound" )
@@ -242,12 +245,6 @@ class VM( prog: Program ) {
           case "-" => lia.Math( FM_SUB, l, r ).asInstanceOf[Number]
         }
       case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
-    }
-
-  def vareval( a: Any ) =
-    a match {
-      case v: Variable => v.eval
-      case _ => a
     }
 
   def fail = {
@@ -304,12 +301,21 @@ class VM( prog: Program ) {
           fail
           false
         }
+      case _ if a == b => true
       case _ =>
-        if (a != b) {
-          fail
+        fail
+        false
+    }
+
+  def unifiable( a: Any, b: Any ): Boolean =
+    (vareval( a ), vareval( b )) match {
+      case (ANONYMOUS, _) | (_, ANONYMOUS) | (_: Variable, _) | (_, _: Variable) => true
+      case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
+        if (n1 == n2 && a1 == a2)
+          0 until a1 forall (i => unifiable( args1(i), args2(i) ))
+        else
           false
-        } else
-          true
+      case _ => a == b
     }
 
   def run = {

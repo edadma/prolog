@@ -223,6 +223,10 @@ object Compiler {
         compileTerm( left )
         compileTerm( right )
         prog += UnifyInst
+      case StructureAST( pos, "\\=", List(left, right) ) =>
+        compileTerm( left )
+        compileTerm( right )
+        prog += NotUnifiableInst
       case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
         compileArithmetic( expr )
         prog += VarInst( vars.num(rname) )

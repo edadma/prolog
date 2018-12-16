@@ -36,6 +36,12 @@ package object prolog {
     def update( n: Int, v: Any ) = args(n) = v
   }
 
+  def vareval( a: Any ) =
+    a match {
+      case v: VM#Variable => v.eval
+      case _ => a
+    }
+
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 
   def display( a: Any ): String =
