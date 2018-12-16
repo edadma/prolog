@@ -240,7 +240,7 @@ object Compiler {
     }
 
   def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {
-    val exprvars = new mutable.HashSet[(Reader, String, Int, Int)]
+    val exprvars = new mutable.HashMap[String, (Reader, Int, Int)]
 
     def addvar( term: TermAST )( implicit vars: Vars ): Unit =
       term match {
@@ -249,7 +249,7 @@ object Compiler {
             case None => r.error( s"variable '$name' does not occur previously in the clause" )
             case Some( n ) =>
               v.name += '\''
-              exprvars += ((r, name, n, vars.num( v.name )))
+              exprvars(name) = (r, n, vars.num( v.name ))
           }
         case StructureAST( _, _, args ) => args foreach addvar
         case _ =>
@@ -257,10 +257,8 @@ object Compiler {
 
     addvar( expr )
 
-    for ((r, n, v, v1) <- exprvars)
+    for ((n, (r, v, v1)) <- exprvars)
       prog += EvalInst( r, n, v, v1 )
-
-    compileExpression( expr )
   }
 
   def compileExpression( expr: TermAST )( implicit prog: Program, vars: Vars ): Unit =
@@ -319,32 +317,39 @@ object Compiler {
         prog += NotUnifiableInst
       case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
         compileArithmetic( expr )
+        compileExpression( expr )
         prog += VarInst( vars.num(rname) )
         prog += UnifyInst
       case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
       case StructureAST( pos, "=:=", List(left, right) ) =>
-        compileArithmetic( left )
-        compileArithmetic( right )
+        compileArithmetic( ast )
+        compileExpression( left )
+        compileExpression( right )
         prog += EqInst
       case StructureAST( pos, "=\\=", List(left, right) ) =>
-        compileArithmetic( left )
-        compileArithmetic( right )
+        compileArithmetic( ast )
+        compileExpression( left )
+        compileExpression( right )
         prog += NeInst
       case StructureAST( pos, "<", List(left, right) ) =>
-        compileArithmetic( left )
-        compileArithmetic( right )
+        compileArithmetic( ast )
+        compileExpression( left )
+        compileExpression( right )
         prog += LtInst
       case StructureAST( pos, "=<", List(left, right) ) =>
-        compileArithmetic( left )
-        compileArithmetic( right )
+        compileArithmetic( ast )
+        compileExpression( left )
+        compileExpression( right )
         prog += LeInst
       case StructureAST( pos, ">", List(left, right) ) =>
-        compileArithmetic( left )
-        compileArithmetic( right )
+        compileArithmetic( ast )
+        compileExpression( left )
+        compileExpression( right )
         prog += GtInst
       case StructureAST( pos, ">=", List(left, right) ) =>
-        compileArithmetic( left )
-        compileArithmetic( right )
+        compileArithmetic( ast )
+        compileExpression( left )
+        compileExpression( right )
         prog += GeInst
       case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
         prog += PushFrameInst

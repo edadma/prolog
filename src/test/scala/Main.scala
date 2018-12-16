@@ -64,10 +64,11 @@ object Main extends App {
       |ancestor(X,Y) :- parent(X,Y).  // someone is your ancestor if there are your parent
       |ancestor(X,Y) :- parent(X,Z),  // or somebody is your ancestor if they are the parent
       |    ancestor(Z,Y).             // of someone who is your ancestor
-      |*/
+      |
       |
       |append( [], L, L ).
       |append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
+      |
       |
       |prefix(X,Z) :- append(X,_,Z).
       |suffix(Y,Z) :- append(_,Y,Z).
@@ -75,15 +76,13 @@ object Main extends App {
       |
       |//member(T,[T|_]).
       |//member(X,[_|Q]) :- member(X,Q).
+      |*/
       |
-      |a2b([],[]).
-      |a2b([a|L1],[b|L2]):- a2b(L1,L2).
-      |
-      |go( X, Y ) :- suffix( X, [1, 2, 3, 4] ).
+      |go( X, Y ) :- X < X + 1.
     """.stripMargin
   val query =
     """
-      |go( X, _ )
+      |go( 3, _ )
     """.stripMargin
   val prog = new Program
 
