@@ -78,11 +78,11 @@ object Main extends App {
       |//member(X,[_|Q]) :- member(X,Q).
       |*/
       |
-      |go( X, Y ) :- X < X + 1.
+      |go( X ) :- X is sqrt( i*i ), Y is X*X, write( Y ), nl.
     """.stripMargin
   val query =
     """
-      |go( 3, _ )
+      |go( R )
     """.stripMargin
   val prog = new Program
 
@@ -91,7 +91,7 @@ object Main extends App {
       //println( ast )
       Compiler.debug = true
       Compiler.compile( ast, prog )
-      //prog.print
+      prog.print
     case m: Parser.Mismatch => m.error
   }
 

@@ -38,13 +38,13 @@ class Program extends Growable[Instruction] {
   }
 
   def print: Unit = {
-    for (Procedure( Functor(Symbol(name), arity), entry, end, clauses ) <- procedureMap.values.toList.sorted) {
+    for (Procedure( Functor(Symbol(name), arity), start, end, clauses ) <- procedureMap.values.toList.sorted) {
       println( s"$name/$arity" )
 
       if (clauses isEmpty)
         println( "  undefined\n" )
       else
-        for (i <- entry until end) {
+        for (i <- start until end) {
           println( "  " + (code(i) match {
             case DebugInst( msg, null ) => s"-----  $msg"
             case DebugInst( msg, pos ) => s"-----  $msg -- ${pos.line}:${pos.col}"
@@ -73,6 +73,9 @@ class Program extends Growable[Instruction] {
             case UnifyInst => "unify"
             case EvalInst( _, _, v1, v2 ) => s"eval $v1 $v2"
             case AddInst => "add"
+            case SubInst => "sub"
+            case MulInst => "mul"
+            case DivInst => "div"
           }) )
         }
 

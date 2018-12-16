@@ -265,13 +265,15 @@ object Compiler {
     expr match {
       case x: NumericAST => prog += PushInst( x.v )
       case VariableAST( pos, name ) => prog += VarInst( vars.num(name) )
-      case StructureAST( pos, op@("+"|"-"), List(left, right) ) =>
+      case StructureAST( pos, op@("+"|"-"|"*"|"/"), List(left, right) ) =>
         compileExpression( left )
         compileExpression( right )
         prog +=
           (op match {
             case "+" => AddInst
             case "-" => SubInst
+            case "*" => MulInst
+            case "/" => DivInst
           })
       case StructureAST( pos, op@("-"), List(arg) ) =>
         compileExpression( arg )
@@ -280,7 +282,7 @@ object Compiler {
             case "-" => NegInst
           })
       case StructureAST( _, name, args ) if Math exists functor( name, args.length ) =>
-        args foreach compileTerm
+        args foreach compileExpression
         prog += NativeInst( Math.function(functor(name, args.length)) )
       case StructureAST( pos, name, args ) => pos.error( s"function $name/${args.length} not found" )
       case AtomAST( _, name ) if Math exists functor( name, 0 ) =>

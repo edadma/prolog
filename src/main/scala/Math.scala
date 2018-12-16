@@ -33,7 +33,8 @@ object Math {
   }
 
   List(
-    MathFunctions
+    MathFunctions,
+    MathConstants
   ) foreach load
 
 }
