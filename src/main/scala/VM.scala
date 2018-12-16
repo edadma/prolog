@@ -66,7 +66,7 @@ class VM( prog: Program ) {
     interp( goal ) match {
       case Some( r ) =>
         def results( res: Map[String, Any] ): Unit = {
-          resultset += res map { case (k, v) => k -> concrete( v ) }
+          resultset += res map { case (k, v) => k -> copy( v ) }
 
           if (fail)
             run match {
@@ -276,6 +276,17 @@ class VM( prog: Program ) {
       false
     }
   }
+
+  def copy( a: Any ): Any =
+    a match {
+      case Structure( functor, args ) => Structure( functor, args map copy )
+      case v: Variable =>
+        v eval match {
+          case v: Variable => new Variable
+          case x => copy( x )
+        }
+      case _ => a
+    }
 
   def unify( a: Any, b: Any ): Boolean =
     (vareval( a ), vareval( b )) match {

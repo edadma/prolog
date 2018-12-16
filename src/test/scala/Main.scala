@@ -76,11 +76,11 @@ object Main extends App {
       |//member(T,[T|_]).
       |//member(X,[_|Q]) :- member(X,Q).
       |
-      |go( L ) :- append( [3, 4], [6, 7], [3, 4, 6, 7] ).
+      |go( X ) :- append( [3, 4], [6, 7], X ).
     """.stripMargin
   val query =
     """
-      |go( L )
+      |go( X )
     """.stripMargin
   val prog = new Program
 
