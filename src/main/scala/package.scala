@@ -12,7 +12,7 @@ package object prolog {
   val NIL = Symbol( "[]" )
   val CONS = Functor( Symbol("."), 2 )
 
-  case object WILDCARD { override def toString = "_" }
+  case object ANONYMOUS { override def toString = "_" }
 
   case object EMPTY { override def toString = "[empty]" }
 

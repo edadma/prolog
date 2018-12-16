@@ -206,7 +206,7 @@ object Compiler {
         args foreach compileTerm
         prog += StructureInst( functor(name, args.length) )
       case AtomAST( pos, name ) => prog += PushInst( Symbol(name) )
-      case WildcardAST( pos ) => prog += PushInst( WILDCARD )
+      case WildcardAST( pos ) => prog += PushInst( ANONYMOUS )
       case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
       case n: NumericAST => prog += PushInst( n.v )
     }

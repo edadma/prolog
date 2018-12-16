@@ -116,7 +116,7 @@ class VM( prog: Program ) {
         args foreach interpTerm
         pushStructure( Functor(Symbol(name), args.length) )
       case AtomAST( pos, name ) => push( Symbol(name) )
-      case WildcardAST( pos ) => push( WILDCARD )
+      case WildcardAST( pos ) => push( ANONYMOUS )
       case VariableAST( pos, name ) => push( vars(name).eval )
       case n: NumericAST => push( n.v )
     }
@@ -290,7 +290,7 @@ class VM( prog: Program ) {
 
   def unify( a: Any, b: Any ): Boolean =
     (vareval( a ), vareval( b )) match {
-      case (WILDCARD, _) | (_, WILDCARD) => true
+      case (ANONYMOUS, _) | (_, ANONYMOUS) => true
       case (a1: Variable, b1) =>
         a1 bind b1
         true
