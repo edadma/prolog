@@ -152,34 +152,6 @@ class VM( prog: Program ) {
     pc = entry
   }
 
-  def fail = {
-    if (trace || debug)
-      println( "*** fail ***" )
-
-    if (choiceStack nonEmpty)
-      choiceStack pop match {
-        case State( _dataStack, _pc, _frame, _trail ) =>
-          dataStack = _dataStack
-          pc = _pc
-          frame = _frame
-
-          var p = trail
-
-          while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
-            p.head.unbind
-            p = p.tail
-          }
-
-          trail = _trail
-          true
-      }
-    else {
-      throw new RuntimeException
-      success = false
-      false
-    }
-  }
-
   def execute {
     val inst = prog(pc)
 
@@ -272,13 +244,40 @@ class VM( prog: Program ) {
       case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
     }
 
-  def unify( a: Any, b: Any ): Boolean = {
-    def vareval( a: Any ) =
-      a match {
-        case v: Variable => v.eval
-        case _ => a
-      }
+  def vareval( a: Any ) =
+    a match {
+      case v: Variable => v.eval
+      case _ => a
+    }
 
+  def fail = {
+    if (trace || debug)
+      println( "*** fail ***" )
+
+    if (choiceStack nonEmpty)
+      choiceStack pop match {
+        case State( _dataStack, _pc, _frame, _trail ) =>
+          dataStack = _dataStack
+          pc = _pc
+          frame = _frame
+
+          var p = trail
+
+          while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
+            p.head.unbind
+            p = p.tail
+          }
+
+          trail = _trail
+          true
+      }
+    else {
+      success = false
+      false
+    }
+  }
+
+  def unify( a: Any, b: Any ): Boolean =
     (vareval( a ), vareval( b )) match {
       case (WILDCARD, _) | (_, WILDCARD) => true
       case (a1: Variable, b1) =>
@@ -290,17 +289,17 @@ class VM( prog: Program ) {
       case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
         if (n1 == n2 && a1 == a2)
           0 until a1 forall (i => unify( args1(i), args2(i) ))
-        else
+        else {
           fail
+          false
+        }
       case _ =>
         if (a != b) {
-          println( a, b)
           fail
-        }
-        else
+          false
+        } else
           true
     }
-  }
 
   def run = {
     while (pc >= 0 && success)
