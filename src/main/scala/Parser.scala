@@ -108,7 +108,7 @@ object Parser extends Matchers[StringReader] {
     pos ~ identOrReserved ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
       case p ~ n ~ _ ~ a ~ _ => StructureAST( p, n, a ) } |
     pos ~ identOrReserved ^^ {
-      case p ~ "_" => WildcardAST( p )
+      case p ~ "_" => AnonymousAST( p )
       case p ~ a if a.head.isLower => AtomAST( p, a )
       case p ~ a => VariableAST( p, a ) }
 

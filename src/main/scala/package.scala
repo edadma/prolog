@@ -12,8 +12,6 @@ package object prolog {
   val NIL = Symbol( "[]" )
   val CONS = Functor( Symbol("."), 2 )
 
-  case object ANONYMOUS { override def toString = "_" }
-
   case object EMPTY { override def toString = "[empty]" }
 
   case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }

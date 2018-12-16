@@ -69,8 +69,8 @@ object Main extends App {
       |append( [], L, L ).
       |append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
       |
-      |//equal( [], [] ).
-      |//equal( [H|T1], [H|T2] ) :- equal( T1, T2 ).
+      |prefix(X,Z) :- append(X,_,Z).
+      |suffix(Y,Z) :- append(_,Y,Z).
       |
       |
       |//member(T,[T|_]).
@@ -79,11 +79,11 @@ object Main extends App {
       |a2b([],[]).
       |a2b([a|L1],[b|L2]):- a2b(L1,L2).
       |
-      |go( X ) :- write( before ), nl, (X = 3 ; X = 4), write( X ), nl.
+      |go( X, Y ) :- suffix( X, [1, 2, 3, 4] ).
     """.stripMargin
   val query =
     """
-      |go( X )
+      |go( X, _ )
     """.stripMargin
   val prog = new Program
 

@@ -14,6 +14,8 @@ object Compiler {
 
     def count = vars.size
 
+    def anon = num( '$' + count.toString )
+
     def num( name: String ) = {
       vars get name match {
         case None =>
@@ -84,7 +86,7 @@ object Compiler {
       prog(addr) = CallInst( prog.procedure(f).entry )
   }
 
-  def dbg(msg: String, pos: Reader )(implicit prog: Program ) =
+  def dbg( msg: String, pos: Reader )(implicit prog: Program ) =
     if (debug)
       prog += DebugInst( msg, pos )
 
@@ -161,8 +163,8 @@ object Compiler {
         dbg( s"get atom $n", r )
         prog += PushInst( Symbol(n) )
         prog += UnifyInst
-      case WildcardAST( r ) =>
-        dbg( "get anything", r )
+      case AnonymousAST( r ) =>
+        dbg( "get anonymous", r )
         prog += DropInst
       case VariableAST( r, name ) =>
         dbg( s"get variable $name", r )
@@ -208,7 +210,7 @@ object Compiler {
     term match {
       case StructureAST( _, _, args ) => args forall ground
       case AtomAST( _, _ ) | _: NumericAST => true
-      case WildcardAST( _ ) | VariableAST( _, _ ) => false
+      case AnonymousAST( _ ) | VariableAST( _, _ ) => false
     }
 
   def constant( term: TermAST ): Any =
@@ -224,8 +226,8 @@ object Compiler {
       case StructureAST( _, name, args ) =>
         args foreach compileTerm
         prog += StructureInst( functor(name, args.length) )
-      case AtomAST( pos, name ) => prog += PushInst( Symbol(name) )
-      case WildcardAST( pos ) => prog += PushInst( ANONYMOUS )
+      case AtomAST( _, name ) => prog += PushInst( Symbol(name) )
+      case AnonymousAST( _ ) => prog += VarInst( vars.anon )
       case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
       case n: NumericAST => prog += PushInst( n.v )
     }
