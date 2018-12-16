@@ -19,6 +19,7 @@ case object LeInst extends Instruction
 case object GtInst extends Instruction
 case object GeInst extends Instruction
 case class BranchIfInst( disp: Int ) extends Instruction
+case class BranchInst( disp: Int ) extends Instruction
 case object FailInst extends Instruction
 case class ChoiceInst( disp: Int ) extends Instruction
 case class CallInst( entry: Int ) extends Instruction

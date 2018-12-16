@@ -54,8 +54,8 @@ class VM( prog: Program ) {
     override def toString: String = s"[frame size=$size ret=$ret]"
   }
 
-  val choiceStack = new ArrayStack[State]
-
+  var choiceStack: List[State] = Nil
+  var mark: List[State] = _
   var dataStack: List[Any] = Nil
   var pc = -1
   var frame: Frame = new Frame( 0, -1 )
@@ -203,8 +203,9 @@ class VM( prog: Program ) {
       case BranchIfInst( disp ) =>
         if (popBoolean)
           pc += disp
+      case BranchInst( disp ) => pc += disp
       case FailInst => fail
-      case ChoiceInst( disp ) => choiceStack push State( dataStack, pc + disp, frame, trail )
+      case ChoiceInst( disp ) => choiceStack ::= State( dataStack, pc + disp, frame, trail )
       case CallInst( entry ) => call( entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {
@@ -252,8 +253,9 @@ class VM( prog: Program ) {
       println( "*** fail ***" )
 
     if (choiceStack nonEmpty)
-      choiceStack pop match {
+      choiceStack.head match {
         case State( _dataStack, _pc, _frame, _trail ) =>
+          choiceStack = choiceStack.tail
           dataStack = _dataStack
           pc = _pc
           frame = _frame

@@ -79,12 +79,11 @@ object Main extends App {
       |a2b([],[]).
       |a2b([a|L1],[b|L2]):- a2b(L1,L2).
       |
-      |go( X ) :- X \= a, write( not_a ).
-      |go( X ) :- write( X ).
+      |go( X ) :- write( before ), nl, (X = 3 ; X = 4), write( X ), nl.
     """.stripMargin
   val query =
     """
-      |go( a )
+      |go( X )
     """.stripMargin
   val prog = new Program
 

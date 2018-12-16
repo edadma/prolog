@@ -62,7 +62,7 @@ object Parser extends Matchers[StringReader] {
   }
 
   def p1100: Matcher[TermAST] =
-    p1050 ~ ";" ~ p1100 ^^ mkterm |
+    p1050 ~ pos ~ ";" ~ p1100 ^^ mkterm |
     p1050
 
   def p1050: Matcher[TermAST] =

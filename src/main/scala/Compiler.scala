@@ -342,9 +342,14 @@ object Compiler {
 
   def compileBody( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
-      case StructureAST( r, ",", List(head, tail) ) =>
-        compileBody( head )
-        compileBody( tail )
+      case StructureAST( r, ",", List(left, right) ) =>
+        compileBody( left )
+        compileBody( right )
+      case StructureAST( r, ";", List(left, right) ) =>
+        prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
+          compileBody( left ) }
+        prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
+          compileBody( right ) }
       case t =>
         dbg( s"goal", t.pos )
         compileCall( t )
