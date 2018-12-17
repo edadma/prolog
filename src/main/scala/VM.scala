@@ -154,6 +154,8 @@ class VM( prog: Program ) {
     pc = entry
   }
 
+  def choice( disp: Int ) = choiceStack ::= State( dataStack, pc + disp, frame, trail )
+
   def execute {
     val inst = prog(pc)
 
@@ -207,7 +209,11 @@ class VM( prog: Program ) {
           pc += disp
       case BranchInst( disp ) => pc += disp
       case FailInst => fail
-      case ChoiceInst( disp ) => choiceStack ::= State( dataStack, pc + disp, frame, trail )
+      case ChoiceInst( disp ) => choice( disp )
+      case MarkInst( disp ) =>
+        mark = choiceStack
+        choice( disp )
+      case UnmarkInst => choiceStack = mark
       case CallInst( entry ) => call( entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {

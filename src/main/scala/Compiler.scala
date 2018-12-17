@@ -13,6 +13,7 @@ object Compiler {
     Set(
       functor( "true", 0 ),
       functor( "fail", 0 ),
+      functor( "false", 0 ),
       functor( "is", 2 )
     )
 
@@ -275,7 +276,7 @@ object Compiler {
             case "*" => MulInst
             case "/" => DivInst
           })
-      case StructureAST( pos, op@("-"), List(arg) ) =>
+      case StructureAST( pos, op@"-", List(arg) ) =>
         compileExpression( arg )
         prog +=
           (op match {
@@ -292,6 +293,19 @@ object Compiler {
 
   def compileBody( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
+      case StructureAST( r, "->", List(goal1, goal2) ) =>
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/branch
+          compileBody( goal1 ) }
+        prog += UnmarkInst
+        prog += BranchInst( 1 )
+        prog += FailInst
+        compileBody( goal2 )
+      case StructureAST( r, "\\+", List(term) ) =>
+        dbg( s"not provable", r )
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+          compileBody( term ) }
+        prog += UnmarkInst
+        prog += FailInst
       case StructureAST( _, ",", List(left, right) ) =>
         compileBody( left )
         compileBody( right )
@@ -302,7 +316,7 @@ object Compiler {
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
           compileBody( right ) }
       case AtomAST( _, "true" ) =>  // no code to emit for true/0
-      case AtomAST( _, "fail" ) => prog += FailInst
+      case AtomAST( _, "false"|"fail" ) => prog += FailInst
       case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
         compileTerm( right )
         prog += VarUnifyInst( vars.num(lname) )

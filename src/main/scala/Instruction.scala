@@ -16,6 +16,8 @@ case class BranchIfInst( disp: Int ) extends Instruction
 case class BranchInst( disp: Int ) extends Instruction
 case object FailInst extends Instruction
 case class ChoiceInst( disp: Int ) extends Instruction
+case class MarkInst( disp: Int ) extends Instruction
+case object UnmarkInst extends Instruction
 case class CallInst( entry: Int ) extends Instruction
 case class CallIndirectInst( pos: Reader, f: Functor ) extends Instruction
 case object DropInst extends Instruction

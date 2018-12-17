@@ -78,11 +78,11 @@ object Main extends App {
       |//member(X,[_|Q]) :- member(X,Q).
       |*/
       |
-      |go( X ) :- X is sqrt( i*i ), Y is X*X, write( Y ), nl.
+      |go( X ) :- (1 = 1 -> write( yes ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |go( R )
+      |go( _ )
     """.stripMargin
   val prog = new Program
 
