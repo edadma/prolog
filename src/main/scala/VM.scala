@@ -48,7 +48,8 @@ class VM( prog: Program ) {
     def map = vars map { case (k, v) => (k, v.eval) } toMap
   }
 
-  case class State( dataStack: List[Any], pc: Int, frame: Frame, trail: List[Variable] )
+  case class State( dataStack: List[Any], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
+                    cut: List[State] )
 
   class Frame( size: Int, val ret: Int ) {
     val vars = Array.fill[Variable]( size )( new Variable )
@@ -156,7 +157,7 @@ class VM( prog: Program ) {
     pc = entry
   }
 
-  def choice( disp: Int ) = choiceStack ::= State( dataStack, pc + disp, frame, trail )
+  def choice( disp: Int ) = choiceStack ::= State( dataStack, pc + disp, frame, trail, mark, cut )
 
   def execute {
     val inst = prog(pc)
@@ -277,11 +278,13 @@ class VM( prog: Program ) {
 
     if (choiceStack nonEmpty)
       choiceStack.head match {
-        case State( _dataStack, _pc, _frame, _trail ) =>
+        case State( _dataStack, _pc, _frame, _trail, _mark, _cut ) =>
           choiceStack = choiceStack.tail
           dataStack = _dataStack
           pc = _pc
           frame = _frame
+          mark = _mark
+          cut = _cut
 
           var p = trail
 

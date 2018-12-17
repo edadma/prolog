@@ -23,7 +23,7 @@ object Parser extends Matchers[StringReader] {
     "**",
     "^",
     "\\",
-    ".", "[", "|", "]", "(", ")"
+    ".", "[", "|", "]", "(", ")", "!"
   )
 
   def unary( pos: Reader, o: String, x: TermAST ) =
@@ -99,6 +99,7 @@ object Parser extends Matchers[StringReader] {
     }
 
   def p0 =
+    pos <~ "!" ^^ (AtomAST( _, "!")) |
     pos ~ floatLit ^^ { case p ~ n => FloatAST( p, n ) } |
     pos ~ integerLit ^^ { case p ~ n => IntegerAST( p, n ) } |
     pos ~ "[" ~ rep1sep(p900, ",") ~ opt("|" ~> p900) ~ "]" ^^ {

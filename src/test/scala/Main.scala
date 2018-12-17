@@ -67,15 +67,14 @@ object Main extends App {
       |*/
       |
       |f(a).
-      |f(b).
+      |f(b) :- !.
       |f(c).
       |
-      |go( Y ) :- Y = f(X).
       |//go( X ) :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |go( X )
+      |f( X )
     """.stripMargin
   val prog = new Program
 
