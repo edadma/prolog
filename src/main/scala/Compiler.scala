@@ -293,12 +293,24 @@ object Compiler {
 
   def compileBody( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
+      case StructureAST( r1, ";", List(StructureAST( r, "->", List(goal1, goal2) ), goal3) ) =>
+        dbg( s"if-then-else", r )
+        prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the branch
+          compileBody( goal1 )
+          prog += UnmarkInst
+          dbg( s"then part", r )
+          compileBody( goal2 ) }
+        prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
+          dbg( s"else part", r1 )
+          compileBody( goal3 ) }
       case StructureAST( r, "->", List(goal1, goal2) ) =>
+        dbg( s"if-then", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/branch
           compileBody( goal1 ) }
         prog += UnmarkInst
         prog += BranchInst( 1 )
         prog += FailInst
+        dbg( s"then part", r )
         compileBody( goal2 )
       case StructureAST( r, "\\+", List(term) ) =>
         dbg( s"not provable", r )

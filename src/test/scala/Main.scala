@@ -64,25 +64,26 @@ object Main extends App {
       |ancestor(X,Y) :- parent(X,Y).  // someone is your ancestor if there are your parent
       |ancestor(X,Y) :- parent(X,Z),  // or somebody is your ancestor if they are the parent
       |    ancestor(Z,Y).             // of someone who is your ancestor
-      |
+      |*/
       |
       |append( [], L, L ).
       |append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
       |
       |
-      |prefix(X,Z) :- append(X,_,Z).
-      |suffix(Y,Z) :- append(_,Y,Z).
+      |//prefix(X,Z) :- append(X,_,Z).
+      |//suffix(Y,Z) :- append(_,Y,Z).
       |
       |
       |//member(T,[T|_]).
       |//member(X,[_|Q]) :- member(X,Q).
-      |*/
       |
-      |go( X ) :- (1 = 1 -> write( yes ), nl), write( after ), nl.
+      |
+      |go( X, Y ) :- bubble( X, Y ).
+      |//go( X ) :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |go( _ )
+      |go( [4, 8, 2, 0, 7], Y )
     """.stripMargin
   val prog = new Program
 
@@ -91,7 +92,7 @@ object Main extends App {
       //println( ast )
       Compiler.debug = true
       Compiler.compile( ast, prog )
-      prog.print
+      //prog.print
     case m: Parser.Mismatch => m.error
   }
 
@@ -101,7 +102,8 @@ object Main extends App {
 
       val vm = new VM( prog ) {trace = false; debug = false}
 
-      println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
+//      println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
+      println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
     case m: Parser.Mismatch => m.error
   }
 
