@@ -57,6 +57,7 @@ class VM( prog: Program ) {
   }
 
   var choiceStack: List[State] = Nil
+  var cut: List[State] = _
   var mark: List[State] = _
   var dataStack: List[Any] = Nil
   var pc = -1
@@ -88,6 +89,7 @@ class VM( prog: Program ) {
     success = true
     vars = new VarMap
     trail = Nil
+    cut = Nil
 
     goal match {
       case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
@@ -210,10 +212,18 @@ class VM( prog: Program ) {
       case BranchInst( disp ) => pc += disp
       case FailInst => fail
       case ChoiceInst( disp ) => choice( disp )
+      case CutChoiceInst( disp ) =>
+        cut = choiceStack
+        choice( disp )
+      case CutInst =>
+        mark = null
+        choiceStack = cut
       case MarkInst( disp ) =>
         mark = choiceStack
         choice( disp )
-      case UnmarkInst => choiceStack = mark
+      case UnmarkInst =>
+        if (mark ne null)
+          choiceStack = mark
       case CallInst( entry ) => call( entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {

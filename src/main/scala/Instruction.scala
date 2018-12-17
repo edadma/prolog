@@ -15,6 +15,8 @@ case object DupInst extends Instruction
 case class BranchIfInst( disp: Int ) extends Instruction
 case class BranchInst( disp: Int ) extends Instruction
 case object FailInst extends Instruction
+case class CutChoiceInst( disp: Int ) extends Instruction
+case object CutInst extends Instruction
 case class ChoiceInst( disp: Int ) extends Instruction
 case class MarkInst( disp: Int ) extends Instruction
 case object UnmarkInst extends Instruction

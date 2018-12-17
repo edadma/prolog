@@ -82,7 +82,7 @@ object Compiler {
         proc.entry = prog.pointer
 
         for (c <- clauses.init)
-          prog.patch( (ptr, len) => ChoiceInst(len - ptr - 1) ) {
+          prog.patch( (ptr, len) => CutChoiceInst(len - ptr - 1) ) {
             c.vars = compileClause( c.ast )
           }
 
@@ -329,6 +329,7 @@ object Compiler {
           compileBody( right ) }
       case AtomAST( _, "true" ) =>  // no code to emit for true/0
       case AtomAST( _, "false"|"fail" ) => prog += FailInst
+      case AtomAST( _, "!" ) => prog += CutInst
       case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
         compileTerm( right )
         prog += VarUnifyInst( vars.num(lname) )
