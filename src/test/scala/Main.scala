@@ -102,10 +102,9 @@ object Main extends App {
       |	range( M1, N, Ns ).
       |*/
       |
-      |select(X, [X|Xs],Xs).
+      |select( X, [X | Xs], Xs ).
       |
-      |select(X, [Y|Ys],[Y|Zs]):-
-      |	select(X, Ys,Zs).
+      |select( X, [Y | Ys], [Y | Zs] ) :- select( X, Ys, Zs ).
       |
       |//select(X, [Head|Tail], Rest) :- select3_(Tail, Head, X, Rest).
       |
@@ -121,7 +120,9 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-      |perm( [1, 2, 3], R )
+      |perm( [1, 2, 3], P )
+      |
+      |//perm( [1, 2, 3], R )
       |
       |//go( R )
       |
@@ -156,7 +157,7 @@ object Main extends App {
           val vm = new VM( prog ) {trace = false; debug = false}
 
           println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
-        //      println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
+          //println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
         case m: Parser.Mismatch => m.error
       }
     case m: Parser.Mismatch => m.error

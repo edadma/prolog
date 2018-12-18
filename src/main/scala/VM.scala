@@ -64,7 +64,7 @@ class VM( prog: Program ) {
   var frame: Frame = new Frame( 0, -1 )
 
   def interpall( goal: TermAST ) = {
-    val resultset = new mutable.HashSet[Map[String, Any]]
+    val resultset = new mutable.ListBuffer[Map[String, Any]]
 
     interp( goal ) match {
       case Some( r ) =>
@@ -82,7 +82,7 @@ class VM( prog: Program ) {
       case None =>
     }
 
-    resultset.toSet
+    resultset//.toSet
   }
 
   def interp( goal: TermAST ) = {
@@ -304,7 +304,7 @@ class VM( prog: Program ) {
       case Structure( functor, args ) => Structure( functor, args map copy )
       case v: Variable =>
         v eval match {
-          case v: Variable => new Variable
+          case _: Variable => new Variable
           case x => copy( x )
         }
       case _ => a
@@ -329,18 +329,6 @@ class VM( prog: Program ) {
       case _ =>
         fail
         false
-    }
-
-  // todo: this won't work - use unify
-  def unifiable( a: Any, b: Any ): Boolean =
-    (vareval( a ), vareval( b )) match {
-      case (_: Variable, _) | (_, _: Variable) => true
-      case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
-        if (n1 == n2 && a1 == a2)
-          0 until a1 forall (i => unifiable( args1(i), args2(i) ))
-        else
-          false
-      case _ => a == b
     }
 
   def run = {
