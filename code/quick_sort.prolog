@@ -1,3 +1,5 @@
+quick_sort(List,Sorted):-qsort(List,Sorted,[]).
+
 qsort([], R, R).
 qsort([X|L], R, R0) :-
 	partition(L, X, L1, L2),

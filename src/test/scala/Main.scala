@@ -102,26 +102,28 @@ object Main extends App {
       |	range( M1, N, Ns ).
       |*/
       |
-      |/*
-      |quick_sort(List,Sorted):-q_sort(List,[],Sorted).
+      |select(X, [X|Xs],Xs).
       |
-      |q_sort([],Acc,Acc).
-      |q_sort([H|T],Acc,Sorted):-
-      |	pivoting(H,T,L1,L2),
-      |	q_sort(L1,Acc,Sorted1),q_sort(L2,[H|Sorted1],Sorted).
+      |select(X, [Y|Ys],[Y|Zs]):-
+      |	select(X, Ys,Zs).
       |
-      |pivoting(H,[],[],[]).
-      |pivoting(H,[X|T],[X|L],G):-X=<H,pivoting(H,T,L,G).
-      |pivoting(H,[X|T],L,[X|G]):-X>H,pivoting(H,T,L,G).
-      |*/
+      |//select(X, [Head|Tail], Rest) :- select3_(Tail, Head, X, Rest).
       |
-      |go( R ) :- 1 \= 1, R = 3.
+      |//select3_(Tail, Head, Head, Tail).
+      |//select3_([Head2|Tail], Head, X, [Head|Rest]) :- select3_(Tail, Head2, X, Rest).
+      |
+      |perm( [], [] ).
+      |perm( List, [First | Perm] ) :- select( First, List, Rest ), perm( Rest, Perm ).
+      |
+      |//go( R ) :- 1 \= 1, R = 3.
       |
       |//go :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |go( R )
+      |perm( [1, 2, 3], R )
+      |
+      |//go( R )
       |
       |//queens( 4, Qs )
     """.stripMargin
@@ -133,16 +135,23 @@ object Main extends App {
   | | | |x|
   | |x| | |
    */
+  println( "parsing program" )
+
   Parser.source( new StringReader(code) ) match {
     case Parser.Match( ast, _ ) =>
       //println( ast )
+      println( "compiling program" )
       Compiler.debug = true
       Compiler.compile( ast, prog )
-      prog.print
+      //prog.print
+
+      println( "parsing query" )
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>
           //println( ast )
+
+          println( "interpreting query" )
 
           val vm = new VM( prog ) {trace = false; debug = false}
 
