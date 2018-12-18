@@ -235,9 +235,6 @@ class VM( prog: Program ) {
       case FrameInst( vars ) => frame = new Frame( vars, popInt )
       case NativeInst( func ) => func( this )
       case UnifyInst => unify( pop, pop )
-      case NotUnifiableInst =>
-        if (unifiable( pop, pop ))
-          fail
       case EvalInst( pos, name, v1, v2 ) =>
         frame.vars(v1).eval match {
           case _: Variable => pos.error( s"variable '$name' is unbound" )

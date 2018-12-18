@@ -66,7 +66,7 @@ object Main extends App {
       |    ancestor(Z,Y).             // of someone who is your ancestor
       |*/
       |
-      |
+      |/*
       |queens(N,Qs):-
       |	range(1,N,Ns),
       |	queens(Ns,[],Qs).
@@ -100,7 +100,7 @@ object Main extends App {
       |	M < N,
       |	M1 is M + 1,
       |	range( M1, N, Ns ).
-      |
+      |*/
       |
       |/*
       |quick_sort(List,Sorted):-q_sort(List,[],Sorted).
@@ -115,15 +115,15 @@ object Main extends App {
       |pivoting(H,[X|T],L,[X|G]):-X>H,pivoting(H,T,L,G).
       |*/
       |
-      |//go( R ) :- 1 < 2.
+      |go( R ) :- 1 \= 1, R = 3.
       |
       |//go :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |//go( R )
+      |go( R )
       |
-      |queens( 4, Qs )
+      |//queens( 4, Qs )
     """.stripMargin
   val prog = new Program
 
@@ -138,7 +138,7 @@ object Main extends App {
       //println( ast )
       Compiler.debug = true
       Compiler.compile( ast, prog )
-      //prog.print
+      prog.print
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>

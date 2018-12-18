@@ -350,9 +350,12 @@ object Compiler {
         compileTerm( right )
         prog += UnifyInst
       case StructureAST( pos, "\\=", List(left, right) ) =>
-        compileTerm( left )
-        compileTerm( right )
-        prog += NotUnifiableInst
+        prog.patch( (ptr, len) => MarkInst(len - ptr - 1) ) {
+          compileTerm( left )
+          compileTerm( right )
+          prog += UnifyInst
+          prog += UnmarkInst
+          prog += FailInst }
       case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
         compileArithmetic( expr )
         compileExpression( expr )
