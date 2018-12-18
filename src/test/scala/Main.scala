@@ -66,7 +66,7 @@ object Main extends App {
       |    ancestor(Z,Y).             // of someone who is your ancestor
       |*/
       |
-      |/*
+      |
       |queens(N,Qs):-
       |	range(1,N,Ns),
       |	queens(Ns,[],Qs).
@@ -100,8 +100,9 @@ object Main extends App {
       |	M < N,
       |	M1 is M + 1,
       |	range( M1, N, Ns ).
-      |*/
       |
+      |
+      |/*
       |quick_sort(List,Sorted):-q_sort(List,[],Sorted).
       |
       |q_sort([],Acc,Acc).
@@ -110,18 +111,19 @@ object Main extends App {
       |	q_sort(L1,Acc,Sorted1),q_sort(L2,[H|Sorted1],Sorted).
       |
       |pivoting(H,[],[],[]).
-      |pivoting(H,[X|T],[X|L],G):-X>=H,pivoting(H,T,L,G).
-      |pivoting(H,[X|T],L,[X|G]):-X<H,pivoting(H,T,L,G).
+      |pivoting(H,[X|T],[X|L],G):-X=<H,pivoting(H,T,L,G).
+      |pivoting(H,[X|T],L,[X|G]):-X>H,pivoting(H,T,L,G).
+      |*/
       |
-      |go( R ) :- quick_sort( [3, 2, 5, 4], R ).
+      |//go( R ) :- 1 < 2.
       |
       |//go :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |go( R )
+      |//go( R )
       |
-      |//queens( 4, Qs )
+      |queens( 4, Qs )
     """.stripMargin
   val prog = new Program
 

@@ -371,23 +371,23 @@ object Compiler {
         prog += NeInst
       case StructureAST( pos, "<", List(left, right) ) =>
         compileArithmetic( ast )
-        compileExpression( left )
         compileExpression( right )
+        compileExpression( left )
         prog += LtInst
       case StructureAST( pos, "=<", List(left, right) ) =>
         compileArithmetic( ast )
-        compileExpression( left )
         compileExpression( right )
+        compileExpression( left )
         prog += LeInst
       case StructureAST( pos, ">", List(left, right) ) =>
         compileArithmetic( ast )
-        compileExpression( left )
         compileExpression( right )
+        compileExpression( left )
         prog += GtInst
       case StructureAST( pos, ">=", List(left, right) ) =>
         compileArithmetic( ast )
-        compileExpression( left )
         compileExpression( right )
+        compileExpression( left )
         prog += GeInst
       case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
         prog += PushFrameInst

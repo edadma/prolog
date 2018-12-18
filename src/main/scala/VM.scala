@@ -202,10 +202,10 @@ class VM( prog: Program ) {
       case DupInst => push( top )
       case EqInst => if (!lia.Math.predicate( FM_EQ, pop, pop )) fail
       case NeInst => if (!lia.Math.predicate( FM_NE, pop, pop )) fail
-      case GtInst => if (!lia.Math.predicate( FM_LT, pop, pop )) fail
-      case GeInst => if (!lia.Math.predicate( FM_LE, pop, pop )) fail
-      case LtInst => if (!lia.Math.predicate( FM_GT, pop, pop )) fail
-      case LeInst => if (!lia.Math.predicate( FM_GE, pop, pop )) fail
+      case GtInst => if (!lia.Math.predicate( FM_GT, pop, pop )) fail
+      case GeInst => if (!lia.Math.predicate( FM_GE, pop, pop )) fail
+      case LtInst => if (!lia.Math.predicate( FM_LT, pop, pop )) fail
+      case LeInst => if (!lia.Math.predicate( FM_LE, pop, pop )) fail
       case BranchIfInst( disp ) =>
         if (popBoolean)
           pc += disp
