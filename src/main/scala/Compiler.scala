@@ -18,7 +18,8 @@ object Compiler {
     )
 
   class Vars {
-    val vars = new mutable.LinkedHashMap[String, Int]
+    val vars = new mutable.HashMap[String, Int]
+    val evals = new mutable.HashSet[String]
 
     def count = vars.size
 
@@ -36,6 +37,14 @@ object Compiler {
     }
 
     def get( name: String ) = vars get name
+
+    def eval( name: String ) =
+      if (evals( name ))
+        false
+      else {
+        evals += name
+        true
+      }
   }
 
   def compile( ast: PrologAST, prog: Program ): Unit = {
@@ -258,7 +267,7 @@ object Compiler {
 
     addvar( expr )
 
-    for ((n, (r, v, v1)) <- exprvars)
+    for ((n, (r, v, v1)) <- exprvars if vars eval n)
       prog += EvalInst( r, n, v, v1 )
   }
 

@@ -66,6 +66,7 @@ object Main extends App {
       |    ancestor(Z,Y).             // of someone who is your ancestor
       |*/
       |
+      |/*
       |queens(N,Qs):-
       |	range(1,N,Ns),
       |	queens(Ns,[],Qs).
@@ -99,12 +100,28 @@ object Main extends App {
       |	M < N,
       |	M1 is M + 1,
       |	range( M1, N, Ns ).
+      |*/
       |
-      |//go( X ) :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
+      |quick_sort(List,Sorted):-q_sort(List,[],Sorted).
+      |
+      |q_sort([],Acc,Acc).
+      |q_sort([H|T],Acc,Sorted):-
+      |	pivoting(H,T,L1,L2),
+      |	q_sort(L1,Acc,Sorted1),q_sort(L2,[H|Sorted1],Sorted).
+      |
+      |pivoting(H,[],[],[]).
+      |pivoting(H,[X|T],[X|L],G):-X>=H,pivoting(H,T,L,G).
+      |pivoting(H,[X|T],L,[X|G]):-X<H,pivoting(H,T,L,G).
+      |
+      |go( R ) :- quick_sort( [3, 2, 5, 4], R ).
+      |
+      |//go :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |queens( 4, Qs )
+      |go( R )
+      |
+      |//queens( 4, Qs )
     """.stripMargin
   val prog = new Program
 
@@ -113,9 +130,6 @@ object Main extends App {
   |x| | | |
   | | | |x|
   | |x| | |
-
-
-
    */
   Parser.source( new StringReader(code) ) match {
     case Parser.Match( ast, _ ) =>
@@ -123,17 +137,17 @@ object Main extends App {
       Compiler.debug = true
       Compiler.compile( ast, prog )
       //prog.print
-    case m: Parser.Mismatch => m.error
-  }
 
-  Parser.query( new StringReader(query) ) match {
-    case Parser.Match( ast, _ ) =>
-      //println( ast )
+      Parser.query( new StringReader(query) ) match {
+        case Parser.Match( ast, _ ) =>
+          //println( ast )
 
-      val vm = new VM( prog ) {trace = false; debug = false}
+          val vm = new VM( prog ) {trace = false; debug = false}
 
-      println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
-//      println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
+          println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
+        //      println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
+        case m: Parser.Mismatch => m.error
+      }
     case m: Parser.Mismatch => m.error
   }
 
