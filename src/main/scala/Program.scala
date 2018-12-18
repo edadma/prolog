@@ -66,6 +66,8 @@ class Program extends Growable[Instruction] {
             case BranchInst( disp ) => s"branch $disp"
             case FailInst => "fail"
             case ChoiceInst( disp ) => s"choice $disp"
+            case CutChoiceInst( disp ) => s"cut_choice $disp"
+            case CutInst => "cut"
             case MarkInst( disp ) => s"mark $disp"
             case UnmarkInst => "unmark"
             case CallInst( entry ) => s"call $entry"

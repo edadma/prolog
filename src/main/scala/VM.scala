@@ -1,7 +1,6 @@
 package xyz.hyperreal.prolog
 
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayStack, ListBuffer}
 import xyz.hyperreal.lia
 
 
@@ -242,7 +241,8 @@ class VM( prog: Program ) {
       case EvalInst( pos, name, v1, v2 ) =>
         frame.vars(v1).eval match {
           case _: Variable => pos.error( s"variable '$name' is unbound" )
-          case t => unify( eval(t), frame.vars(v2) )
+          case t =>
+            unify( eval(t), frame.vars(v2) )
         }
       case AddInst => push( lia.Math(FM_ADD, pop, pop) )
       case SubInst =>
@@ -328,12 +328,13 @@ class VM( prog: Program ) {
           fail
           false
         }
-      case _ if a == b => true
+      case (a1, b1) if a1 == b1 => true
       case _ =>
         fail
         false
     }
 
+  // todo: this won't work - use unify
   def unifiable( a: Any, b: Any ): Boolean =
     (vareval( a ), vareval( b )) match {
       case (_: Variable, _) | (_, _: Variable) => true
