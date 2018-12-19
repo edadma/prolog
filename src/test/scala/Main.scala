@@ -68,7 +68,7 @@ object Main extends App {
       |    ancestor(Z,Y).             // of someone who is your ancestor
       |*/
       |
-      |/*
+      |
       |queens(N,Qs):-
       |	range(1,N,Ns),
       |	queens(Ns,[],Qs).
@@ -102,7 +102,7 @@ object Main extends App {
       |	M < N,
       |	M1 is M + 1,
       |	range( M1, N, Ns ).
-      |*/
+      |
       |
       |/*
       |select( X, [X | Xs], Xs ).
@@ -112,6 +112,7 @@ object Main extends App {
       |perm( List, [First | Perm] ) :- select( First, List, Rest ), perm( Rest, Perm ).
       |*/
       |
+      |/*
       |append( [], L, L ).
       |append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
       |
@@ -119,17 +120,28 @@ object Main extends App {
       |perm( L, [H | T] ) :- append( V, [H | U], L ), append( V, U, W ), perm( W, T ).
       |
       |
+      |naiveSort(L1,L2) :-
+      |  perm(L1,L2), inOrder(L2).
+      |
+      |inOrder([]).
+      |inOrder([_]).
+      |inOrder([A,B|T]) :-
+      |   A =< B, inOrder([B|T]).
+      |*/
+      |
       |//go( R ) :- 1 \= 1, R = 3.
       |
       |//go :- (1 = 2 -> write( yes ), nl ; write( no ), nl), write( after ), nl.
     """.stripMargin
   val query =
     """
-      |perm( [1, 2, 3], P )
+      |//naiveSort( [3, 2, 1], L )
+      |
+      |//perm( [1, 2, 3], P )
       |
       |//go( R )
       |
-      |//queens( 4, Qs )
+      |queens( 4, Qs )
     """.stripMargin
   val prog = new Program
 
@@ -157,8 +169,7 @@ object Main extends App {
 
           println( "interpreting query" )
 
-          val vm = new VM( prog ) {trace = false; debug = true; debugout = new PrintStream( "debug" )
-          }
+          val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
           println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
           //println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )

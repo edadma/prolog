@@ -26,7 +26,7 @@ class VM( prog: Program ) {
 
   var trace = false
   var debug = false
-  var debugout = Console.out
+  var out = Console.out
 
   var success = true
   var trail: List[Variable] = Nil
@@ -73,7 +73,7 @@ class VM( prog: Program ) {
           val res1 = res map { case (k, v) => k -> copy( v ) }
 
           if (trace || debug)
-            debugout.println( s"==> $res1" )
+            out.println( s"==> $res1" )
 
           resultset += res1
 
@@ -168,22 +168,22 @@ class VM( prog: Program ) {
     val inst = prog(pc)
 
     if (trace)
-      println( pc, inst, dataStack )
+      out.println( pc, inst, dataStack )
 
     pc += 1
 
     inst match {
       case DebugInst( _, _ ) if !debug =>
-      case DebugInst( msg, null ) => debugout.println( msg )
-      case DebugInst( msg, pos ) => debugout.println( pos.longErrorText(msg) )
+      case DebugInst( msg, null ) => out.println( msg )
+      case DebugInst( msg, pos ) => out.println( pos.longErrorText(msg) )
       case PushInst( d ) => push( d )
-      case VarInst( n ) => push( frame.vars(n).eval )
+      case VarInst( n ) => push( frame.vars(n) )
       case VarUnifyInst( n ) =>
         val v = frame.vars(n).eval
         val p = pop
 
         if (debug)
-          debugout.println( s"var: $v   pop: $p" )
+          out.println( s"var: $v   pop: $p" )
 
         unify( v, p )
       case StructureInst( f ) => pushStructure( f )
@@ -191,7 +191,7 @@ class VM( prog: Program ) {
         val v = pop
         val s = pop.asInstanceOf[Compound]
 
-        s productElement n match {
+        vareval( s productElement n ) match {
           case EMPTY => s.update( n, v )
           case u: Variable =>
             unify( u, v )
@@ -284,7 +284,7 @@ class VM( prog: Program ) {
 
   def fail = {
     if (trace || debug)
-      debugout.println( "*** fail ***" )
+      out.println( "*** fail ***" )
 
     if (choiceStack nonEmpty)
       choiceStack.head match {
@@ -349,7 +349,7 @@ class VM( prog: Program ) {
       execute
 
     if (trace)
-      println( dataStack )
+      out.println( dataStack )
 
     if (success)
       Some( vars.map )
@@ -372,7 +372,7 @@ class VM( prog: Program ) {
     def unbound = !bound
 
     def bind( v: Any ): Unit = {
-      val last = end
+      val last: Variable = end
 
       last.binding = v
       last.bound = true
@@ -394,7 +394,7 @@ class VM( prog: Program ) {
         this
 
     def eval = {
-      val last = end
+      val last: Variable = end
 
       if (last.bound)
         last.binding
