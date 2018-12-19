@@ -240,23 +240,23 @@ object Compiler {
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     term match {
       case s: StructureAST if ground( s ) =>
-        dbg( s"structure", s.pos )
+        dbg( s"put structure", s.pos )
         prog += PushInst( constant(s) )
       case StructureAST( r, name, args ) =>
-        dbg( s"structure", r )
+        dbg( s"put structure", r )
         args foreach compileTerm
         prog += StructureInst( functor(name, args.length) )
       case AtomAST( r, name ) =>
-        dbg( "atom", r )
+        dbg( "put atom", r )
         prog += PushInst( Symbol(name) )
       case AnonymousAST( r ) =>
-        dbg( "anonymous", r )
+        dbg( "put anonymous", r )
         prog += VarInst( vars.anon )
       case VariableAST( r, name ) =>
-        dbg( "variable", r )
+        dbg( "put variable", r )
         prog += VarInst( vars.num(name) )
       case n: NumericAST =>
-        dbg( "number", n.pos )
+        dbg( "put number", n.pos )
         prog += PushInst( n.v )
     }
 

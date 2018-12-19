@@ -26,6 +26,7 @@ class VM( prog: Program ) {
 
   var trace = false
   var debug = false
+  var debugout = Console.out
 
   var success = true
   var trail: List[Variable] = Nil
@@ -72,7 +73,7 @@ class VM( prog: Program ) {
           val res1 = res map { case (k, v) => k -> copy( v ) }
 
           if (trace || debug)
-            println( s"==> $res1" )
+            debugout.println( s"==> $res1" )
 
           resultset += res1
 
@@ -173,8 +174,8 @@ class VM( prog: Program ) {
 
     inst match {
       case DebugInst( _, _ ) if !debug =>
-      case DebugInst( msg, null ) => println( msg )
-      case DebugInst( msg, pos ) => println( pos.longErrorText(msg) )
+      case DebugInst( msg, null ) => debugout.println( msg )
+      case DebugInst( msg, pos ) => debugout.println( pos.longErrorText(msg) )
       case PushInst( d ) => push( d )
       case VarInst( n ) => push( frame.vars(n).eval )
       case VarUnifyInst( n ) =>
@@ -182,7 +183,7 @@ class VM( prog: Program ) {
         val p = pop
 
         if (debug)
-          println( s"var: $v   pop: $p" )
+          debugout.println( s"var: $v   pop: $p" )
 
         unify( v, p )
       case StructureInst( f ) => pushStructure( f )
@@ -283,7 +284,7 @@ class VM( prog: Program ) {
 
   def fail = {
     if (trace || debug)
-      println( "*** fail ***" )
+      debugout.println( "*** fail ***" )
 
     if (choiceStack nonEmpty)
       choiceStack.head match {
