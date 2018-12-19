@@ -69,7 +69,12 @@ class VM( prog: Program ) {
     interp( goal ) match {
       case Some( r ) =>
         def results( res: Map[String, Any] ): Unit = {
-          resultset += res map { case (k, v) => k -> copy( v ) }
+          val res1 = res map { case (k, v) => k -> copy( v ) }
+
+          if (trace || debug)
+            println( s"==> $res1" )
+
+          resultset += res1
 
           if (fail)
             run match {
@@ -172,7 +177,14 @@ class VM( prog: Program ) {
       case DebugInst( msg, pos ) => println( pos.longErrorText(msg) )
       case PushInst( d ) => push( d )
       case VarInst( n ) => push( frame.vars(n).eval )
-      case VarUnifyInst( n ) => unify( frame.vars(n).eval, pop )
+      case VarUnifyInst( n ) =>
+        val v = frame.vars(n).eval
+        val p = pop
+
+        if (debug)
+          println( s"var: $v   pop: $p" )
+
+        unify( v, p )
       case StructureInst( f ) => pushStructure( f )
       case ElementUnifyInst( n ) =>
         val v = pop

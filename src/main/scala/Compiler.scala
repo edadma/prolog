@@ -239,14 +239,25 @@ object Compiler {
 
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     term match {
-      case s: StructureAST if ground( s ) => prog += PushInst( constant(s) )
-      case StructureAST( _, name, args ) =>
+      case s: StructureAST if ground( s ) =>
+        dbg( s"structure", s.pos )
+        prog += PushInst( constant(s) )
+      case StructureAST( r, name, args ) =>
+        dbg( s"structure", r )
         args foreach compileTerm
         prog += StructureInst( functor(name, args.length) )
-      case AtomAST( _, name ) => prog += PushInst( Symbol(name) )
-      case AnonymousAST( _ ) => prog += VarInst( vars.anon )
-      case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
-      case n: NumericAST => prog += PushInst( n.v )
+      case AtomAST( r, name ) =>
+        dbg( "atom", r )
+        prog += PushInst( Symbol(name) )
+      case AnonymousAST( r ) =>
+        dbg( "anonymous", r )
+        prog += VarInst( vars.anon )
+      case VariableAST( r, name ) =>
+        dbg( "variable", r )
+        prog += VarInst( vars.num(name) )
+      case n: NumericAST =>
+        dbg( "number", n.pos )
+        prog += PushInst( n.v )
     }
 
   def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {
@@ -331,25 +342,33 @@ object Compiler {
         compileBody( left )
         compileBody( right )
       case StructureAST( r, ";", List(left, right) ) =>
-        dbg( s"disjunction", r )
+        dbg( "disjunction", r )
         prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
           compileBody( left ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
           compileBody( right ) }
       case AtomAST( _, "true" ) =>  // no code to emit for true/0
-      case AtomAST( _, "false"|"fail" ) => prog += FailInst
-      case AtomAST( _, "!" ) => prog += CutInst
+      case AtomAST( r, "false"|"fail" ) =>
+        dbg( "fail", r )
+        prog += FailInst
+      case AtomAST( r, "!" ) =>
+        dbg( "cut", r )
+        prog += CutInst
       case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
+        dbg( "unify", pos )
         compileTerm( right )
         prog += VarUnifyInst( vars.num(lname) )
       case StructureAST( pos, "=", List(left, VariableAST(_, rname)) ) =>
+        dbg( "unify", pos )
         compileTerm( left )
         prog += VarUnifyInst( vars.num(rname) )
       case StructureAST( pos, "=", List(left, right) ) =>
+        dbg( "unify", pos )
         compileTerm( left )
         compileTerm( right )
         prog += UnifyInst
       case StructureAST( pos, "\\=", List(left, right) ) =>
+        dbg( "not unifiable", pos )
         prog.patch( (ptr, len) => MarkInst(len - ptr - 1) ) {
           compileTerm( left )
           compileTerm( right )
@@ -392,39 +411,51 @@ object Compiler {
         compileExpression( right )
         compileExpression( left )
         prog += GeInst
-      case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
-        prog += PushFrameInst
-        args foreach compileTerm
-
+      case StructureAST( r, name, args ) if prog.defined( name, args.length ) =>
         val f = functor( name, args.length )
 
+        dbg( s"procedure $f", r )
+        prog += PushFrameInst
+        args foreach compileTerm
+
         prog.procedure( f ).entry match {
           case -1 => prog.fixup( f )
           case entry => prog += CallInst( entry )
         }
-      case StructureAST( _, name, args ) if Builtin exists functor( name, args.length ) =>
-        args foreach compileTerm
-        prog += NativeInst( Builtin.predicate(functor(name, args.length)) )
-      case StructureAST( pos, name, args ) =>
-        prog += PushFrameInst
-        args foreach compileTerm
-        prog += CallIndirectInst( pos, functor(name, args.length) )
-      case AtomAST( _, name ) if prog.defined( name, 0 ) =>
-        prog += PushFrameInst
+      case StructureAST( r, name, args ) if Builtin exists functor( name, args.length ) =>
+        val f = functor( name, args.length )
 
+        dbg( s"built-in $f", r )
+        args foreach compileTerm
+        prog += NativeInst( Builtin.predicate(f) )
+      case StructureAST( pos, name, args ) =>
+        val f = functor( name, args.length )
+
+        dbg( s"procedure (indirect) $f", pos )
+        prog += PushFrameInst
+        args foreach compileTerm
+        prog += CallIndirectInst( pos, f )
+      case AtomAST( r, name ) if prog.defined( name, 0 ) =>
         val f = functor( name, 0 )
 
+        dbg( s"built-in $f", r )
+        prog += PushFrameInst
+
         prog.procedure( f ).entry match {
           case -1 => prog.fixup( f )
           case entry => prog += CallInst( entry )
         }
-      case AtomAST( pos, name ) if Builtin exists functor( name, 0 ) =>
-        dbg( s"built-in $name/0", pos )
-        prog += NativeInst( Builtin.predicate(functor( name, 0)) )
-      case AtomAST( pos, name ) =>
-        dbg( s"goal $name/0", pos )
+      case AtomAST( r, name ) if Builtin exists functor( name, 0 ) =>
+        val f = functor( name, 0 )
+
+        dbg( s"built-in $f", r )
+        prog += NativeInst( Builtin.predicate(f) )
+      case AtomAST( r, name ) =>
+        val f = functor( name, 0 )
+
+        dbg( s"boal $f", r )
         prog += PushFrameInst
-        prog += CallIndirectInst( pos, functor(name, 0) )
+        prog += CallIndirectInst( r, functor(name, 0) )
     }
 
 }

@@ -102,14 +102,9 @@ object Main extends App {
       |	range( M1, N, Ns ).
       |*/
       |
+      |
       |select( X, [X | Xs], Xs ).
-      |
       |select( X, [Y | Ys], [Y | Zs] ) :- select( X, Ys, Zs ).
-      |
-      |//select(X, [Head|Tail], Rest) :- select3_(Tail, Head, X, Rest).
-      |
-      |//select3_(Tail, Head, Head, Tail).
-      |//select3_([Head2|Tail], Head, X, [Head|Rest]) :- select3_(Tail, Head2, X, Rest).
       |
       |perm( [], [] ).
       |perm( List, [First | Perm] ) :- select( First, List, Rest ), perm( Rest, Perm ).
@@ -121,8 +116,6 @@ object Main extends App {
   val query =
     """
       |perm( [1, 2, 3], P )
-      |
-      |//perm( [1, 2, 3], R )
       |
       |//go( R )
       |
@@ -154,7 +147,7 @@ object Main extends App {
 
           println( "interpreting query" )
 
-          val vm = new VM( prog ) {trace = false; debug = false}
+          val vm = new VM( prog ) {trace = false; debug = true}
 
           println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
           //println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )

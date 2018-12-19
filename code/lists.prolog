@@ -6,6 +6,9 @@ prefix( [E | T0], [E | T] ) :- prefix( T0, T ).
 
 suffix( Y, Z ) :- append( _, Y, Z ).
 
+nextto( X, Y, [X, Y | _] ).
+nextto( X, Y, [_ | Zs] ) :- nextto( X, Y, Zs ).
+
 member( T, [T | _] ).
 member( X, [_ | Q] ) :- member( X, Q ).
 
