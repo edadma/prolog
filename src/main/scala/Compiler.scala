@@ -14,6 +14,7 @@ object Compiler {
       functor( "true", 0 ),
       functor( "fail", 0 ),
       functor( "false", 0 ),
+      functor( "repeat", 0 ),
       functor( "is", 2 )
     )
 
@@ -354,6 +355,9 @@ object Compiler {
       case AtomAST( r, "!" ) =>
         dbg( "cut", r )
         prog += CutInst
+      case AtomAST( r, "repeat" ) =>
+        dbg( "repeat", r )
+        prog += ChoiceInst( -1 )
       case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
         dbg( "unify", pos )
         compileTerm( right )

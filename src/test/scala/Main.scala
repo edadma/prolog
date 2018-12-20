@@ -8,8 +8,6 @@ object Main extends App {
   val code =
     """
       |go :- write( wow ), nl.
-      |
-      |
     """.stripMargin
   val query =
     """

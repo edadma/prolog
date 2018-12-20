@@ -8,4 +8,9 @@ object BuiltinTermIO {
     true
   }
 
+  def writeln( vm: VM, a: Any ) = {
+    println( display(a) )
+    true
+  }
+
 }
