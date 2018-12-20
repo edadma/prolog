@@ -3,7 +3,7 @@ package xyz.hyperreal.prolog
 
 object BultinCharacterIO {
 
-  def nl = {
+  def nl( vm: VM ) = {
     println
     true
   }

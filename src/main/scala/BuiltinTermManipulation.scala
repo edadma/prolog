@@ -3,10 +3,9 @@ package xyz.hyperreal.prolog
 
 object BuiltinTermManipulation {
 
-  def functor( a: Any ) =
-    {}
+//  def functor( a: Any ) =
 
-  def arg( n: Any, term: Any, arg: Any ) = {
+  def arg( vm: VM, arg: Any, term: Any, n: Any ) = {
 
   }
 

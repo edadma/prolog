@@ -7,13 +7,13 @@ object Main extends App {
 
   val code =
     """
-      |go.
+      |go :- write( wow ), nl.
       |
       |
     """.stripMargin
   val query =
     """
-      |write( hello )
+      |go
     """.stripMargin
   val prog = new Program
 

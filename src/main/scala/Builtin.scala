@@ -35,7 +35,8 @@ object Builtin {
 
   List(
     BultinCharacterIO,
-    BuiltinTermIO
+    BuiltinTermIO,
+    BuiltinTypeTesting
   ) foreach load
 
 }
