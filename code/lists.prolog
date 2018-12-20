@@ -15,3 +15,9 @@ member( X, [_ | Q] ) :- member( X, Q ).
 reverse( List, Reversed ) :- reverse( List, [], Reversed ).
 reverse( [], Reversed, Reversed ).
 reverse( [Head | Tail], SoFar, Reversed ) :- reverse( Tail, [Head | SoFar], Reversed ).
+
+select( X, [X | Xs], Xs ).
+select( X, [Y | Ys], [Y | Zs] ) :- select( X, Ys, Zs ).
+
+perm( [], [] ).
+perm( List, [First | Perm] ) :- select( First, List, Rest ), perm( Rest, Perm ).

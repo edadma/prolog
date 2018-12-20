@@ -3,7 +3,7 @@ package xyz.hyperreal.prolog
 
 object BuiltinTermIO {
 
-  def write( a: Any ) = {
+  def write( vm: VM, a: Any ) = {
     print( display(a) )
     true
   }

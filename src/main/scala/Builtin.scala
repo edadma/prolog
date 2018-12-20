@@ -19,15 +19,15 @@ object Builtin {
 
       m.getReturnType match {
         case Void.TYPE =>
-        case java.lang.Boolean.TYPE => predicates(functor(name, m.getParameterCount)) = new Predicate(obj, m)
+        case java.lang.Boolean.TYPE => predicates(functor(name, m.getParameterCount - 1)) = new Predicate(obj, m)
         case _ =>
       }
     }
 
   class Predicate( obj: Any, method: Method ) extends (VM => Unit) {
     def apply( vm: VM ): Unit =
-      if(!method.invoke( obj, (for (_ <- 1 to method.getParameterCount) yield vm.pop).reverse.
-        toArray.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Boolean])
+      if(!method.invoke( obj, vm +: (for (_ <- 1 to method.getParameterCount - 1) yield vm.pop).
+        toArray[Object]: _* ).asInstanceOf[Boolean])
         vm.fail
 
     override def toString(): String = s"<predicate ${method.getName}/${method.getParameterCount}>"

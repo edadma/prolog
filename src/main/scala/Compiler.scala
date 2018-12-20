@@ -230,7 +230,7 @@ object Compiler {
       case AnonymousAST( _ ) | VariableAST( _, _ ) => false
     }
 
-  def constant( term: TermAST ): Any =
+  def constant( term: TermAST ): AnyRef =
     term match {
       case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toArray )
       case AtomAST( _, name ) => Symbol( name )

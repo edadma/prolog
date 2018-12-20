@@ -6,4 +6,8 @@ object BuiltinTermManipulation {
   def functor( a: Any ) =
     {}
 
+  def arg( n: Any, term: Any, arg: Any ) = {
+
+  }
+
 }
