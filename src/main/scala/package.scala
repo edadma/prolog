@@ -21,22 +21,22 @@ package object prolog {
   case class Clause( var vars: Int, ast: TermAST )
 
   trait Compound extends Product {
-    def update( n: Int, value: AnyRef )
+    def update( n: Int, value: Any )
 
-    override def productElement( n: Int ): AnyRef
+    override def productElement( n: Int ): Any
   }
 
-  case class Structure( functor: Functor, args: Array[AnyRef] ) extends Compound {
+  case class Structure( functor: Functor, args: Array[Any] ) extends Compound {
     override def productArity = args.length
 
-    override def productElement( n: Int ): AnyRef = args( n )
+    override def productElement( n: Int ): Any = args( n )
 
     override def productPrefix = functor.name.name
 
-    def update( n: Int, v: AnyRef ) = args(n) = v
+    def update( n: Int, v: Any ) = args(n) = v
   }
 
-  def vareval( a: AnyRef ): AnyRef =
+  def vareval( a: Any ): Any =
     a match {
       case v: VM#Variable => v.eval
       case _ => a

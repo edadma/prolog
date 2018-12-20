@@ -231,7 +231,7 @@ object Compiler {
       case AnonymousAST( _ ) | VariableAST( _, _ ) => false
     }
 
-  def constant( term: TermAST ): AnyRef =
+  def constant( term: TermAST ): Any =
     term match {
       case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toArray )
       case AtomAST( _, name ) => Symbol( name )
@@ -333,12 +333,22 @@ object Compiler {
         prog += FailInst
         dbg( s"then part", r )
         compileBody( goal2 )
-      case StructureAST( r, "\\+", List(term) ) =>
+      case StructureAST( r, "\\+", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
         dbg( s"not provable", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
           compileBody( term ) }
         prog += UnmarkInst
         prog += FailInst
+//      case StructureAST( r, "call", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
+//        dbg( s"call", r )
+//        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+//          compileBody( term ) }
+//        prog += UnmarkInst
+//      case StructureAST( r, "once", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
+//        dbg( s"not provable", r )
+//        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+//          compileBody( term ) }
+//        prog += UnmarkInst
       case StructureAST( _, ",", List(left, right) ) =>
         compileBody( left )
         compileBody( right )

@@ -48,7 +48,7 @@ class VM( prog: Program ) {
     def map = vars map { case (k, v) => (k, v.eval) } toMap
   }
 
-  case class State( dataStack: List[AnyRef], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
+  case class State( dataStack: List[Any], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
                     cut: List[State] )
 
   class Frame( size: Int, val ret: Int ) {
@@ -60,16 +60,16 @@ class VM( prog: Program ) {
   var choiceStack: List[State] = Nil
   var cut: List[State] = _
   var mark: List[State] = _
-  var dataStack: List[AnyRef] = Nil
+  var dataStack: List[Any] = Nil
   var pc = -1
   var frame: Frame = new Frame( 0, -1 )
 
   def interpall( goal: TermAST ) = {
-    val resultset = new mutable.HashSet[Map[String, AnyRef]]
+    val resultset = new mutable.HashSet[Map[String, Any]]
 
     interp( goal ) match {
       case Some( r ) =>
-        def results( res: Map[String, AnyRef] ): Unit = {
+        def results( res: Map[String, Any] ): Unit = {
           val res1 = res map { case (k, v) => k -> copy( v ) }
 
           if (trace || debug)
@@ -134,7 +134,7 @@ class VM( prog: Program ) {
   def pushFrame = push( frame )
 
   def pushStructure(f: Functor ): Unit = {
-    val args = new Array[AnyRef]( f.arity )
+    val args = new Array[Any]( f.arity )
 
     for (i <- f.arity - 1 to 0 by -1)
       args(i) = pop
@@ -142,9 +142,9 @@ class VM( prog: Program ) {
     push( Structure(f, args) )
   }
 
-  def top: AnyRef = vareval( dataStack.head )
+  def top = vareval( dataStack.head )
 
-  def pop: AnyRef = {
+  def pop = {
     val res = top
 
     dataStack = dataStack.tail
@@ -155,7 +155,7 @@ class VM( prog: Program ) {
 
   def popBoolean = pop.asInstanceOf[Boolean]
 
-  def push( d: AnyRef ): Unit = dataStack ::= d
+  def push( d: Any ): Unit = dataStack ::= d
 
   def call( entry: Int ): Unit = {
     push( pc.asInstanceOf[Number] )
@@ -312,7 +312,7 @@ class VM( prog: Program ) {
     }
   }
 
-  def copy( a: AnyRef ): AnyRef =
+  def copy( a: Any ): Any =
     a match {
       case Structure( functor, args ) => Structure( functor, args map copy )
       case v: Variable =>
@@ -323,7 +323,7 @@ class VM( prog: Program ) {
       case _ => a
     }
 
-  def unify( a: AnyRef, b: AnyRef ): Boolean =
+  def unify( a: Any, b: Any ): Boolean =
     (vareval( a ), vareval( b )) match {
       case (a1: Variable, b1) =>
         a1 bind b1
@@ -366,12 +366,12 @@ class VM( prog: Program ) {
 
     Variable.count += 1
 
-    var binding: AnyRef = _
+    var binding: Any = _
     var bound = false
 
     def unbound = !bound
 
-    def bind( v: AnyRef ): Unit = {
+    def bind( v: Any ): Unit = {
       val last: Variable = end
 
       last.binding = v
@@ -393,7 +393,7 @@ class VM( prog: Program ) {
       else
         this
 
-    def eval: AnyRef = {
+    def eval: Any = {
       val last: Variable = end
 
       if (last.bound)
