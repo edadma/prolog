@@ -1,6 +1,6 @@
 package xyz.hyperreal
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 
 package object prolog {
@@ -41,6 +41,28 @@ package object prolog {
       case v: VM#Variable => v.eval
       case _ => a
     }
+
+  def list2array( s: Any, buf: ArrayBuffer[Any] = new ArrayBuffer ): Array[Any] =
+    s match {
+      case NIL => buf.toArray
+      case Structure( CONS, Array(head, tail) ) =>
+        buf += head
+        list2array( tail, buf )
+    }
+
+  def array2list( a: Array[Any] ) = {
+    var list: Any = NIL
+    var idx = a.length - 1
+
+    while (idx >= 0) {
+      list = cons( a(idx), list )
+      idx -= 1
+    }
+
+    list
+  }
+
+  def cons( head: Any, tail: Any ) = Structure( CONS, Array(head, tail) )
 
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 

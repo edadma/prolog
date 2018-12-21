@@ -35,11 +35,11 @@ object Main extends App {
       |member( T, [T | _] ).
       |member( X, [_ | Q] ) :- member( X, Q ).
       |
-      |go :- writeln( 123 ).
+      |go( A, B ) :- A =.. B.
     """.stripMargin
   val query =
     """
-      |go
+      |go( asdf, R )
       |
       |//tour( pos(4, 3), Tour )
     """.stripMargin

@@ -6,7 +6,18 @@ object BuiltinTermManipulation {
   def `=..`( vm: VM, list: Any, term: Any ) =
     term match {
       case v: vm.Variable =>
+        list match {
+          case NIL => sys.error( "univ: empty list" )
+          case Structure( CONS, Array(head: Symbol, NIL) ) => v bind head
+          case Structure( CONS, Array(head: Symbol, tail) ) =>
+            val args = list2array( tail )
 
+            v bind Structure( Functor(head, args.length), args )
+          case _ => sys.error( s"univ: illegal list argument: $list" )
+        }
+      case a: Symbol => vm.unify( list, cons(a, NIL) )
+      case Structure( Functor(name, _), args ) => vm.unify( list, cons(name, array2list(args)) )
+      case _ => sys.error( s"univ: illegal term argument: $term" )
     }
 
   def copy_term( vm: VM, term2: Any, term1: Any ) = vm.unify( vm.copy(term1), term2 )

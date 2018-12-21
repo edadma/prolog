@@ -16,11 +16,12 @@ object Builtin {
       case c => c.toString
     }
 
-  def translate( f: Functor ): Functor =
+  def translate( f: Functor ): Functor = {
     if (f.name.name.head.isLetter)
       f
     else
-      Functor( Symbol(translate(f.name.name)), f.arity )
+      functor( translate(f.name.name), f.arity )
+  }
 
   def exists( f: Functor ) = predicates contains translate( f )
 
