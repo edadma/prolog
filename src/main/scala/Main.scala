@@ -5,6 +5,8 @@ import java.io.{File, PrintStream}
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
 
+import xyz.hyperreal.pattern_matcher.{Reader, StringReader}
+
 
 object Main extends App {
 
@@ -15,6 +17,8 @@ object Main extends App {
     val out = new PrintStream( reader.getTerminal.wrapOutIfNeeded(System.out), true )
     var line: String = null
     val historyFile = new File( System.getProperty("user.home") + "/.ppc-repl-history" )
+
+    var program = new Program
 
     if (!historyFile.exists)
       historyFile.createNewFile
@@ -67,11 +71,23 @@ object Main extends App {
                   |ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
                   |THIS SOFTWARE.
                 """.trim.stripMargin )
-            case List( "quit"|"q" ) =>
-              sys.exit
+            case List( "quit"|"q" ) => sys.exit
+            case List( "load"|"l", file ) =>
+              program = new Program
+
+              Parser.source( Reader.fromFile(file) ) match {
+                case Parser.Match( ast, _ ) => Compiler.compile( ast, program )
+                case m: Parser.Mismatch => m.error
+              }
           }
         } else {
+          Parser.query( new StringReader(line) ) match {
+            case Parser.Match( ast, _ ) =>
+              val vm = new VM( program )
 
+              println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) mkString "\n" )
+            case m: Parser.Mismatch => m.error
+          }
         }
 
         out.println
