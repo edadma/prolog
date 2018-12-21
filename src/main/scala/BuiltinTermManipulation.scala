@@ -8,11 +8,14 @@ object BuiltinTermManipulation {
       case v: vm.Variable =>
         list match {
           case NIL => sys.error( "univ: empty list" )
-          case Structure( CONS, Array(head: Symbol, NIL) ) => v bind head
+          case Structure( CONS, Array(head: Symbol, NIL) ) =>
+            v bind head
+            true
           case Structure( CONS, Array(head: Symbol, tail) ) =>
             val args = list2array( tail )
 
             v bind Structure( Functor(head, args.length), args )
+            true
           case _ => sys.error( s"univ: illegal list argument: $list" )
         }
       case a: Symbol => vm.unify( list, cons(a, NIL) )
