@@ -3,6 +3,14 @@ package xyz.hyperreal.prolog
 
 object BuiltinTermManipulation {
 
+  def `=..`( vm: VM, list: Any, term: Any ) =
+    term match {
+      case v: vm.Variable =>
+
+    }
+
+  def copy_term( vm: VM, term2: Any, term1: Any ) = vm.unify( vm.copy(term1), term2 )
+
   def functor( vm: VM, arity: Any, name: Any, term: Any ) =
     term match {
       case v: vm.Variable =>
