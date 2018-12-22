@@ -106,9 +106,9 @@ object Parser extends Matchers[Reader] {
       case p ~ _ ~ ts ~ tl ~ _ => mklist( ts, tl ) } |
     pos <~ "[" ~ "]" ^^ (AtomAST( _, "[]" )) |
     "(" ~> term <~ ")" |
-    pos ~ identOrReserved ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
+    pos ~ (singleStringLit | identOrReserved) ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
       case p ~ n ~ _ ~ a ~ _ => StructureAST( p, n, a ) } |
-    pos ~ identOrReserved ^^ {
+    pos ~ (singleStringLit | identOrReserved) ^^ {
       case p ~ "_" => AnonymousAST( p )
       case p ~ a if a.head.isLower => AtomAST( p, a )
       case p ~ a => VariableAST( p, a ) }

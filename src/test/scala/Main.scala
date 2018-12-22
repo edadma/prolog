@@ -11,7 +11,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-      |go( Term, [a] )
+      |go( Term, ['is good', 'apple sauce'] )
     """.stripMargin
   val prog = new Program
 

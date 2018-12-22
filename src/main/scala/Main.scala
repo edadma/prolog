@@ -75,8 +75,11 @@ object Main extends App {
             case List( "load"|"l", file ) =>
               program = new Program
 
-              Parser.source( Reader.fromFile(file) ) match {
-                case Parser.Match( ast, _ ) => Compiler.compile( ast, program )
+              Parser.source( Reader.fromFile(file + ".prolog") ) match {
+                case Parser.Match( ast, _ ) =>
+                  Compiler.compile( ast, program )
+
+                  println( program.procedures map (_.func) mkString "\n" )
                 case m: Parser.Mismatch => m.error
               }
           }
@@ -85,7 +88,7 @@ object Main extends App {
             case Parser.Match( ast, _ ) =>
               val vm = new VM( program )
 
-              println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) mkString "\n" )
+              println( vm.interpall(ast) map (_ map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
             case m: Parser.Mismatch => m.error
           }
         }
@@ -93,8 +96,8 @@ object Main extends App {
         out.println
       } catch {
         case e: Exception =>
-          //					out.println( e )
-          e.printStackTrace( out )
+          out.println( e.getMessage )
+          //e.printStackTrace( out )
       }
     }
 
