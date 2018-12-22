@@ -1,6 +1,7 @@
 package xyz.hyperreal.prolog
 
 import xyz.hyperreal.pattern_matcher.StringReader
+import xyz.hyperreal.prolog.Compiler.Vars
 
 
 object Main extends App {
@@ -29,12 +30,12 @@ object Main extends App {
   val prog = new Program
 
   println( "parsing program" )
+  Compiler.debug = true
 
   Parser.source( new StringReader(code) ) match {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       println( "compiling program" )
-      Compiler.debug = true
       Compiler.compile( ast, prog )
       //prog.print
 
@@ -42,16 +43,31 @@ object Main extends App {
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>
-          //println( ast )
-
-          println( "interpreting query" )
-
+          implicit val query = new Program
+          implicit val vars = new Vars
+          val block = query.block( "query" )
           val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
-          //println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
-          println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
+          Compiler.compileGoal( ast )
+          vm.pb = block
+          vm.pc = 0
+          vm.run
+
         case m: Parser.Mismatch => m.error
       }
+
+//      Parser.query( new StringReader(query) ) match {
+//        case Parser.Match( ast, _ ) =>
+//          //println( ast )
+//
+//          println( "interpreting query" )
+//
+//          val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
+//
+//          //println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
+//          println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
+//        case m: Parser.Mismatch => m.error
+//      }
     case m: Parser.Mismatch => m.error
   }
 

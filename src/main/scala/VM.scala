@@ -358,11 +358,21 @@ class VM( prog: Program ) {
     if (trace)
       out.println( dataStack )
 
-    if (success)
-      Some( vars.map )
-    else
-      None
+    success
   }
+
+  //  def run = {
+//    while (pc >= 0 && success)
+//      execute
+//
+//    if (trace)
+//      out.println( dataStack )
+//
+//    if (success)
+//      Some( vars.map )
+//    else
+//      None
+//  }
 
   object Variable {
     private var count = 0

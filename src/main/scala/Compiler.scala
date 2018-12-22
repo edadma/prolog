@@ -120,12 +120,12 @@ object Compiler {
         dbg( s"rule $f/${args.length}", pos )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
-          compileBody( body ) }
+          compileGoal( body ) }
         prog += ReturnInst
       case StructureAST( r, ":-", List(AtomAST(pos, n), body) ) =>
         dbg( s"rule $n/0", pos )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
-          compileBody( body ) }
+          compileGoal( body ) }
         prog += ReturnInst
       case StructureAST( r, f, args ) =>
         dbg( s"fact $f/${args.length}", r )
@@ -316,31 +316,31 @@ object Compiler {
       case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
     }
 
-  def compileBody( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
+  def compileGoal( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
       case StructureAST( r1, ";", List(StructureAST( r, "->", List(goal1, goal2) ), goal3) ) =>
         dbg( s"if-then-else", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the branch
-          compileBody( goal1 )
+          compileGoal( goal1 )
           prog += UnmarkInst
           dbg( s"then part", r )
-          compileBody( goal2 ) }
+          compileGoal( goal2 ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
           dbg( s"else part", r1 )
-          compileBody( goal3 ) }
+          compileGoal( goal3 ) }
       case StructureAST( r, "->", List(goal1, goal2) ) =>
         dbg( s"if-then", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/branch
-          compileBody( goal1 ) }
+          compileGoal( goal1 ) }
         prog += UnmarkInst
         prog += BranchInst( 1 )
         prog += FailInst
         dbg( s"then part", r )
-        compileBody( goal2 )
+        compileGoal( goal2 )
       case StructureAST( r, "\\+", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
         dbg( s"not provable", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
-          compileBody( term ) }
+          compileGoal( term ) }
         prog += UnmarkInst
         prog += FailInst
 //      case StructureAST( r, "call", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
@@ -354,14 +354,14 @@ object Compiler {
 //          compileBody( term ) }
 //        prog += UnmarkInst
       case StructureAST( _, ",", List(left, right) ) =>
-        compileBody( left )
-        compileBody( right )
+        compileGoal( left )
+        compileGoal( right )
       case StructureAST( r, ";", List(left, right) ) =>
         dbg( "disjunction", r )
         prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
-          compileBody( left ) }
+          compileGoal( left ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
-          compileBody( right ) }
+          compileGoal( right ) }
       case AtomAST( _, "true" ) =>  // no code to emit for true/0
       case AtomAST( r, "false"|"fail" ) =>
         dbg( "fail", r )
