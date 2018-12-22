@@ -7,24 +7,12 @@ object Main extends App {
 
   val code =
     """
-      |quick_sort(List,Sorted):-qsort(List,Sorted,[]).
-      |
-      |qsort([], R, R).
-      |qsort([X|L], R, R0) :-
-      |	partition(L, X, L1, L2),
-      |	qsort(L2, R1, R0),
-      |	qsort(L1, R, [X|R1]).
-      |
-      |partition([],_,[],[]).
-      |partition([X|L],Y,[X|L1],L2) :-
-      |	X =< Y, !,
-      |	partition(L,Y,L1,L2).
-      |partition([X|L],Y,L1,[X|L2]) :-
-      |	partition(L,Y,L1,L2).
+      |append( [], L, L ).
+      |append( [H | L1], L2, [H | L3] ) :- append( L1, L2, L3 ).
     """.stripMargin
   val query =
     """
-      |quick_sort( [3, 2, 1], L )
+      |append( [3, 4, 5], [6, 7, 8], L )
     """.stripMargin
   val prog = new Program
 
@@ -46,7 +34,7 @@ object Main extends App {
 
           println( "interpreting query" )
 
-          val vm = new VM( prog ) {trace = true; debug = true/*; out = new PrintStream( "debug" )*/}
+          val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
           //println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
           println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )

@@ -50,10 +50,10 @@ class VM( prog: Program ) {
     def map = vars map { case (k, v) => (k, v.eval) } toMap
   }
 
-  case class State( dataStack: List[Any], pb: ArrayBuffer[Instruction], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
+  case class State( dataStack: List[Any], pb: Block, pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
                     cut: List[State] )
 
-  class Frame( size: Int, val retpc: Int, val retpb: ArrayBuffer[Instruction] ) {
+  class Frame( size: Int, val retpc: Int, val retpb: Block ) {
     val vars = Array.fill[Variable]( size )( new Variable )
 
     override def toString: String = s"[frame size=$size retpb=$retpb retpc=$retpc]"
@@ -63,7 +63,7 @@ class VM( prog: Program ) {
   var cut: List[State] = _
   var mark: List[State] = _
   var dataStack: List[Any] = Nil
-  var pb: ArrayBuffer[Instruction] = _
+  var pb: Block = _
   var pc = -1
   var frame: Frame = new Frame( 0, -1, null )
 
@@ -160,7 +160,7 @@ class VM( prog: Program ) {
 
   def push( d: Any ): Unit = dataStack ::= d
 
-  def call( block: ArrayBuffer[Instruction], entry: Int ): Unit = {
+  def call( block: Block, entry: Int ): Unit = {
     push( pb )
     push( pc )
     pb = block
@@ -170,10 +170,10 @@ class VM( prog: Program ) {
   def choice( disp: Int ) = choiceStack ::= State( dataStack, pb, pc + disp, frame, trail, mark, cut )
 
   def execute {
-    val inst = prog(pc)
+    val inst = pb(pc)
 
     if (trace)
-      out.println( pc, inst, dataStack )
+      out.println( pc, instruction(inst), dataStack )
 
     pc += 1
 
@@ -251,7 +251,7 @@ class VM( prog: Program ) {
         }
       case DropInst => pop
       case PushFrameInst => pushFrame
-      case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[ArrayBuffer[Instruction]] )
+      case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[Block] )
       case NativeInst( func ) => func( this )
       case UnifyInst => unify( pop, pop )
       case EvalInst( pos, name, v1, v2 ) =>

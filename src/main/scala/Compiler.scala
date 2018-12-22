@@ -88,8 +88,8 @@ object Compiler {
 
   def phase2( implicit prog: Program ) {
     prog.procedures foreach {
-      case proc@Procedure( _, _, _, _, clauses ) =>
-        proc.block = prog.block
+      case proc@Procedure( f, _, _, _, clauses ) =>
+        proc.block = prog.block( f.toString )
         proc.entry = prog.pointer
 
         for (c <- clauses.init)
