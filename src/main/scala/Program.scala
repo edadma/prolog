@@ -7,13 +7,14 @@ import scala.collection.mutable.ArrayBuffer
 
 class Program extends Growable[Instruction] {
 
-  val code = new ArrayBuffer[Instruction]
+  var code: ArrayBuffer[Instruction] = _
   val procedureMap = new mutable.HashMap[Functor, Procedure]
-  var fixups = new ArrayBuffer[(Int, Functor)]
+  val fixups = new ArrayBuffer[(ArrayBuffer[Instruction], Int, Functor)]
 
-  def newprocedure = code.clear
-
-  def block = code.toArray
+  def block = {
+    code = new ArrayBuffer
+    code
+  }
 
   def apply( n: Int ) = code(n)
 
@@ -97,7 +98,7 @@ class Program extends Growable[Instruction] {
   def get( f: Functor ) = procedureMap get f
 
   def fixup( f: Functor ) {
-    fixups += ((pointer, f))
+    fixups += ((code, pointer, f))
     code += null
   }
 

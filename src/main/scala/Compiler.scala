@@ -89,7 +89,7 @@ object Compiler {
   def phase2( implicit prog: Program ) {
     prog.procedures foreach {
       case proc@Procedure( _, _, _, _, clauses ) =>
-        prog.newprocedure
+        proc.block = prog.block
         proc.entry = prog.pointer
 
         for (c <- clauses.init)
@@ -99,13 +99,12 @@ object Compiler {
 
         clauses.last.vars = compileClause( clauses.last.ast )
         proc.end = prog.pointer
-        proc.block = prog.block
     }
 
-    for ((addr, f) <- prog.fixups) {
+    for ((block, addr, f) <- prog.fixups) {
       val p = prog.procedure(f)
 
-      prog(addr) = CallInst( p.block, p.entry )
+      block(addr) = CallInst( p.block, p.entry )
     }
   }
 

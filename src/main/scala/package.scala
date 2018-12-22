@@ -16,7 +16,7 @@ package object prolog {
 
   case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
 
-  case class Procedure( func: Functor, var block: Array[Instruction], var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer )
+  case class Procedure( func: Functor, var block: ArrayBuffer[Instruction], var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer )
 
   case class Clause( var vars: Int, ast: TermAST )
 

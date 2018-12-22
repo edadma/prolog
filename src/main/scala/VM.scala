@@ -3,6 +3,8 @@ package xyz.hyperreal.prolog
 import scala.collection.mutable
 import xyz.hyperreal.lia
 
+import scala.collection.mutable.ArrayBuffer
+
 
 object VM {
 
@@ -48,10 +50,10 @@ class VM( prog: Program ) {
     def map = vars map { case (k, v) => (k, v.eval) } toMap
   }
 
-  case class State( dataStack: List[Any], pb: Array[Instruction], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
+  case class State( dataStack: List[Any], pb: ArrayBuffer[Instruction], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
                     cut: List[State] )
 
-  class Frame( size: Int, val retpc: Int, val retpb: Array[Instruction] ) {
+  class Frame( size: Int, val retpc: Int, val retpb: ArrayBuffer[Instruction] ) {
     val vars = Array.fill[Variable]( size )( new Variable )
 
     override def toString: String = s"[frame size=$size retpb=$retpb retpc=$retpc]"
@@ -61,7 +63,7 @@ class VM( prog: Program ) {
   var cut: List[State] = _
   var mark: List[State] = _
   var dataStack: List[Any] = Nil
-  var pb: Array[Instruction] = _
+  var pb: ArrayBuffer[Instruction] = _
   var pc = -1
   var frame: Frame = new Frame( 0, -1, null )
 
@@ -158,7 +160,7 @@ class VM( prog: Program ) {
 
   def push( d: Any ): Unit = dataStack ::= d
 
-  def call( block: Array[Instruction], entry: Int ): Unit = {
+  def call( block: ArrayBuffer[Instruction], entry: Int ): Unit = {
     push( pb )
     push( pc )
     pb = block
@@ -249,7 +251,7 @@ class VM( prog: Program ) {
         }
       case DropInst => pop
       case PushFrameInst => pushFrame
-      case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[Array[Instruction]] )
+      case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[ArrayBuffer[Instruction]] )
       case NativeInst( func ) => func( this )
       case UnifyInst => unify( pop, pop )
       case EvalInst( pos, name, v1, v2 ) =>
