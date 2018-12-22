@@ -88,7 +88,8 @@ object Compiler {
 
   def phase2( implicit prog: Program ) {
     prog.procedures foreach {
-      case proc@Procedure( _, _, _, clauses ) =>
+      case proc@Procedure( f, _, _, _, clauses ) =>
+        proc.block = prog.block( f.toString )
         proc.entry = prog.pointer
 
         for (c <- clauses.init)
@@ -100,8 +101,11 @@ object Compiler {
         proc.end = prog.pointer
     }
 
-    for ((addr, f) <- prog.fixups)
-      prog(addr) = CallInst( prog.procedure(f).entry )
+    for ((block, addr, f) <- prog.fixups) {
+      val p = prog.procedure(f)
+
+      block(addr) = CallInst( p.block, p.entry )
+    }
   }
 
   def dbg( msg: String, pos: Reader )(implicit prog: Program ) =
@@ -432,10 +436,12 @@ object Compiler {
         prog += PushFrameInst
         args foreach compileTerm
 
-        prog.procedure( f ).entry match {
-          case -1 => prog.fixup( f )
-          case entry => prog += CallInst( entry )
-        }
+        val p = prog.procedure( f )
+
+        if (p.entry == -1)
+          prog.fixup( f )
+        else
+          prog += CallInst( p.block, p.entry )
       case StructureAST( r, name, args ) if Builtin exists functor( name, args.length ) =>
         val f = functor( name, args.length )
 
@@ -455,10 +461,12 @@ object Compiler {
         dbg( s"built-in $f", r )
         prog += PushFrameInst
 
-        prog.procedure( f ).entry match {
-          case -1 => prog.fixup( f )
-          case entry => prog += CallInst( entry )
-        }
+        val p = prog.procedure( f )
+
+        if (p.entry == -1)
+          prog.fixup( f )
+        else
+          prog += CallInst( p.block, p.entry )
       case AtomAST( r, name ) if Builtin exists functor( name, 0 ) =>
         val f = functor( name, 0 )
 

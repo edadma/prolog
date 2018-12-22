@@ -16,7 +16,7 @@ package object prolog {
 
   case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
 
-  case class Procedure( func: Functor, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer )
+  case class Procedure( func: Functor, var block: Block, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer )
 
   case class Clause( var vars: Int, ast: TermAST )
 
@@ -67,7 +67,7 @@ package object prolog {
   def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
 
   def display( a: Any ): String =
-    a match {
+    vareval( a ) match {
       case Symbol( s ) => s
       case Structure( CONS, Array(_, _) ) =>
         def elems( term: Any, buf: StringBuilder = new StringBuilder ): String =
@@ -76,13 +76,15 @@ package object prolog {
             case Structure( CONS, Array(hd, tl) ) =>
               buf ++= display( hd )
 
-              tl match {
+              val tl1 = vareval( tl )
+
+              tl1 match {
                 case NIL =>
                 case s: Structure if s.functor == CONS => buf ++= ", "
                 case _ => buf ++= " | "
               }
 
-              elems( tl, buf )
+              elems( tl1, buf )
             case e =>
               buf ++= display( e )
               buf.toString
@@ -90,12 +92,46 @@ package object prolog {
 
         s"[${elems( a )}]"
       case Structure( Functor(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
-      case v: VM#Variable =>
-        v.eval match {
-          case x: VM#Variable => x.toString
-          case x => display( x )
-        }
-      case _ => a.toString
+      case v => v.toString
+    }
+
+  def instruction( inst: Instruction ) =
+    inst match {
+      case DebugInst( msg, null ) => s"-----  $msg"
+      case DebugInst( msg, pos ) => s"-----  $msg -- ${pos.line}:${pos.col}"
+      case PushInst( d ) => s"push $d"
+      case VarInst( n ) => s"pushv $n"
+      case VarUnifyInst( n ) => s"unifyv $n"
+      case StructureInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
+      case ElementUnifyInst( n ) => s"unifye $n"
+      case ReturnInst => s"return"
+      case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"
+      case DupInst => "dup"
+      case EqInst => "eq"
+      case NeInst => "ne"
+      case LtInst => "lt"
+      case LeInst => "le"
+      case GtInst => "gt"
+      case GeInst => "ge"
+      case BranchIfInst( disp ) => s"branch if $disp"
+      case BranchInst( disp ) => s"branch $disp"
+      case FailInst => "fail"
+      case ChoiceInst( disp ) => s"choice $disp"
+      case CutChoiceInst( disp ) => s"cut_choice $disp"
+      case CutInst => "cut"
+      case MarkInst( disp ) => s"mark $disp"
+      case UnmarkInst => "unmark"
+      case CallInst( _, entry ) => s"call $entry"//todo: add procedure functor to callInst for debugging
+      case DropInst => "drop"
+      case PushFrameInst => "pushfr"
+      case FrameInst( vars ) => s"frame $vars"
+      case NativeInst( pred ) => s"native $pred"
+      case UnifyInst => "unify"
+      case EvalInst( _, _, v1, v2 ) => s"eval $v1 $v2"
+      case AddInst => "add"
+      case SubInst => "sub"
+      case MulInst => "mul"
+      case DivInst => "div"
     }
 
 }

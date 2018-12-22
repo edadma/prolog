@@ -7,13 +7,18 @@ import scala.collection.mutable.ArrayBuffer
 
 class Program extends Growable[Instruction] {
 
-  val code = new ArrayBuffer[Instruction]
+  var code: ArrayBuffer[Instruction] = _
   val procedureMap = new mutable.HashMap[Functor, Procedure]
-  var fixups = new ArrayBuffer[(Int, Functor)]
+  val fixups = new ArrayBuffer[(ArrayBuffer[Instruction], Int, Functor)]
+
+  def block( name: String ) = {
+    val b = new Block( name )
+
+    code = b.code
+    b
+  }
 
   def apply( n: Int ) = code(n)
-
-  def update( n: Int, inst: Instruction ) = code(n) = inst
 
   def procedures = procedureMap.values
 
@@ -37,51 +42,15 @@ class Program extends Growable[Instruction] {
     procedureMap.clear
   }
 
-  def print: Unit = {
-    for (Procedure( Functor(Symbol(name), arity), start, end, clauses ) <- procedureMap.values.toList.sorted) {
+  def printProcedures: Unit = {
+    for (Procedure( Functor(Symbol(name), arity), block, start, end, clauses ) <- procedureMap.values.toList.sorted) {
       println( s"$name/$arity" )
 
       if (clauses isEmpty)
         println( "  undefined\n" )
       else
         for (i <- start until end) {
-          println( "  " + (code(i) match {
-            case DebugInst( msg, null ) => s"-----  $msg"
-            case DebugInst( msg, pos ) => s"-----  $msg -- ${pos.line}:${pos.col}"
-            case PushInst( d ) => s"push $d"
-            case VarInst( n ) => s"pushv $n"
-            case VarUnifyInst( n ) => s"unifyv $n"
-            case StructureInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
-            case ElementUnifyInst( n ) => s"unifye $n"
-            case ReturnInst => s"return"
-            case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"
-            case DupInst => "dup"
-            case EqInst => "eq"
-            case NeInst => "ne"
-            case LtInst => "lt"
-            case LeInst => "le"
-            case GtInst => "gt"
-            case GeInst => "ge"
-            case BranchIfInst( disp ) => s"branch if $disp"
-            case BranchInst( disp ) => s"branch $disp"
-            case FailInst => "fail"
-            case ChoiceInst( disp ) => s"choice $disp"
-            case CutChoiceInst( disp ) => s"cut_choice $disp"
-            case CutInst => "cut"
-            case MarkInst( disp ) => s"mark $disp"
-            case UnmarkInst => "unmark"
-            case CallInst( entry ) => s"call $entry"
-            case DropInst => "drop"
-            case PushFrameInst => "pushfr"
-            case FrameInst( vars ) => s"frame $vars"
-            case NativeInst( pred ) => s"native $pred"
-            case UnifyInst => "unify"
-            case EvalInst( _, _, v1, v2 ) => s"eval $v1 $v2"
-            case AddInst => "add"
-            case SubInst => "sub"
-            case MulInst => "mul"
-            case DivInst => "div"
-          }) )
+          println( "  " + instruction(block(i)) )
         }
 
       println
@@ -93,7 +62,7 @@ class Program extends Growable[Instruction] {
   def get( f: Functor ) = procedureMap get f
 
   def fixup( f: Functor ) {
-    fixups += ((pointer, f))
+    fixups += ((code, pointer, f))
     code += null
   }
 
@@ -102,11 +71,21 @@ class Program extends Growable[Instruction] {
   def procedure( f: Functor ) =
     procedureMap get f match {
       case None =>
-        val p = Procedure( f, -1, 0 )
+        val p = Procedure( f, null, -1, 0 )
 
         procedureMap(f) = p
         p
       case Some( p ) => p
     }
+
+}
+
+class Block( val name: String ) {
+
+  val code: ArrayBuffer[Instruction] = new ArrayBuffer
+
+  def apply( idx: Int ) = code(idx)
+
+  override def toString: String = s"[block $name]"
 
 }
