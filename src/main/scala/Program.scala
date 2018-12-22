@@ -11,6 +11,10 @@ class Program extends Growable[Instruction] {
   val procedureMap = new mutable.HashMap[Functor, Procedure]
   var fixups = new ArrayBuffer[(Int, Functor)]
 
+  def newprocedure = code.clear
+
+  def block = code.toArray
+
   def apply( n: Int ) = code(n)
 
   def update( n: Int, inst: Instruction ) = code(n) = inst
@@ -38,7 +42,7 @@ class Program extends Growable[Instruction] {
   }
 
   def print: Unit = {
-    for (Procedure( Functor(Symbol(name), arity), start, end, clauses ) <- procedureMap.values.toList.sorted) {
+    for (Procedure( Functor(Symbol(name), arity), block, start, end, clauses ) <- procedureMap.values.toList.sorted) {
       println( s"$name/$arity" )
 
       if (clauses isEmpty)
@@ -70,7 +74,7 @@ class Program extends Growable[Instruction] {
             case CutInst => "cut"
             case MarkInst( disp ) => s"mark $disp"
             case UnmarkInst => "unmark"
-            case CallInst( entry ) => s"call $entry"
+            case CallInst( block, entry ) => s"call $entry"//todo: add procedure functor to callInst for debugging
             case DropInst => "drop"
             case PushFrameInst => "pushfr"
             case FrameInst( vars ) => s"frame $vars"
@@ -102,7 +106,7 @@ class Program extends Growable[Instruction] {
   def procedure( f: Functor ) =
     procedureMap get f match {
       case None =>
-        val p = Procedure( f, -1, 0 )
+        val p = Procedure( f, null, -1, 0 )
 
         procedureMap(f) = p
         p

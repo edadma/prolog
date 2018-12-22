@@ -48,21 +48,22 @@ class VM( prog: Program ) {
     def map = vars map { case (k, v) => (k, v.eval) } toMap
   }
 
-  case class State( dataStack: List[Any], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
+  case class State( dataStack: List[Any], pb: Array[Instruction], pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
                     cut: List[State] )
 
-  class Frame( size: Int, val ret: Int ) {
+  class Frame( size: Int, val retpc: Int, val retpb: Array[Instruction] ) {
     val vars = Array.fill[Variable]( size )( new Variable )
 
-    override def toString: String = s"[frame size=$size ret=$ret]"
+    override def toString: String = s"[frame size=$size retpb=$retpb retpc=$retpc]"
   }
 
   var choiceStack: List[State] = Nil
   var cut: List[State] = _
   var mark: List[State] = _
   var dataStack: List[Any] = Nil
+  var pb: Array[Instruction] = _
   var pc = -1
-  var frame: Frame = new Frame( 0, -1 )
+  var frame: Frame = new Frame( 0, -1, null )
 
   def interpall( goal: TermAST ) = {
     val resultset = new mutable.HashSet[Map[String, Any]]
@@ -101,7 +102,7 @@ class VM( prog: Program ) {
       case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
         pushFrame
         args foreach interpTerm
-        call( prog.procedure(name, args.length).entry )
+        call( prog.procedure(name, args.length).block, prog.procedure(name, args.length).entry )
         run
       case StructureAST( _, name, args ) if Builtin exists functor( name, args.length ) =>
         args foreach interpTerm
@@ -110,7 +111,7 @@ class VM( prog: Program ) {
       case StructureAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
       case AtomAST( _, name ) if prog.defined( name, 0 ) =>
         pushFrame
-        call( prog.procedure( name, 0).entry )
+        call( prog.procedure( name, 0).block, prog.procedure( name, 0).entry )
         run
       case AtomAST( _, name ) if Builtin exists functor( name, 0 ) =>
         Builtin.predicate(functor(name, 0))( this )
@@ -157,12 +158,14 @@ class VM( prog: Program ) {
 
   def push( d: Any ): Unit = dataStack ::= d
 
-  def call( entry: Int ): Unit = {
-    push( pc.asInstanceOf[Number] )
+  def call( block: Array[Instruction], entry: Int ): Unit = {
+    push( pb )
+    push( pc )
+    pb = block
     pc = entry
   }
 
-  def choice( disp: Int ) = choiceStack ::= State( dataStack, pc + disp, frame, trail, mark, cut )
+  def choice( disp: Int ) = choiceStack ::= State( dataStack, pb, pc + disp, frame, trail, mark, cut )
 
   def execute {
     val inst = prog(pc)
@@ -199,7 +202,8 @@ class VM( prog: Program ) {
           case e => unify( e, v )
         }
       case ReturnInst =>
-        pc = frame.ret
+        pc = frame.retpc
+        pb = frame.retpb
         frame = pop.asInstanceOf[Frame]
       case FunctorInst( f ) =>
         top match {
@@ -237,15 +241,15 @@ class VM( prog: Program ) {
       case UnmarkInst =>
         if (mark ne null)
           choiceStack = mark
-      case CallInst( entry ) => call( entry )
+      case CallInst( block, entry ) => call( block, entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {
           case None => pos.error( s"rule $name/$arity not defined" )
-          case Some( p ) => call( p.entry )
+          case Some( p ) => call( p.block, p.entry )
         }
       case DropInst => pop
       case PushFrameInst => pushFrame
-      case FrameInst( vars ) => frame = new Frame( vars, popInt )
+      case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[Array[Instruction]] )
       case NativeInst( func ) => func( this )
       case UnifyInst => unify( pop, pop )
       case EvalInst( pos, name, v1, v2 ) =>
@@ -288,9 +292,10 @@ class VM( prog: Program ) {
 
     if (choiceStack nonEmpty)
       choiceStack.head match {
-        case State( _dataStack, _pc, _frame, _trail, _mark, _cut ) =>
+        case State( _dataStack, _pb, _pc, _frame, _trail, _mark, _cut ) =>
           choiceStack = choiceStack.tail
           dataStack = _dataStack
+          pb = _pb
           pc = _pc
           frame = _frame
           mark = _mark
