@@ -19,6 +19,9 @@ object Main extends App {
     val historyFile = new File( System.getProperty("user.home") + "/.ppc-repl-history" )
 
     var program = new Program
+    implicit var vars: Vars = null
+    var block: Block = null
+    var vm: VM = null
 
     if (!historyFile.exists)
       historyFile.createNewFile
@@ -83,17 +86,31 @@ object Main extends App {
                     out.println( program.procedures map (_.func) mkString "\n" )
                   case m: Parser.Mismatch => m.error
                 }
+              case List( "" ) =>
+                if (vm.fail)
+                  vm.run( block ) match {
+                    case Some( r ) => println( displayResult(r) )
+                    case None => println( "no" )
+                  }
+                else
+                  println( "no" )
             }
           } else {
-            Parser.query( new StringReader(line) ) match {
+            val all = line endsWith "*"
+            val queryline = if (all) line dropRight 1 else line
+
+            Parser.query( new StringReader(queryline) ) match {
               case Parser.Match( ast, _ ) =>
                 implicit val query = new Program
-                implicit val vars = new Vars
-                val block = query.block( "query" )
-                val vm = new VM( program )
 
+                vars = new Vars
+                block = query.block( "query" )
+                vm = new VM( program )
                 Compiler.compileGoal( ast, program )
-                println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+
+                val result = if (all) vm.runall( block ) else vm.runfirst( block ).toList
+
+                println( result map displayResult mkString "\n\n" )
               case m: Parser.Mismatch => m.error
             }
           }
@@ -107,6 +124,7 @@ object Main extends App {
         }
       }
 
-  }
+    def displayResult( r: Map[String, Any]) = r filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n"
 
+  }
 }

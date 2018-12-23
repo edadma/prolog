@@ -53,8 +53,7 @@ object Main extends App {
 
           Compiler.compileGoal( ast, prog )
           block.print
-          vm.init( block )
-          println( vm.run( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
           println( vm.choiceStack )
           //println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
         case m: Parser.Mismatch => m.error

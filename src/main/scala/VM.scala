@@ -353,12 +353,6 @@ class VM( prog: Program ) {
         false
     }
 
-  def init( block: Block )( implicit vars: Vars ): Unit = {
-    frame = new Frame( vars.count, -1, null )
-    pb = block
-    pc = 0
-  }
-
   def run( block: Block )( implicit vars: Vars ) = {
     while (pc < pb.length && pc >= 0 && success)
       execute
@@ -372,11 +366,17 @@ class VM( prog: Program ) {
       None
   }
 
+  def runfirst( block: Block )( implicit vars: Vars ) = {
+    frame = new Frame( vars.count, -1, null )
+    pb = block
+    pc = 0
+    run( block )
+  }
+
   def runall( block: Block )( implicit vars: Vars ) = {
     val resultset = new mutable.LinkedHashSet[Map[String, Any]]
 
-    init( block )
-    run( block ) match {
+    runfirst( block ) match {
       case Some( r ) =>
         def results( res: Map[String, Any] ): Unit = {
           val res1 = res map { case (k, v) => k -> copy( v ) }
