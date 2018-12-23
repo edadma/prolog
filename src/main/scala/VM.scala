@@ -255,11 +255,10 @@ class VM( prog: Program ) {
       case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[Block] )
       case NativeInst( func ) => func( this )
       case UnifyInst => unify( pop, pop )
-      case EvalInst( pos, name, v1, v2 ) =>
-        frame.vars(v1).eval match {
+      case EvalInst( pos, name, v ) =>
+        frame.vars(v).eval match {
           case _: Variable => pos.error( s"variable '$name' is unbound" )
-          case t =>
-            unify( eval(t), frame.vars(v2) )
+          case t => push( eval(t) )
         }
       case AddInst => push( lia.Math(FM_ADD, pop, pop) )
       case SubInst =>

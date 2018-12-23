@@ -236,14 +236,20 @@ object Compiler {
     }
 
   def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {
+    val seen = new mutable.HashMap[String, VariableAST]
     val exprvars = new mutable.HashMap[String, (Reader, Int, Int)]
 
     def addvar( term: TermAST )( implicit vars: Vars ): Unit =
       term match {
+        case v@VariableAST( _, name ) if !seen.contains(name) =>
+          seen(name) = v
+          v.eval = true
         case v@VariableAST( r, name ) =>
           vars get name match {
             case None => r.error( s"variable '$name' does not occur previously in the clause" )
             case Some( n ) =>
+              seen(name).name += '\''
+              seen(name).eval = false
               v.name += '\''
               exprvars(name) = (r, n, vars.num( v.name ))
           }
@@ -253,14 +259,17 @@ object Compiler {
 
     addvar( expr )
 
-    for ((n, (r, v, v1)) <- exprvars if vars eval n)
-      prog += EvalInst( r, n, v, v1 )
+    for ((n, (r, v, v1)) <- exprvars if vars eval n) {
+      prog += EvalInst( r, n, v )
+      prog += VarUnifyInst( v1 )
+    }
   }
 
   def compileExpression( expr: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     expr match {
       case x: NumericAST => prog += PushInst( x.v )
-      case VariableAST( pos, name ) => prog += VarInst( vars.num(name) )
+      case v@VariableAST( pos, name ) if v.eval => prog += EvalInst( pos, name, vars.num(name) )
+      case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
       case StructureAST( pos, op@("+"|"-"|"*"|"/"), List(left, right) ) =>
         compileExpression( left )
         compileExpression( right )

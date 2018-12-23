@@ -65,6 +65,8 @@ package object prolog {
         evals += name
         true
       }
+
+    def evalSet = evals map (_ + '\'') toSet
   }
 
   def vareval( a: Any ): Any =
@@ -158,7 +160,7 @@ package object prolog {
       case FrameInst( vars ) => s"frame $vars"
       case NativeInst( pred ) => s"native $pred"
       case UnifyInst => "unify"
-      case EvalInst( _, _, v1, v2 ) => s"eval $v1 $v2"
+      case EvalInst( _, _, v ) => s"eval $v"
       case AddInst => "add"
       case SubInst => "sub"
       case MulInst => "mul"

@@ -36,7 +36,7 @@ case object LtInst extends Instruction
 case object LeInst extends Instruction
 case object GtInst extends Instruction
 case object GeInst extends Instruction
-case class EvalInst( pos: Reader, name: String, v1: Int, v2: Int ) extends Instruction
+case class EvalInst( pos: Reader, name: String, v: Int ) extends Instruction
 case object AddInst extends Instruction
 case object SubInst extends Instruction
 case object MulInst extends Instruction

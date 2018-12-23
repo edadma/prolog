@@ -12,7 +12,8 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-       |go( X, Y )
+       |X = 3, Y is X + X
+       |//go( X, Y )
     """.stripMargin
   val prog = new Program
 
@@ -22,7 +23,7 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       Compiler.compile( ast, prog )
-      //prog.print
+      //prog.printProcedures
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>
@@ -32,22 +33,10 @@ object Main extends App {
           val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
           Compiler.compileGoal( ast )
-          println( vm.runall( block ) map (_ map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          block.print
+          println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
         case m: Parser.Mismatch => m.error
       }
-
-//      Parser.query( new StringReader(query) ) match {
-//        case Parser.Match( ast, _ ) =>
-//          //println( ast )
-//
-//          println( "interpreting query" )
-//
-//          val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
-//
-//          //println( vm.interpall(ast) map (_.map { case (k, v) => k -> display(v)}) )
-//          println( vm.interp(ast) map (_.map { case (k, v) => k -> display(v)}) )
-//        case m: Parser.Mismatch => m.error
-//      }
     case m: Parser.Mismatch => m.error
   }
 

@@ -49,9 +49,7 @@ class Program extends Growable[Instruction] {
       if (clauses isEmpty)
         println( "  undefined\n" )
       else
-        for (i <- start until end) {
-          println( "  " + instruction(block(i)) )
-        }
+        block.print( start, end )
 
       println
     }
@@ -87,6 +85,13 @@ class Block( val name: String ) {
   def apply( idx: Int ) = code(idx)
 
   def length = code.length
+
+  def print( start: Int, end: Int ) =
+    for (i <- start until end) {
+      println( "  " + instruction(code(i)) )
+    }
+
+  def print: Unit = print( 0, code.length )
 
   override def toString: String = s"[block $name]"
 
