@@ -92,7 +92,7 @@ object Main extends App {
                 val block = query.block( "query" )
                 val vm = new VM( program )
 
-                Compiler.compileGoal( ast )
+                Compiler.compileGoal( ast, program )
                 println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
               case m: Parser.Mismatch => m.error
             }

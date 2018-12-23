@@ -7,17 +7,36 @@ object Main extends App {
 
   val code =
     """
-       |go( a, b ).
-       |go( c, d ).
+       |mov( 1, 2 ). mov( 1, -2 ). mov( -1, 2 ). mov( -1, -2 ).
+       |mov( 2, 1 ). mov( 2, -1 ). mov( -2, 1 ). mov( -2, -1 ).
+       |
+       |jump( pos(X0, Y0), pos(X1, Y1) ) :-
+       |	mov( X, Y ),
+       |	X1 is X0 + X,
+       |	Y1 is Y0 + Y,
+       |	X1 >= 1, X1 =< 5,
+       |	Y1 >= 1, Y1 =< 5.
+       |
+       |tour( Init, Tour ) :-
+       |	tour( Init, [Init], 1, Tour ).
+       |
+       |tour( _, Visited, 25, Visited ).
+       |tour( Position, Visited, N, Tour ) :-
+       |	jump( Position, Next ),
+       |	\+ member( Next, Visited ),
+       | M is N + 1,
+       | tour( Next, [Next | Visited], M, Tour ).
+       |
+       |member( T, [T | _] ).
+       |member( X, [_ | Q] ) :- member( X, Q ).
     """.stripMargin
   val query =
     """
-       |X = 3, Y is X + X
-       |//go( X, Y )
+       |once( tour( pos(1, 1), Tour ) )
     """.stripMargin
   val prog = new Program
 
-  Compiler.debug = true
+//  Compiler.debug = true
 
   Parser.source( new StringReader(code) ) match {
     case Parser.Match( ast, _ ) =>
@@ -32,9 +51,12 @@ object Main extends App {
           val block = query.block( "query" )
           val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
-          Compiler.compileGoal( ast )
+          Compiler.compileGoal( ast, prog )
           block.print
-          println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          vm.init( block )
+          println( vm.run( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          println( vm.choiceStack )
+          //println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
         case m: Parser.Mismatch => m.error
       }
     case m: Parser.Mismatch => m.error

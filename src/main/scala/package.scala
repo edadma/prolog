@@ -130,6 +130,7 @@ package object prolog {
 
   def instruction( inst: Instruction ) =
     inst match {
+      case null => "*** null ***"
       case DebugInst( msg, null ) => s"-----  $msg"
       case DebugInst( msg, pos ) => s"-----  $msg -- ${pos.line}:${pos.col}"
       case PushInst( d ) => s"push $d"
@@ -154,7 +155,8 @@ package object prolog {
       case CutInst => "cut"
       case MarkInst( disp ) => s"mark $disp"
       case UnmarkInst => "unmark"
-      case CallInst( _, entry ) => s"call $entry"//todo: add procedure functor to callInst for debugging
+      case CallInst( block, entry ) => s"call $block $entry"
+      case CallIndirectInst( _, f ) => s"call $f"
       case DropInst => "drop"
       case PushFrameInst => "pushfr"
       case FrameInst( vars ) => s"frame $vars"

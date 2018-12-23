@@ -90,12 +90,12 @@ object Compiler {
         dbg( s"rule $f/${args.length}", pos )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
           args.reverse foreach compileHead
-          compileGoal( body ) }
+          compileGoal( body, prog ) }
         prog += ReturnInst
       case StructureAST( r, ":-", List(AtomAST(pos, n), body) ) =>
         dbg( s"rule $n/0", pos )
         prog.patch( (_, _) => FrameInst(vars.count) ) {
-          compileGoal( body ) }
+          compileGoal( body, prog ) }
         prog += ReturnInst
       case StructureAST( r, f, args ) =>
         dbg( s"fact $f/${args.length}", r )
@@ -295,31 +295,31 @@ object Compiler {
       case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
     }
 
-  def compileGoal( ast: TermAST )( implicit prog: Program, vars: Vars ): Unit =
+  def compileGoal( ast: TermAST, lookup: Program )( implicit prog: Program, vars: Vars ): Unit =
     ast match {
       case StructureAST( r1, ";", List(StructureAST( r, "->", List(goal1, goal2) ), goal3) ) =>
         dbg( s"if-then-else", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the branch
-          compileGoal( goal1 )
+          compileGoal( goal1, lookup )
           prog += UnmarkInst
           dbg( s"then part", r )
-          compileGoal( goal2 ) }
+          compileGoal( goal2, lookup ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
           dbg( s"else part", r1 )
-          compileGoal( goal3 ) }
+          compileGoal( goal3, lookup ) }
       case StructureAST( r, "->", List(goal1, goal2) ) =>
         dbg( s"if-then", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/branch
-          compileGoal( goal1 ) }
+          compileGoal( goal1, lookup ) }
         prog += UnmarkInst
         prog += BranchInst( 1 )
         prog += FailInst
         dbg( s"then part", r )
-        compileGoal( goal2 )
+        compileGoal( goal2, lookup )
       case StructureAST( r, "\\+", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
         dbg( s"not provable", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
-          compileGoal( term ) }
+          compileGoal( term, lookup ) }
         prog += UnmarkInst
         prog += FailInst
 //      case StructureAST( r, "call", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
@@ -327,20 +327,20 @@ object Compiler {
 //        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
 //          compileBody( term ) }
 //        prog += UnmarkInst
-//      case StructureAST( r, "once", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
-//        dbg( s"not provable", r )
-//        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
-//          compileBody( term ) }
-//        prog += UnmarkInst
+      case StructureAST( r, "once", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
+        dbg( s"once", r )
+        prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the unmark
+          compileGoal( term, lookup ) }
+        prog += UnmarkInst
       case StructureAST( _, ",", List(left, right) ) =>
-        compileGoal( left )
-        compileGoal( right )
+        compileGoal( left, lookup )
+        compileGoal( right, lookup )
       case StructureAST( r, ";", List(left, right) ) =>
         dbg( "disjunction", r )
         prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
-          compileGoal( left ) }
+          compileGoal( left, lookup ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
-          compileGoal( right ) }
+          compileGoal( right, lookup ) }
       case AtomAST( _, "true" ) =>  // no code to emit for true/0
       case AtomAST( r, "false"|"fail" ) =>
         dbg( "fail", r )
@@ -408,14 +408,14 @@ object Compiler {
         compileExpression( right )
         compileExpression( left )
         prog += GeInst
-      case StructureAST( r, name, args ) if prog.defined( name, args.length ) =>
+      case StructureAST( r, name, args ) if lookup.defined( name, args.length ) =>
         val f = functor( name, args.length )
 
         dbg( s"procedure $f", r )
         prog += PushFrameInst
         args foreach compileTerm
 
-        val p = prog.procedure( f )
+        val p = lookup.procedure( f )
 
         if (p.entry == -1)
           prog.fixup( f )
@@ -434,13 +434,13 @@ object Compiler {
         prog += PushFrameInst
         args foreach compileTerm
         prog += CallIndirectInst( pos, f )
-      case AtomAST( r, name ) if prog.defined( name, 0 ) =>
+      case AtomAST( r, name ) if lookup.defined( name, 0 ) =>
         val f = functor( name, 0 )
 
         dbg( s"built-in $f", r )
         prog += PushFrameInst
 
-        val p = prog.procedure( f )
+        val p = lookup.procedure( f )
 
         if (p.entry == -1)
           prog.fixup( f )
@@ -454,7 +454,7 @@ object Compiler {
       case AtomAST( r, name ) =>
         val f = functor( name, 0 )
 
-        dbg( s"boal $f", r )
+        dbg( s"procedure (indirect) $f", r )
         prog += PushFrameInst
         prog += CallIndirectInst( r, functor(name, 0) )
     }

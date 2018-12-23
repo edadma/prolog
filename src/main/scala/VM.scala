@@ -52,7 +52,9 @@ class VM( prog: Program ) {
   }
 
   case class State( dataStack: List[Any], pb: Block, pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
-                    cut: List[State] )
+                    cut: List[State] ) {
+    override def toString: String = s"[state pb=$pb pc=$pc]"
+  }
 
   class Frame( size: Int, val retpc: Int, val retpb: Block ) {
     val vars = Array.fill[Variable]( size )( new Variable )
@@ -374,7 +376,6 @@ class VM( prog: Program ) {
     val resultset = new mutable.LinkedHashSet[Map[String, Any]]
 
     init( block )
-
     run( block ) match {
       case Some( r ) =>
         def results( res: Map[String, Any] ): Unit = {
