@@ -86,6 +86,8 @@ class Block( val name: String ) {
 
   def apply( idx: Int ) = code(idx)
 
+  def length = code.length
+
   override def toString: String = s"[block $name]"
 
 }

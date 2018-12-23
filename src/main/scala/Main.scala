@@ -88,7 +88,7 @@ object Main extends App {
             case Parser.Match( ast, _ ) =>
               val vm = new VM( program )
 
-              out.println( vm.interpall(ast) map (_ map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+//              out.println( vm.interpall(ast) map (_ map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
             case m: Parser.Mismatch => m.error
           }
         }

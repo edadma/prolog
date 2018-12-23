@@ -1,45 +1,28 @@
 package xyz.hyperreal.prolog
 
 import xyz.hyperreal.pattern_matcher.StringReader
-import xyz.hyperreal.prolog.Compiler.Vars
 
 
 object Main extends App {
 
   val code =
     """
-      |quick_sort( List, Sorted ) :- qsort( List, Sorted, [] ).
-      |
-      |qsort( [], R, R ).
-      |qsort( [X | L], R, R0 ) :-
-      |	partition( L, X, L1, L2 ),
-      |	qsort( L2, R1, R0 ),
-      |	qsort( L1, R, [X | R1] ).
-      |
-      |partition( [], _, [], [] ).
-      |partition( [X | L], Y, [X | L1], L2 ) :-
-      |	X =< Y, !,
-      |	partition( L, Y, L1, L2 ).
-      |partition( [X | L], Y, L1, [X | L2] ) :-
-      |	partition( L, Y, L1, L2 ).
+       |go( a, b ).
+       |go( c, d ).
     """.stripMargin
   val query =
     """
-      |quick_sort( [3, 5, 0, 7, 6, 4, 2, 1], L )
+       |go( X, Y )
     """.stripMargin
   val prog = new Program
 
-  println( "parsing program" )
   Compiler.debug = true
 
   Parser.source( new StringReader(code) ) match {
     case Parser.Match( ast, _ ) =>
       //println( ast )
-      println( "compiling program" )
       Compiler.compile( ast, prog )
       //prog.print
-
-      println( "parsing query" )
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>
@@ -49,10 +32,7 @@ object Main extends App {
           val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
           Compiler.compileGoal( ast )
-          vm.pb = block
-          vm.pc = 0
-          vm.run
-
+          println( vm.runall( block ) map (_ map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
         case m: Parser.Mismatch => m.error
       }
 

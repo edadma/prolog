@@ -1,5 +1,6 @@
 package xyz.hyperreal
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 
@@ -34,6 +35,36 @@ package object prolog {
     override def productPrefix = functor.name.name
 
     def update( n: Int, v: Any ) = args(n) = v
+  }
+
+  class Vars {
+    val varMap = new mutable.HashMap[String, Int]
+    val evals = new mutable.HashSet[String]
+
+    def count = varMap.size
+
+    def anon = num( '$' + count.toString )
+
+    def num( name: String ) = {
+      varMap get name match {
+        case None =>
+          val n = count
+
+          varMap(name) = n
+          n
+        case Some( n ) => n
+      }
+    }
+
+    def get( name: String ) = varMap get name
+
+    def eval( name: String ) =
+      if (evals( name ))
+        false
+      else {
+        evals += name
+        true
+      }
   }
 
   def vareval( a: Any ): Any =

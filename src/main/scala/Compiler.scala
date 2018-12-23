@@ -18,36 +18,6 @@ object Compiler {
       functor( "is", 2 )
     )
 
-  class Vars {
-    val vars = new mutable.HashMap[String, Int]
-    val evals = new mutable.HashSet[String]
-
-    def count = vars.size
-
-    def anon = num( '$' + count.toString )
-
-    def num( name: String ) = {
-      vars get name match {
-        case None =>
-          val n = count
-
-          vars(name) = n
-          n
-        case Some( n ) => n
-      }
-    }
-
-    def get( name: String ) = vars get name
-
-    def eval( name: String ) =
-      if (evals( name ))
-        false
-      else {
-        evals += name
-        true
-      }
-  }
-
   def compile( ast: PrologAST, prog: Program ): Unit = {
     phase1( ast, prog )
     phase2( prog )
