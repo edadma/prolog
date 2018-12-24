@@ -367,6 +367,10 @@ class VM( prog: Program ) {
   }
 
   def runfirst( block: Block )( implicit vars: Vars ) = {
+    choiceStack = Nil
+    dataStack = Nil
+    mark = null
+    cut = Nil
     frame = new Frame( vars.count, -1, null )
     pb = block
     pc = 0
