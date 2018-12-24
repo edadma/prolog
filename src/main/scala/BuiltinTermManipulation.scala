@@ -12,9 +12,11 @@ object BuiltinTermManipulation {
             v bind head
             true
           case Structure( CONS, Array(head: Symbol, tail) ) =>
-            val args = list2array( tail )
+            list2array( tail ) match {
+              case Some( args ) => v bind Structure( Functor(head, args.length), args )
+              case None => sys.error( s"univ: illegal list argument: $list" )
+            }
 
-            v bind Structure( Functor(head, args.length), args )
             true
           case _ => sys.error( s"univ: illegal list argument: $list" )
         }
