@@ -75,12 +75,13 @@ package object prolog {
       case _ => a
     }
 
-  def list2array( s: Any, buf: ArrayBuffer[Any] = new ArrayBuffer ): Array[Any] =
+  def list2array( s: Any, buf: ArrayBuffer[Any] = new ArrayBuffer ): Option[Array[Any]] =
     s match {
-      case NIL => buf.toArray
+      case NIL => Some( buf.toArray )
       case Structure( CONS, Array(head, tail) ) =>
         buf += head
         list2array( tail, buf )
+      case _ => None
     }
 
   def array2list( a: Array[Any] ) = {

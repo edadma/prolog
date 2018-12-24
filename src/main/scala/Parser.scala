@@ -113,6 +113,10 @@ object Parser extends Matchers[Reader] {
       case p ~ a if a.head.isLower => AtomAST( p, a )
       case p ~ a => VariableAST( p, a ) } |
     pos ~ singleStringLit ^^ {
-      case p ~ a => AtomAST( p, a ) }
+      case p ~ a => AtomAST( p, a ) } |
+    pos ~ doubleStringLit ^^ {
+      case p ~ s => StringAST( p, s ) }
+//    pos ~ backStringLit ^^ {
+//      case p ~ s => StringAST( p, s ) }
 
 }
