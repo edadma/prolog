@@ -7,7 +7,7 @@ Prolog
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://github.com/edadma/prolog/blob/master/LICENSE)
 [![Version](https://img.shields.io/badge/latest_release-v0.4.22-orange.svg)](https://github.com/edadma/prolog/releases/tag/v0.4.22)
 
-*Prolog* is a processor for Prolog language written in [Scala](http://scala-lang.org). 
+*Prolog* is a processor for Prolog language written in [Scala](http://scala-lang.org).  It is a work in progress.  ISO compliance plus support for a string type is the goal.
 
 
 Examples
@@ -15,7 +15,7 @@ Examples
 
 ### Family Tree
 
-Here's a Prolog 
+Here's an example 
 
 ```
 ```

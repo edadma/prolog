@@ -118,13 +118,13 @@ object Main extends App {
           out.println
         } catch {
           case e: Exception =>
-            //out.println( e.getMessage )
-            e.printStackTrace( out )
+            out.println( e.getMessage )
+            //e.printStackTrace( out )
             out.println
         }
       }
 
-    def displayResult( r: Map[String, Any]) = r filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n"
+    def displayResult( r: Map[String, Any]) = r filterNot {case (k, _) => vars.evalSet(k) || k.startsWith("$")} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n"
 
   }
 }
