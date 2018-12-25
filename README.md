@@ -64,6 +64,22 @@ grandmother( X, Y ) :- female( X ), grandparent( X, Y ).
 grandfather( X, Y ) :- male( X ), grandparent( X, Y ).
 ```
 
+This example is contained in the repo as `examples/family_tree`.  Run the REPL (repeat-evaluate-print-loop) and type
+
+    ;l examples/family_tree
+    
+to load the example.  To get a list of all the persons in the family tree who are fathers, type
+
+    father( X, _ )*
+    
+#### Output
+
+X = don
+
+X = liam
+
+X = logan
+ 
 ### Library
 
 This example program shows how to 
