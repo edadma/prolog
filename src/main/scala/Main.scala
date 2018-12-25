@@ -124,7 +124,7 @@ object Main extends App {
         }
       }
 
-    def displayResult( r: Map[String, Any]) = r filterNot {case (k, _) => vars.evalSet(k) || k.startsWith("$")} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n"
+    def displayResult( r: Map[String, Any]) = r map { case (k, v) => s"$k = ${display(v)}" } mkString "\n"
 
   }
 }

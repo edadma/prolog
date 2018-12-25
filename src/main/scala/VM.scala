@@ -361,7 +361,8 @@ class VM( prog: Program ) {
       out.println( dataStack )
 
     if (success)
-      Some( SortedMap( vars.varMap map { case (k, v) => (k, frame.vars(v).eval) } toList: _* ) )
+      Some( SortedMap( vars.varMap map { case (k, v) => (k, copy(frame.vars(v).eval)) }
+        filterNot {case (k, _) => vars.evalSet(k) || k.startsWith("$")} toList: _* ) )
     else
       None
   }
@@ -383,12 +384,10 @@ class VM( prog: Program ) {
     runfirst( block ) match {
       case Some( r ) =>
         def results( res: Map[String, Any] ): Unit = {
-          val res1 = res map { case (k, v) => k -> copy( v ) }
-
           if (trace || debug)
-            out.println( s"==> $res1" )
+            out.println( s"==> $res" )
 
-          resultset += res1
+          resultset += res
 
           if (fail)
             run( block ) match {
