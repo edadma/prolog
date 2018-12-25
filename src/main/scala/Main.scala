@@ -16,7 +16,7 @@ object Main extends App {
     val reader = new ConsoleReader
     val out = new PrintStream( reader.getTerminal.wrapOutIfNeeded(System.out), true )
     var line: String = null
-    val historyFile = new File( System.getProperty("user.home") + "/.ppc-repl-history" )
+    val historyFile = new File( System.getProperty("user.home") + "/.prolog-repl-history" )
 
     var program = new Program
     implicit var vars: Vars = null
@@ -37,8 +37,8 @@ object Main extends App {
     reader.setHistory( history )
     out.println(
       """
-        |Welcome to the PPC (Portable Prolog Compiler) REPL v0.1
-        |PPC comes with ABSOLUTELY NO WARRANTY. This is free software.
+        |Welcome to the Prolog REPL v0.1
+        |Prolog comes with ABSOLUTELY NO WARRANTY. This is free software.
         |Please type “;license” for legal details.
         |
         |Type “;help” for list of commands.
