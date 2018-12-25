@@ -5,7 +5,7 @@ Prolog
 [![Build status](https://ci.appveyor.com/api/projects/status/h5b23n2vd0k4oh9q/branch/master?svg=true)](https://ci.appveyor.com/project/edadma/prolog/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/edadma/prolog/badge.svg?branch=master)](https://coveralls.io/github/edadma/prolog?branch=master)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://github.com/edadma/prolog/blob/master/LICENSE)
-[![Version](https://img.shields.io/badge/latest_release-v0.4.22-orange.svg)](https://github.com/edadma/prolog/releases/tag/v0.4.22)
+[![Version](https://img.shields.io/badge/latest_release-v0.1-orange.svg)](https://github.com/edadma/prolog/releases/tag/v0.1)
 
 *Prolog* is a processor for Prolog language written in [Scala](http://scala-lang.org).  It is a work in progress.  ISO compliance plus support for a string type is the goal.
 
@@ -119,7 +119,7 @@ Use the following definition to use Prolog in your Maven project:
 <dependency>
   <groupId>xyz.hyperreal</groupId>
   <artifactId>prolog</artifactId>
-  <version>0.4.22</version>
+  <version>0.1</version>
 </dependency>
 ```
 
@@ -133,7 +133,7 @@ libraryDependencies += "xyz.hyperreal" %% "prolog" % "0.1"
 
 ### Executable
 
-An executable can be downloaded from [here](https://dl.bintray.com/edadma/generic/prolog-0.4.22.jar). *You do not need* the Scala library for it to work because the JAR already contains all dependencies. You just need Java 8+ installed.
+An executable can be downloaded from [here](https://dl.bintray.com/edadma/generic/prolog-0.1.jar). *You do not need* the Scala library for it to work because the JAR already contains all dependencies. You just need Java 8+ installed.
 
 Run it as a normal Java executable JAR with the command `java -jar prolog-0.1.jar <template>` in the folder where you downloaded the file, where *template* is the name of the template file to be rendered.
 
