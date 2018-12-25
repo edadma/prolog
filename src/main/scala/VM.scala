@@ -375,6 +375,7 @@ class VM( prog: Program ) {
     frame = new Frame( vars.count, -1, null )
     pb = block
     pc = 0
+    success = true
     run( block )
   }
 

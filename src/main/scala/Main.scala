@@ -89,6 +89,7 @@ object Main extends App {
               case List( "" ) =>
                 if (vm.fail)
                   vm.run( block ) match {
+                    case Some( r ) if r isEmpty => println( "yes" )
                     case Some( r ) => println( displayResult(r) )
                     case None => println( "no" )
                   }
@@ -110,7 +111,11 @@ object Main extends App {
 
                 val result = if (all) vm.runall( block ) else vm.runfirst( block ).toList
 
-                println( result map displayResult mkString "\n\n" )
+                result match {
+                  case Nil => println( "no" )
+                  case List( r ) if r isEmpty => println( "yes" )
+                  case _ => println( result map displayResult mkString "\n\n" )
+                }
               case m: Parser.Mismatch => m.error
             }
           }
