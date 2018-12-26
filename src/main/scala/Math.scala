@@ -36,7 +36,8 @@ object Math {
 
   List(
     MathFunctions,
-    MathConstants
+    MathConstants,
+    MathSpecial
   ) foreach load
 
 }
