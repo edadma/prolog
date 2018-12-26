@@ -83,7 +83,7 @@ object Parser extends Matchers[Reader] {
 
   def p500 = p400 ~ rep(pos ~ ("+"|"-"|"/\\"|"\\/") ~ p400) ^^ assoc
 
-  def p400 = p200 ~ rep(pos ~ ("*"|"/"|"//"|"<<"|">>") ~ p200) ^^ assoc
+  def p400 = p200 ~ rep(pos ~ ("*"|"/"|"//"|"<<"|">>"|"mod"|"rem") ~ p200) ^^ assoc
 
   def p200: Matcher[TermAST] =
     p0 ~ pos ~ "**" ~ p0 ^^ mkterm |

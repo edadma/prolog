@@ -20,6 +20,7 @@ object VM {
   val FM_SUB = lia.Math.lookup( '- )
   val FM_MUL = lia.Math.lookup( '* )
   val FM_DIV = lia.Math.lookup( '/ )
+  val FM_MOD = lia.Math.lookup( 'mod )
 
 }
 
@@ -272,6 +273,10 @@ class VM( prog: Program ) {
         val r = pop
 
         push( lia.Math(FM_DIV, pop, r) )
+      case ModInst =>
+        val r = pop
+
+        push( lia.Math(FM_MOD, pop, r) )
       case NegInst => push( lia.Math('-, pop) )
     }
   }

@@ -270,7 +270,7 @@ object Compiler {
       case x: NumericAST => prog += PushInst( x.v )
       case v@VariableAST( pos, name ) if v.eval => prog += EvalInst( pos, name, vars.num(name) )
       case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
-      case StructureAST( pos, op@("+"|"-"|"*"|"/"), List(left, right) ) =>
+      case StructureAST( pos, op@("+"|"-"|"*"|"/"|"mod"), List(left, right) ) =>
         compileExpression( left )
         compileExpression( right )
         prog +=
@@ -279,6 +279,7 @@ object Compiler {
             case "-" => SubInst
             case "*" => MulInst
             case "/" => DivInst
+            case "mod" => ModInst
           })
       case StructureAST( pos, op@"-", List(arg) ) =>
         compileExpression( arg )

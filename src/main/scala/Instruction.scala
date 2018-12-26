@@ -41,6 +41,7 @@ case object AddInst extends Instruction
 case object SubInst extends Instruction
 case object MulInst extends Instruction
 case object DivInst extends Instruction
+case object ModInst extends Instruction
 case object NegInst extends Instruction
 
 case class DebugInst( msg: String, pos: Reader ) extends Instruction
