@@ -293,6 +293,10 @@ class VM( prog: Program ) {
           case "-" => lia.Math( FM_SUB, l, r ).asInstanceOf[Number]
         }
       case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
+      case Structure( f, args ) if Math exists f => Math.function( f ).call( args map eval )
+      case Structure( name, args ) => sys.error( s"function $name/${args.length} not found" )
+      case s@Symbol( name ) if Math exists functor( name, 0 ) => Math.function( Functor(s, 0) ).call( Array() )
+      case Symbol( name ) => sys.error( s"constant '$name' not found" )
     }
 
   def fail = {

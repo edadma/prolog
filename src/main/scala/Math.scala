@@ -7,7 +7,7 @@ import scala.collection.mutable
 
 object Math {
 
-  private val functions = new mutable.HashMap[Functor, VM => Unit]
+  private val functions = new mutable.HashMap[Functor, Function]
   private val NumberClass = classOf[Number]
 
   def exists( f: Functor ) = functions contains f
@@ -28,6 +28,8 @@ object Math {
     def apply( vm: VM ) =
       vm.push( method.invoke( obj, (for (_ <- 1 to method.getParameterCount) yield vm.pop).reverse.
         toArray.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Number] )
+
+    def call( args: Array[Number] ) = method.invoke( obj,args.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Number]
 
     override def toString(): String = s"<function ${method.getName}/${method.getParameterCount}>"
   }

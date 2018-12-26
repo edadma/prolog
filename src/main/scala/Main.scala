@@ -123,7 +123,8 @@ object Main extends App {
           out.println
         } catch {
           case e: Exception =>
-            out.println( e.getMessage )
+            out.println( e )
+            //out.println( e.getMessage )
             //e.printStackTrace( out )
             out.println
         }
