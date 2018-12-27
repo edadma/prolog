@@ -2,15 +2,13 @@ package xyz.hyperreal.prolog
 
 import xyz.hyperreal.pattern_matcher.Reader
 
-import scala.collection.mutable.ArrayBuffer
-
 
 abstract class Instruction
 case class PushInst( a: Any ) extends Instruction
 case class VarInst( n: Int ) extends Instruction
 case class VarUnifyInst( n: Int ) extends Instruction
 case class StructureInst( f: Functor ) extends Instruction
-case class ElementUnifyInst(n: Int ) extends Instruction
+case class ElementUnifyInst( n: Int ) extends Instruction
 case object ReturnInst extends Instruction
 case class FunctorInst( f: Functor ) extends Instruction
 case object DupInst extends Instruction

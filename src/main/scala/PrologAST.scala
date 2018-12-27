@@ -14,13 +14,16 @@ abstract class TermAST extends PrologAST {
 }
 
 case class StructureAST( pos: Reader, name: String, args: List[TermAST] ) extends TermAST
+
 case class AtomAST( pos: Reader, name: String ) extends TermAST
+
 case class StringAST( pos: Reader, s: String ) extends TermAST
+
 case class VariableAST( pos: Reader, var name: String ) extends TermAST { var eval: Boolean = false }
+
 case class AnonymousAST( pos: Reader ) extends TermAST
 
 abstract class NumericAST extends TermAST {
-  val pos: Reader
   val v: Number
 }
 

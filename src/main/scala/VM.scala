@@ -4,7 +4,6 @@ import scala.collection.mutable
 import xyz.hyperreal.lia
 
 import scala.collection.immutable.SortedMap
-import scala.collection.mutable.ArrayBuffer
 
 
 object VM {
@@ -34,23 +33,23 @@ class VM( prog: Program ) {
 
   var success = true
   var trail: List[Variable] = Nil
-  implicit var vars: VarMap = _
-
-  class VarMap {
-    val vars = new mutable.HashMap[String, Variable]
-
-    def apply( name: String ) =
-      vars get name match {
-        case None =>
-          val v = new Variable
-
-          vars(name) = v
-          v
-        case Some( v ) => v
-      }
-
-    def map = vars map { case (k, v) => (k, v.eval) } toMap
-  }
+//  implicit var vars: VarMap = _
+//
+//  class VarMap {
+//    val vars = new mutable.HashMap[String, Variable]
+//
+//    def apply( name: String ) =
+//      vars get name match {
+//        case None =>
+//          val v = new Variable
+//
+//          vars(name) = v
+//          v
+//        case Some( v ) => v
+//      }
+//
+//    def map = vars map { case (k, v) => (k, v.eval) } toMap
+//  }
 
   case class State( dataStack: List[Any], pb: Block, pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
                     cut: List[State] ) {
@@ -138,9 +137,26 @@ class VM( prog: Program ) {
 //      case n: NumericAST => push( n.v )
 //    }
 
+  def data( term: TermAST, vars: mutable.HashMap[String, Variable] = new mutable.HashMap ): Any =
+    term match {
+      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map (data(_, vars)) toArray )
+      case AtomAST( _, name ) => Symbol( name )
+      case AnonymousAST( _ ) => new Variable( "_" )
+      case VariableAST( _, name ) =>
+        vars get name match {
+          case None =>
+            val v = new Variable( name )
+
+            vars(name) = v
+            v
+          case Some( v ) => v
+        }
+      case n: NumericAST => n.v
+    }
+
   def pushFrame = push( frame )
 
-  def pushStructure(f: Functor ): Unit = {
+  def pushStructure( f: Functor ): Unit = {
     val args = new Array[Any]( f.arity )
 
     for (i <- f.arity - 1 to 0 by -1)
@@ -429,7 +445,7 @@ class VM( prog: Program ) {
     private var count = 0
   }
 
-  class Variable {
+  class Variable( val name: String = null ) {
     val num = Variable.count
 
     Variable.count += 1
