@@ -469,27 +469,19 @@ object Compiler {
 
   def compileTerm( term: Any )( implicit prog: Program, vars: Vars ): Unit =
     term match {
-      case s: StructureAST if ground( s ) =>
-        dbg( s"put structure", s.pos )
-        prog += PushInst( constant(s) )
-      case StructureAST( r, name, args ) =>
-        dbg( s"put structure", r )
+      case s: Structure if ground( s ) => prog += PushInst( s )
+      case Structure( f, args ) =>
         args foreach compileTerm
-        prog += StructureInst( functor(name, args.length) )
-      case AtomAST( r, name ) =>
-        dbg( "put atom", r )
-        prog += PushInst( Symbol(name) )
-      case AnonymousAST( r ) =>
-        dbg( "put anonymous", r )
-        prog += VarInst( vars.anon )
-      case VariableAST( r, name ) =>
-        dbg( "put variable", r )
-        prog += VarInst( vars.num(name) )
-      case n: NumericAST =>
-        dbg( "put number", n.pos )
-        prog += PushInst( n.v )
+        prog += StructureInst( f )
+      case s: Symbol => prog += PushInst( s )
+//      case AnonymousAST( r ) =>
+//        prog += VarInst( vars.anon )
+//      case VariableAST( r, name ) =>
+//        prog += VarInst( vars.num(name) )
+      case n: NumericAST => prog += PushInst( n.v )
     }
 
+  /*
   def compileArithmetic( expr: Any )( implicit prog: Program, vars: Vars ) {
     val seen = new mutable.HashMap[String, VariableAST]
     val exprvars = new mutable.HashMap[String, (Reader, Int, Int)]
@@ -550,6 +542,7 @@ object Compiler {
         prog += NativeInst( Math.function(functor( name, 0)) )
       case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
     }
+*/
 
   def compileGoal( data: Any, lookup: Program )( implicit prog: Program, vars: Vars ): Unit =
     data match {
@@ -594,74 +587,67 @@ object Compiler {
       case 'false|'fail => prog += FailInst
       case Symbol( "!" ) => prog += CutInst
       case 'repeat => prog += ChoiceInst( -1 )
-      case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
-        dbg( "unify", pos )
-        compileTerm( right )
-        prog += VarUnifyInst( vars.num(lname) )
-      case StructureAST( pos, "=", List(left, VariableAST(_, rname)) ) =>
-        dbg( "unify", pos )
-        compileTerm( left )
-        prog += VarUnifyInst( vars.num(rname) )
-      case StructureAST( pos, "=", List(left, right) ) =>
-        dbg( "unify", pos )
+//      case Structure( Functor(Symbol("="), 2), Array(v: VM#Variable, right) ) =>
+//        compileTerm( right )
+//        prog += VarUnifyInst( vars.num(lname) )
+//      case StructureAST( pos, "=", List(left, VariableAST(_, rname)) ) =>
+//        compileTerm( left )
+//        prog += VarUnifyInst( vars.num(rname) )
+      case Structure( Functor(Symbol("="), 2), List(left, right) ) =>
         compileTerm( left )
         compileTerm( right )
         prog += UnifyInst
-      case StructureAST( pos, "\\=", List(left, right) ) =>
-        dbg( "not unifiable", pos )
+      case Structure( Functor(Symbol("\\="), 2), List(left, right) ) =>
         prog.patch( (ptr, len) => MarkInst(len - ptr - 1) ) {
           compileTerm( left )
           compileTerm( right )
           prog += UnifyInst
           prog += UnmarkInst
           prog += FailInst }
-      case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
-        compileArithmetic( expr )
-        compileExpression( expr )
-        prog += VarInst( vars.num(rname) )
-        prog += UnifyInst
-      case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
-      case StructureAST( pos, "=:=", List(left, right) ) =>
-        compileArithmetic( data )
-        compileExpression( left )
-        compileExpression( right )
-        prog += EqInst
-      case StructureAST( pos, "=\\=", List(left, right) ) =>
-        compileArithmetic( data )
-        compileExpression( left )
-        compileExpression( right )
-        prog += NeInst
-      case StructureAST( pos, "<", List(left, right) ) =>
-        compileArithmetic( data )
-        compileExpression( right )
-        compileExpression( left )
-        prog += LtInst
-      case StructureAST( pos, "=<", List(left, right) ) =>
-        compileArithmetic( data )
-        compileExpression( right )
-        compileExpression( left )
-        prog += LeInst
-      case StructureAST( pos, ">", List(left, right) ) =>
-        compileArithmetic( data )
-        compileExpression( right )
-        compileExpression( left )
-        prog += GtInst
-      case StructureAST( pos, ">=", List(left, right) ) =>
-        compileArithmetic( data )
-        compileExpression( right )
-        compileExpression( left )
-        prog += GeInst
-      case StructureAST( r, name, args ) if lookup.defined( name, args.length ) =>
-        val f = functor( name, args.length )
-
-        dbg( s"procedure $f", r )
+//      case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
+//        compileArithmetic( expr )
+//        compileExpression( expr )
+//        prog += VarInst( vars.num(rname) )
+//        prog += UnifyInst
+//      case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
+//      case StructureAST( pos, "=:=", List(left, right) ) =>
+//        compileArithmetic( data )
+//        compileExpression( left )
+//        compileExpression( right )
+//        prog += EqInst
+//      case StructureAST( pos, "=\\=", List(left, right) ) =>
+//        compileArithmetic( data )
+//        compileExpression( left )
+//        compileExpression( right )
+//        prog += NeInst
+//      case StructureAST( pos, "<", List(left, right) ) =>
+//        compileArithmetic( data )
+//        compileExpression( right )
+//        compileExpression( left )
+//        prog += LtInst
+//      case StructureAST( pos, "=<", List(left, right) ) =>
+//        compileArithmetic( data )
+//        compileExpression( right )
+//        compileExpression( left )
+//        prog += LeInst
+//      case StructureAST( pos, ">", List(left, right) ) =>
+//        compileArithmetic( data )
+//        compileExpression( right )
+//        compileExpression( left )
+//        prog += GtInst
+//      case StructureAST( pos, ">=", List(left, right) ) =>
+//        compileArithmetic( data )
+//        compileExpression( right )
+//        compileExpression( left )
+//        prog += GeInst
+      case Structure( f, args ) if lookup.defined( f ) =>
         prog += PushFrameInst
         args foreach compileTerm
 
         val p = lookup.procedure( f )
 
         if (p.entry == -1)
-          prog.fixup( f )
+          sys.error( s"procedure entry point unknown: $p" )
         else
           prog += CallInst( p.block, p.entry )
       case StructureAST( r, name, args ) if Builtin exists functor( name, args.length ) =>
