@@ -205,6 +205,13 @@ object Compiler {
       case AnonymousAST( _ ) | VariableAST( _, _ ) => false
     }
 
+  def ground( term: Any ): Boolean =
+    term match {
+      case Structure( _, args ) => args forall ground
+      case _: Symbol | _: Number => true
+      case _: VM#Variable => false
+    }
+
   def constant( term: TermAST ): Any =
     term match {
       case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toArray )
@@ -406,6 +413,241 @@ object Compiler {
         prog += GtInst
       case StructureAST( pos, ">=", List(left, right) ) =>
         compileArithmetic( ast )
+        compileExpression( right )
+        compileExpression( left )
+        prog += GeInst
+      case StructureAST( r, name, args ) if lookup.defined( name, args.length ) =>
+        val f = functor( name, args.length )
+
+        dbg( s"procedure $f", r )
+        prog += PushFrameInst
+        args foreach compileTerm
+
+        val p = lookup.procedure( f )
+
+        if (p.entry == -1)
+          prog.fixup( f )
+        else
+          prog += CallInst( p.block, p.entry )
+      case StructureAST( r, name, args ) if Builtin exists functor( name, args.length ) =>
+        val f = functor( name, args.length )
+
+        dbg( s"built-in $f", r )
+        args foreach compileTerm
+        prog += NativeInst( Builtin.predicate(f) )
+      case StructureAST( pos, name, args ) =>
+        val f = functor( name, args.length )
+
+        dbg( s"procedure (indirect) $f", pos )
+        prog += PushFrameInst
+        args foreach compileTerm
+        prog += CallIndirectInst( pos, f )
+      case AtomAST( r, name ) if lookup.defined( name, 0 ) =>
+        val f = functor( name, 0 )
+
+        dbg( s"built-in $f", r )
+        prog += PushFrameInst
+
+        val p = lookup.procedure( f )
+
+        if (p.entry == -1)
+          prog.fixup( f )
+        else
+          prog += CallInst( p.block, p.entry )
+      case AtomAST( r, name ) if Builtin exists functor( name, 0 ) =>
+        val f = functor( name, 0 )
+
+        dbg( s"built-in $f", r )
+        prog += NativeInst( Builtin.predicate(f) )
+      case AtomAST( r, name ) =>
+        val f = functor( name, 0 )
+
+        dbg( s"procedure (indirect) $f", r )
+        prog += PushFrameInst
+        prog += CallIndirectInst( r, functor(name, 0) )
+    }
+
+  def compileTerm( term: Any )( implicit prog: Program, vars: Vars ): Unit =
+    term match {
+      case s: StructureAST if ground( s ) =>
+        dbg( s"put structure", s.pos )
+        prog += PushInst( constant(s) )
+      case StructureAST( r, name, args ) =>
+        dbg( s"put structure", r )
+        args foreach compileTerm
+        prog += StructureInst( functor(name, args.length) )
+      case AtomAST( r, name ) =>
+        dbg( "put atom", r )
+        prog += PushInst( Symbol(name) )
+      case AnonymousAST( r ) =>
+        dbg( "put anonymous", r )
+        prog += VarInst( vars.anon )
+      case VariableAST( r, name ) =>
+        dbg( "put variable", r )
+        prog += VarInst( vars.num(name) )
+      case n: NumericAST =>
+        dbg( "put number", n.pos )
+        prog += PushInst( n.v )
+    }
+
+  def compileArithmetic( expr: Any )( implicit prog: Program, vars: Vars ) {
+    val seen = new mutable.HashMap[String, VariableAST]
+    val exprvars = new mutable.HashMap[String, (Reader, Int, Int)]
+
+    def addvar( term: TermAST )( implicit vars: Vars ): Unit =
+      term match {
+        case v@VariableAST( _, name ) if !seen.contains(name) =>
+          seen(name) = v
+          v.eval = true
+        case v@VariableAST( r, name ) =>
+          vars get name match {
+            case None => r.error( s"variable '$name' does not occur previously in the clause" )
+            case Some( n ) =>
+              seen(name).name += '\''
+              seen(name).eval = false
+              v.name += '\''
+              exprvars(name) = (r, n, vars.num( v.name ))
+          }
+        case StructureAST( _, _, args ) => args foreach addvar
+        case _ =>
+      }
+
+    addvar( expr )
+
+    for ((n, (r, v, v1)) <- exprvars if vars eval n) {
+      prog += EvalInst( r, n, v )
+      prog += VarUnifyInst( v1 )
+    }
+  }
+
+  def compileExpression( expr: Any )( implicit prog: Program, vars: Vars ): Unit =
+    expr match {
+      case x: NumericAST => prog += PushInst( x.v )
+      case v@VariableAST( pos, name ) if v.eval => prog += EvalInst( pos, name, vars.num(name) )
+      case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
+      case StructureAST( pos, op@("+"|"-"|"*"|"/"|"mod"), List(left, right) ) =>
+        compileExpression( left )
+        compileExpression( right )
+        prog +=
+          (op match {
+            case "+" => AddInst
+            case "-" => SubInst
+            case "*" => MulInst
+            case "/" => DivInst
+            case "mod" => ModInst
+          })
+      case StructureAST( pos, op@"-", List(arg) ) =>
+        compileExpression( arg )
+        prog +=
+          (op match {
+            case "-" => NegInst
+          })
+      case StructureAST( _, name, args ) if Math exists functor( name, args.length ) =>
+        args foreach compileExpression
+        prog += NativeInst( Math.function(functor(name, args.length)) )
+      case StructureAST( pos, name, args ) => pos.error( s"function $name/${args.length} not found" )
+      case AtomAST( _, name ) if Math exists functor( name, 0 ) =>
+        prog += NativeInst( Math.function(functor( name, 0)) )
+      case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
+    }
+
+  def compileGoal( data: Any, lookup: Program )( implicit prog: Program, vars: Vars ): Unit =
+    data match {
+      case Structure( Functor(Symbol(";"), 2), Array(Structure(Functor(Symbol("->"), 2), Array(goal1, goal2)), goal3) ) =>
+        prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the branch
+          compileGoal( goal1, lookup )
+          prog += UnmarkInst
+          compileGoal( goal2, lookup ) }
+        prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
+          compileGoal( goal3, lookup ) }
+      case Structure( Functor(Symbol("->"), 2), Array(goal1, goal2) ) =>
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/branch
+          compileGoal( goal1, lookup ) }
+        prog += UnmarkInst
+        prog += BranchInst( 1 )
+        prog += FailInst
+        compileGoal( goal2, lookup )
+      case Structure( Functor(Symbol("\\+"), 1), Array(term@(_: Symbol | _: Structure)) ) =>
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+          compileGoal( term, lookup ) }
+        prog += UnmarkInst
+        prog += FailInst
+      //      case StructureAST( r, "call", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
+      //        dbg( s"call", r )
+      //        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+      //          compileBody( term ) }
+      //        prog += UnmarkInst
+//      case StructureAST( r, "once", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
+//        dbg( s"once", r )
+//        prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the unmark
+//          compileGoal( term, lookup ) }
+//        prog += UnmarkInst
+      case Structure( Functor(Symbol(","), 2), Array(left, right) ) =>
+        compileGoal( left, lookup )
+        compileGoal( right, lookup )
+      case Structure( Functor(Symbol(";"), 2), Array(left, right) ) =>
+        prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
+          compileGoal( left, lookup ) }
+        prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
+          compileGoal( right, lookup ) }
+      case 'true =>  // no code to emit for true/0
+      case 'false|'fail => prog += FailInst
+      case Symbol( "!" ) => prog += CutInst
+      case 'repeat => prog += ChoiceInst( -1 )
+      case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
+        dbg( "unify", pos )
+        compileTerm( right )
+        prog += VarUnifyInst( vars.num(lname) )
+      case StructureAST( pos, "=", List(left, VariableAST(_, rname)) ) =>
+        dbg( "unify", pos )
+        compileTerm( left )
+        prog += VarUnifyInst( vars.num(rname) )
+      case StructureAST( pos, "=", List(left, right) ) =>
+        dbg( "unify", pos )
+        compileTerm( left )
+        compileTerm( right )
+        prog += UnifyInst
+      case StructureAST( pos, "\\=", List(left, right) ) =>
+        dbg( "not unifiable", pos )
+        prog.patch( (ptr, len) => MarkInst(len - ptr - 1) ) {
+          compileTerm( left )
+          compileTerm( right )
+          prog += UnifyInst
+          prog += UnmarkInst
+          prog += FailInst }
+      case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
+        compileArithmetic( expr )
+        compileExpression( expr )
+        prog += VarInst( vars.num(rname) )
+        prog += UnifyInst
+      case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
+      case StructureAST( pos, "=:=", List(left, right) ) =>
+        compileArithmetic( data )
+        compileExpression( left )
+        compileExpression( right )
+        prog += EqInst
+      case StructureAST( pos, "=\\=", List(left, right) ) =>
+        compileArithmetic( data )
+        compileExpression( left )
+        compileExpression( right )
+        prog += NeInst
+      case StructureAST( pos, "<", List(left, right) ) =>
+        compileArithmetic( data )
+        compileExpression( right )
+        compileExpression( left )
+        prog += LtInst
+      case StructureAST( pos, "=<", List(left, right) ) =>
+        compileArithmetic( data )
+        compileExpression( right )
+        compileExpression( left )
+        prog += LeInst
+      case StructureAST( pos, ">", List(left, right) ) =>
+        compileArithmetic( data )
+        compileExpression( right )
+        compileExpression( left )
+        prog += GtInst
+      case StructureAST( pos, ">=", List(left, right) ) =>
+        compileArithmetic( data )
         compileExpression( right )
         compileExpression( left )
         prog += GeInst
