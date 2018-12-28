@@ -337,11 +337,11 @@ object Compiler {
         prog += UnmarkInst
       case StructureAST( r, "call", List(VariableAST(pos, name)) ) =>
         dbg( s"call (compile)", r )
+        prog += PushFrameInst
         prog += VarInst( vars.num(name) )
         prog += NativeInst( Runtime.compileCall )
-        prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the unmark
-          prog += PushFrameInst
-          prog += CallBlockInst }
+        prog += MarkInst( 2 )
+        prog += CallBlockInst
         prog += UnmarkInst
       case StructureAST( r, "call", List(arg) ) => r.error( s"call: term should be callable: $arg" )
       case StructureAST( r, "once", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
