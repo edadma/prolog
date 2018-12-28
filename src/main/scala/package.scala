@@ -156,6 +156,7 @@ package object prolog {
       case CutInst => "cut"
       case MarkInst( disp ) => s"mark $disp"
       case UnmarkInst => "unmark"
+      case CallBlockInst => "call block"
       case CallInst( block, entry ) => s"call $block $entry"
       case CallIndirectInst( _, f ) => s"call $f"
       case DropInst => "drop"

@@ -20,6 +20,7 @@ case object CutInst extends Instruction
 case class ChoiceInst( disp: Int ) extends Instruction
 case class MarkInst( disp: Int ) extends Instruction
 case object UnmarkInst extends Instruction
+case object CallBlockInst extends Instruction
 case class CallInst( block: Block, entry: Int ) extends Instruction
 case class CallIndirectInst( pos: Reader, f: Functor ) extends Instruction
 case object DropInst extends Instruction

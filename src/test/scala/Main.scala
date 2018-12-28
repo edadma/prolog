@@ -35,12 +35,12 @@ object Main extends App {
           implicit val query = new Program
           implicit val vars = new Vars
           val block = query.block( "query" )
-          val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
+          val vm = new VM( prog ) {trace = true; debug = false/*; out = new PrintStream( "debug" )*/}
 
           Compiler.compileGoal( ast, prog )
           //block.print
-          //println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
-          println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          //println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
         case m: Parser.Mismatch => m.error
       }
     case m: Parser.Mismatch => m.error

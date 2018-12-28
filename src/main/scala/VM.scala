@@ -23,7 +23,7 @@ object VM {
 
 }
 
-class VM( prog: Program ) {
+class VM( val prog: Program ) {
 
   import VM._
 
@@ -165,7 +165,11 @@ class VM( prog: Program ) {
     push( Structure(f, args) )
   }
 
-  def top = vareval( dataStack.head )
+  def top =
+    dataStack.headOption match {
+      case None => sys.error( "data stack underflow" )
+      case Some( t ) => vareval( t )
+    }
 
   def pop = {
     val res = top
@@ -263,6 +267,7 @@ class VM( prog: Program ) {
       case UnmarkInst =>
         if (mark ne null)
           choiceStack = mark
+      case CallBlockInst => call( pop.asInstanceOf[Block], 0 )
       case CallInst( block, entry ) => call( block, entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {
