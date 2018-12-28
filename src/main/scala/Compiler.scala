@@ -330,11 +330,17 @@ object Compiler {
           compileGoal( term, lookup ) }
         prog += UnmarkInst
         prog += FailInst
-//      case StructureAST( r, "call", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
+      case StructureAST( r, "call", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
+        dbg( s"call", r )
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+          compileGoal( term, lookup ) }
+        prog += UnmarkInst
+      case StructureAST( r, "call", List(VariableAST(pos, name)) ) =>
 //        dbg( s"call", r )
 //        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
-//          compileBody( term ) }
+//          compileGoal( term, lookup ) }
 //        prog += UnmarkInst
+      case StructureAST( r, "call", List(arg) ) => r.error( s"call: term should be callable: $arg" )
       case StructureAST( r, "once", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
         dbg( s"once", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the unmark
@@ -380,11 +386,10 @@ object Compiler {
           prog += UnifyInst
           prog += UnmarkInst
           prog += FailInst }
-      case StructureAST( pos, "is", List(VariableAST(_, rname), expr) ) =>
+      case StructureAST( pos, "is", List(VariableAST(_, lname), expr) ) =>
         compileArithmetic( expr )
         compileExpression( expr )
-        prog += VarInst( vars.num(rname) )
-        prog += UnifyInst
+        prog += VarUnifyInst( vars.num(lname) )
       case StructureAST( _, "is", List(head, _) ) => head.pos.error( s"variable was expected" )
       case StructureAST( pos, "=:=", List(left, right) ) =>
         compileArithmetic( ast )

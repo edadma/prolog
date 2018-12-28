@@ -42,7 +42,7 @@ class Program extends Growable[Instruction] {
     procedureMap.clear
   }
 
-  def printProcedures: Unit = {
+  def printProcedures: Unit =
     for (Procedure( Functor(Symbol(name), arity), block, start, end, clauses ) <- procedureMap.values.toList.sorted) {
       println( s"$name/$arity" )
 
@@ -53,7 +53,6 @@ class Program extends Growable[Instruction] {
 
       println
     }
-  }
 
   def defined( name: String, arity: Int ): Boolean = defined( functor(name, arity) )
 
