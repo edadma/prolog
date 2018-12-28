@@ -55,7 +55,7 @@ class Program extends Growable[Instruction] {
     }
   }
 
-  def defined( name: String, arity: Int ) = defined( functor(name, arity) )
+  def defined( name: String, arity: Int ): Boolean = defined( functor(name, arity) )
 
   def defined( f: Functor ) = procedureMap contains f
 

@@ -593,11 +593,11 @@ object Compiler {
 //      case StructureAST( pos, "=", List(left, VariableAST(_, rname)) ) =>
 //        compileTerm( left )
 //        prog += VarUnifyInst( vars.num(rname) )
-      case Structure( Functor(Symbol("="), 2), List(left, right) ) =>
+      case Structure( Functor(Symbol("="), 2), Array(left, right) ) =>
         compileTerm( left )
         compileTerm( right )
         prog += UnifyInst
-      case Structure( Functor(Symbol("\\="), 2), List(left, right) ) =>
+      case Structure( Functor(Symbol("\\="), 2), Array(left, right) ) =>
         prog.patch( (ptr, len) => MarkInst(len - ptr - 1) ) {
           compileTerm( left )
           compileTerm( right )
@@ -640,7 +640,7 @@ object Compiler {
 //        compileExpression( right )
 //        compileExpression( left )
 //        prog += GeInst
-      case Structure( f, args ) if lookup.defined( f ) =>
+      case Structure( f, args ) if lookup defined f =>
         prog += PushFrameInst
         args foreach compileTerm
 
@@ -650,42 +650,28 @@ object Compiler {
           sys.error( s"procedure entry point unknown: $p" )
         else
           prog += CallInst( p.block, p.entry )
-      case StructureAST( r, name, args ) if Builtin exists functor( name, args.length ) =>
-        val f = functor( name, args.length )
-
-        dbg( s"built-in $f", r )
+      case Structure( f, args ) if Builtin exists f =>
         args foreach compileTerm
         prog += NativeInst( Builtin.predicate(f) )
-      case StructureAST( pos, name, args ) =>
-        val f = functor( name, args.length )
-
-        dbg( s"procedure (indirect) $f", pos )
+      case Structure( f, args ) =>
         prog += PushFrameInst
         args foreach compileTerm
-        prog += CallIndirectInst( pos, f )
-      case AtomAST( r, name ) if lookup.defined( name, 0 ) =>
-        val f = functor( name, 0 )
+        prog += CallIndirectInst( null, f )
+      case a: Symbol if lookup defined Functor( a, 0 ) =>
+        val f = Functor( a, 0 )
 
-        dbg( s"built-in $f", r )
         prog += PushFrameInst
 
         val p = lookup.procedure( f )
 
         if (p.entry == -1)
-          prog.fixup( f )
+          sys.error( s"procedure entry point unknown: $p" )
         else
           prog += CallInst( p.block, p.entry )
-      case AtomAST( r, name ) if Builtin exists functor( name, 0 ) =>
-        val f = functor( name, 0 )
-
-        dbg( s"built-in $f", r )
-        prog += NativeInst( Builtin.predicate(f) )
-      case AtomAST( r, name ) =>
-        val f = functor( name, 0 )
-
-        dbg( s"procedure (indirect) $f", r )
+      case a: Symbol if Builtin exists Functor( a, 0 ) => prog += NativeInst( Builtin predicate Functor( a, 0 ) )
+      case a: Symbol =>
         prog += PushFrameInst
-        prog += CallIndirectInst( r, functor(name, 0) )
+        prog += CallIndirectInst( null, Functor( a, 0 ) )
     }
 
 }
