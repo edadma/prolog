@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog
 
-import java.io.{DataInputStream, DataOutputStream, InputStream, OutputStream}
+import java.io._
 
 import scala.collection.generic.Growable
 import scala.collection.mutable
@@ -20,114 +20,117 @@ class Program extends Growable[Instruction] {
   val procedureMap = new mutable.HashMap[Functor, Procedure]
 
   def save( out: OutputStream ): Unit = {
-    val s = new DataOutputStream( out ) { def ptr = written }
-
-    def writeFunctor( f: Functor ): Unit = {
-      s writeUTF f.name.name
-      s writeByte f.arity
-    }
-
-    def write( d: Any ): Unit =
-      d match {
-        case Symbol( atom ) =>
-          s writeByte ATOM
-          s writeUTF atom
-        case n: Int =>
-          s writeByte INTEGER
-          s writeInt n
-        case n: Double =>
-          s writeByte FLOAT
-          s writeDouble n
-        case a: String =>
-          s writeByte STRING
-          s writeUTF a
-        case Structure( f, args ) =>
-          s writeByte STRUCTURE
-          writeFunctor( f )
-          args foreach write
-      }
+    val s = new DataOutputStream( out )
 
     s writeBytes "PCC V1 "
 
-    for (Procedure( func, block, _, _, _ ) <- procedureMap.values) {
-      writeFunctor( func )
+    for (Procedure( Functor(Symbol(name), arity), block, _, _, _ ) <- procedureMap.values) {
+      s writeUTF name
+      s writeByte arity
 
-      val len = s.ptr
+      val blockpcc = new ByteArrayOutputStream
+      val b = new DataOutputStream( blockpcc )
 
-      s writeInt 0
+      def writeFunctor( f: Functor ): Unit = {
+        b writeUTF f.name.name
+        b writeByte f.arity
+      }
+
+      def write( d: Any ): Unit =
+        d match {
+          case Symbol( atom ) =>
+            b writeByte ATOM
+            b writeUTF atom
+          case n: Int =>
+            b writeByte INTEGER
+            b writeInt n
+          case n: Double =>
+            b writeByte FLOAT
+            b writeDouble n
+          case a: String =>
+            b writeByte STRING
+            b writeUTF a
+          case Structure( f, args ) =>
+            b writeByte STRUCTURE
+            writeFunctor( f )
+            args foreach write
+        }
 
       block.code foreach {
         case DebugInst( msg, _ ) =>
-          s writeByte 0
-          s writeUTF msg
+          b writeByte 0
+          b writeUTF msg
         case PushInst( d ) =>
-          s writeByte 1
+          b writeByte 1
           write( d )
         case VarInst( n ) =>
-          s writeByte 2
-          s writeByte n
+          b writeByte 2
+          b writeByte n
         case VarUnifyInst( n ) =>
-          s writeByte 3
-          s writeByte n
+          b writeByte 3
+          b writeByte n
         case StructureInst( f ) =>
-          s writeByte 4
+          b writeByte 4
           writeFunctor( f )
         case ElementUnifyInst( n ) =>
-          s writeByte 5
-          s writeByte n
-        case ReturnInst => s writeByte 6
+          b writeByte 5
+          b writeByte n
+        case ReturnInst => b writeByte 6
         case FunctorInst( f ) =>
-          s writeByte 7
+          b writeByte 7
           writeFunctor( f )
-        case DupInst => s writeByte 8
-        case EqInst => s writeByte 9
-        case NeInst => s writeByte 10
-        case LtInst => s writeByte 11
-        case LeInst => s writeByte 12
-        case GtInst => s writeByte 13
-        case GeInst => s writeByte 14
+        case DupInst => b writeByte 8
+        case EqInst => b writeByte 9
+        case NeInst => b writeByte 10
+        case LtInst => b writeByte 11
+        case LeInst => b writeByte 12
+        case GtInst => b writeByte 13
+        case GeInst => b writeByte 14
         case BranchIfInst( disp ) =>
-          s writeByte 15
-          s writeInt disp
+          b writeByte 15
+          b writeInt disp
         case BranchInst( disp ) =>
-          s writeByte 16
-          s writeInt disp
-        case FailInst => s writeByte 17
+          b writeByte 16
+          b writeInt disp
+        case FailInst => b writeByte 17
         case ChoiceInst( disp ) =>
-          s writeByte 17
-          s writeInt disp
+          b writeByte 17
+          b writeInt disp
         case CutChoiceInst( disp ) =>
-          s writeByte 18
-          s writeInt disp
-        case CutInst => s writeByte 19
+          b writeByte 18
+          b writeInt disp
+        case CutInst => b writeByte 19
         case MarkInst( disp ) =>
-          s writeByte 20
-          s writeInt disp
-        case UnmarkInst => s writeByte 21
-        case CallBlockInst => s writeByte 22
+          b writeByte 20
+          b writeInt disp
+        case UnmarkInst => b writeByte 21
+        case CallBlockInst => b writeByte 22
         case CallProcedureInst( p ) =>
-          s writeByte 23
+          b writeByte 23
           writeFunctor( p.func )
         case CallIndirectInst( _, f ) =>
-          s writeByte 24
+          b writeByte 24
           writeFunctor( f )
-        case DropInst => s writeByte 25
-        case PushFrameInst => s writeByte 26
+        case DropInst => b writeByte 25
+        case PushFrameInst => b writeByte 26
         case FrameInst( vars ) =>
-          s writeByte 27
-          s writeInt vars
+          b writeByte 27
+          b writeInt vars
         case NativeInst( _, func ) =>
-          s writeByte 28
+          b writeByte 28
           writeFunctor( func )
-        case UnifyInst => s writeByte 29
+        case UnifyInst => b writeByte 29
         case EvalInst( _, _, v ) =>
-          s writeByte 30
-          s writeInt v
-        case AddInst => s writeByte 31
-        case SubInst => s writeByte 32
-        case MulInst => s writeByte 33
-        case DivInst => s writeByte 34
+          b writeByte 30
+          b writeInt v
+        case AddInst => b writeByte 31
+        case SubInst => b writeByte 32
+        case MulInst => b writeByte 33
+        case DivInst => b writeByte 34
       }
+
+      s writeInt blockpcc.size
+      s write blockpcc.toByteArray
     }
 
   }

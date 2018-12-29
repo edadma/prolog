@@ -1,5 +1,7 @@
 package xyz.hyperreal
 
+import java.io.PrintStream
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
@@ -177,5 +179,43 @@ package object prolog {
       case MulInst => "mul"
       case DivInst => "div"
     }
+
+  def dump( array: Array[Byte], start: Int, lines: Int, out: PrintStream = Console.out ) = {
+    val addr = start - start%16
+
+    def printByte( b: Option[Int] ) =
+      if (b isEmpty)
+        out.print( "-- " )
+      else
+        out.print( "%02x ".format(b.get&0xFF).toUpperCase )
+
+    def printChar( c: Option[Int] ) = out.print( if (c.nonEmpty && ' ' <= c.get && c.get <= '~') c.get.asInstanceOf[Char] else '.' )
+
+    def read( addr: Int ) =
+      if (addr < array.length)
+        Some( array(addr)&0xFF )
+      else
+        None
+
+    for (line <- addr until (addr + 16*lines) by 16) {
+      out.print( "%6x  ".format(line).toUpperCase )
+
+      for (i <- line until (line + 16)) {
+        if (i%16 == 8)
+          out.print( ' ' )
+
+        printByte( read(i) )
+      }
+
+      val bytes = ((line + 16) min 0x10000) - line
+
+      out.print( " "*((16 - bytes)*3 + 1 + (if (bytes < 9) 1 else 0)) )
+
+      for (i <- line until (line + 16))
+        printChar( read(i) )
+
+      out.println
+    }
+  }
 
 }

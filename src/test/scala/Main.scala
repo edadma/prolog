@@ -1,5 +1,7 @@
 package xyz.hyperreal.prolog
 
+import java.io.ByteArrayOutputStream
+
 import xyz.hyperreal.pattern_matcher.StringReader
 
 
@@ -28,6 +30,12 @@ object Main extends App {
       //println( (System.currentTimeMillis - start) )
       Compiler.compile( ast, prog )
       //prog.printProcedures
+
+      val pcc = new ByteArrayOutputStream
+
+      prog.save( pcc )
+      dump( pcc.toByteArray, 0, 3 )
+//      println( pcc.toByteArray map (b => f"$b%02x") mkString ", " )
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>
