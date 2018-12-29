@@ -21,7 +21,7 @@ case class ChoiceInst( disp: Int ) extends Instruction
 case class MarkInst( disp: Int ) extends Instruction
 case object UnmarkInst extends Instruction
 case object CallBlockInst extends Instruction
-case class CallInst( block: Block, entry: Int ) extends Instruction
+case class CallProcedureInst( procedure: Procedure ) extends Instruction { var functor: Functor = null }
 case class CallIndirectInst( pos: Reader, f: Functor ) extends Instruction
 case object DropInst extends Instruction
 case class FrameInst( vars: Int ) extends Instruction

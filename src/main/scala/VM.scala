@@ -268,7 +268,7 @@ class VM( val prog: Program ) {
         if (mark ne null)
           choiceStack = mark
       case CallBlockInst => call( pop.asInstanceOf[Block], 0 )
-      case CallInst( block, entry ) => call( block, entry )
+      case CallProcedureInst( p ) => call( p.block, p.entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {
           case None => pos.error( s"rule $name/$arity not defined" )

@@ -9,7 +9,6 @@ class Program extends Growable[Instruction] {
 
   var code: ArrayBuffer[Instruction] = _
   val procedureMap = new mutable.HashMap[Functor, Procedure]
-  val fixups = new ArrayBuffer[(ArrayBuffer[Instruction], Int, Functor)]
 
   def block( name: String ) = {
     val b = new Block( name )
@@ -59,11 +58,6 @@ class Program extends Growable[Instruction] {
   def defined( f: Functor ) = procedureMap contains f
 
   def get( f: Functor ) = procedureMap get f
-
-  def fixup( f: Functor ) {
-    fixups += ((code, pointer, f))
-    code += null
-  }
 
   def procedure( name: String, arity: Int ): Procedure = procedure( functor(name, arity) )
 

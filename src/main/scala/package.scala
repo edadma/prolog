@@ -17,7 +17,7 @@ package object prolog {
 
   case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
 
-  case class Procedure( func: Functor, var block: Block, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer )
+  case class Procedure( func: Functor, var block: Block, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer ) { override def toString = s"[procedure $func" }
 
   case class Clause( var vars: Int, ast: TermAST )
 
@@ -157,7 +157,7 @@ package object prolog {
       case MarkInst( disp ) => s"mark $disp"
       case UnmarkInst => "unmark"
       case CallBlockInst => "call block"
-      case CallInst( block, entry ) => s"call $block $entry"
+      case CallProcedureInst( p ) => s"call $p"
       case CallIndirectInst( _, f ) => s"call $f"
       case DropInst => "drop"
       case PushFrameInst => "pushfr"

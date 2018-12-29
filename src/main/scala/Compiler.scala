@@ -56,7 +56,7 @@ object Compiler {
         prog.procedure( f ).clauses += Clause( 0, clause )
     }
 
-  def phase2( implicit prog: Program ) {
+  def phase2( implicit prog: Program ) =
     prog.procedures foreach {
       case proc@Procedure( f, _, _, _, clauses ) =>
         proc.block = prog.block( f.toString )
@@ -71,14 +71,7 @@ object Compiler {
         proc.end = prog.pointer
     }
 
-    for ((block, addr, f) <- prog.fixups) {
-      val p = prog.procedure(f)
-
-      block(addr) = CallInst( p.block, p.entry )
-    }
-  }
-
-  def dbg( msg: String, pos: Reader )(implicit prog: Program ) =
+  def dbg( msg: String, pos: Reader )( implicit prog: Program ) =
     if (debug)
       prog += DebugInst( msg, pos )
 
@@ -430,13 +423,7 @@ object Compiler {
         dbg( s"procedure $f", r )
         prog += PushFrameInst
         args foreach compileTerm
-
-        val p = lookup.procedure( f )
-
-        if (p.entry == -1)
-          prog.fixup( f )
-        else
-          prog += CallInst( p.block, p.entry )
+        prog += CallProcedureInst( lookup procedure f )
       case StructureAST( r, name, args ) if Builtin exists functor( name, args.length ) =>
         val f = functor( name, args.length )
 
@@ -446,7 +433,7 @@ object Compiler {
       case StructureAST( pos, name, args ) =>
         val f = functor( name, args.length )
 
-        dbg( s"procedure (indirect) $f", pos )
+        dbg( s"call procedure (indirect) $f", pos )
         prog += PushFrameInst
         args foreach compileTerm
         prog += CallIndirectInst( pos, f )
@@ -455,13 +442,7 @@ object Compiler {
 
         dbg( s"built-in $f", r )
         prog += PushFrameInst
-
-        val p = lookup.procedure( f )
-
-        if (p.entry == -1)
-          prog.fixup( f )
-        else
-          prog += CallInst( p.block, p.entry )
+        prog += CallProcedureInst( lookup procedure f )
       case AtomAST( r, name ) if Builtin exists functor( name, 0 ) =>
         val f = functor( name, 0 )
 
@@ -657,7 +638,7 @@ object Compiler {
         if (p.entry == -1)
           sys.error( s"procedure entry point unknown: $p" )
         else
-          prog += CallInst( p.block, p.entry )
+          prog += CallProcedureInst( p )
       case Structure( f, args ) if Builtin exists f =>
         args foreach compileTerm
         prog += NativeInst( Builtin.predicate(f) )
@@ -675,7 +656,7 @@ object Compiler {
         if (p.entry == -1)
           sys.error( s"procedure entry point unknown: $p" )
         else
-          prog += CallInst( p.block, p.entry )
+          prog += CallProcedureInst( p )
       case a: Symbol if Builtin exists Functor( a, 0 ) => prog += NativeInst( Builtin predicate Functor( a, 0 ) )
       case a: Symbol =>
         prog += PushFrameInst
