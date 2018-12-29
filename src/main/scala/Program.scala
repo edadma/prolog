@@ -116,13 +116,17 @@ class Program extends Growable[Instruction] {
         case FrameInst( vars ) =>
           s writeByte 27
           s writeInt vars
-        case NativeInst( _, func ) => s"native $pred"
-        case UnifyInst => "unify"
-        case EvalInst( _, _, v ) => s"eval $v"
-        case AddInst => "add"
-        case SubInst => "sub"
-        case MulInst => "mul"
-        case DivInst => "div"
+        case NativeInst( _, func ) =>
+          s writeByte 28
+          writeFunctor( func )
+        case UnifyInst => s writeByte 29
+        case EvalInst( _, _, v ) =>
+          s writeByte 30
+          s writeInt v
+        case AddInst => s writeByte 31
+        case SubInst => s writeByte 32
+        case MulInst => s writeByte 33
+        case DivInst => s writeByte 34
       }
     }
 

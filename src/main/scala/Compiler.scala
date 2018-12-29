@@ -226,6 +226,9 @@ object Compiler {
       case n: NumericAST =>
         dbg( "put number", n.pos )
         prog += PushInst( n.v )
+      case StringAST( r, s ) =>
+        dbg( "put string", r )
+        prog += PushInst( s )
     }
 
   def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {

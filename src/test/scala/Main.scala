@@ -7,12 +7,11 @@ object Main extends App {
 
   val code =
     """
-       |p( a ).
-       |p( b ).
+       |main :- writeln( "wow" ).
     """.stripMargin
   val query =
     """
-       |A = (X = asdf, writeln(X)), call( A ), writeln( done )
+       |main
     """.stripMargin
   val prog = new Program
 
