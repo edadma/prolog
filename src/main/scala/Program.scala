@@ -76,30 +76,47 @@ class Program extends Growable[Instruction] {
           s writeByte 5
           s writeByte n
         case ReturnInst => s writeByte 6
-
-        case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"
-        case DupInst => "dup"
-        case EqInst => "eq"
-        case NeInst => "ne"
-        case LtInst => "lt"
-        case LeInst => "le"
-        case GtInst => "gt"
-        case GeInst => "ge"
-        case BranchIfInst( disp ) => s"branch if $disp"
-        case BranchInst( disp ) => s"branch $disp"
-        case FailInst => "fail"
-        case ChoiceInst( disp ) => s"choice $disp"
-        case CutChoiceInst( disp ) => s"cut_choice $disp"
-        case CutInst => "cut"
-        case MarkInst( disp ) => s"mark $disp"
-        case UnmarkInst => "unmark"
-        case CallBlockInst => "call block"
-        case CallProcedureInst( p ) => s"call $p"
-        case CallIndirectInst( _, f ) => s"call $f"
-        case DropInst => "drop"
-        case PushFrameInst => "pushfr"
-        case FrameInst( vars ) => s"frame $vars"
-        case NativeInst( pred ) => s"native $pred"
+        case FunctorInst( f ) =>
+          s writeByte 7
+          writeFunctor( f )
+        case DupInst => s writeByte 8
+        case EqInst => s writeByte 9
+        case NeInst => s writeByte 10
+        case LtInst => s writeByte 11
+        case LeInst => s writeByte 12
+        case GtInst => s writeByte 13
+        case GeInst => s writeByte 14
+        case BranchIfInst( disp ) =>
+          s writeByte 15
+          s writeInt disp
+        case BranchInst( disp ) =>
+          s writeByte 16
+          s writeInt disp
+        case FailInst => s writeByte 17
+        case ChoiceInst( disp ) =>
+          s writeByte 17
+          s writeInt disp
+        case CutChoiceInst( disp ) =>
+          s writeByte 18
+          s writeInt disp
+        case CutInst => s writeByte 19
+        case MarkInst( disp ) =>
+          s writeByte 20
+          s writeInt disp
+        case UnmarkInst => s writeByte 21
+        case CallBlockInst => s writeByte 22
+        case CallProcedureInst( p ) =>
+          s writeByte 23
+          writeFunctor( p.func )
+        case CallIndirectInst( _, f ) =>
+          s writeByte 24
+          writeFunctor( f )
+        case DropInst => s writeByte 25
+        case PushFrameInst => s writeByte 26
+        case FrameInst( vars ) =>
+          s writeByte 27
+          s writeInt vars
+        case NativeInst( _, func ) => s"native $pred"
         case UnifyInst => "unify"
         case EvalInst( _, _, v ) => s"eval $v"
         case AddInst => "add"
@@ -108,7 +125,6 @@ class Program extends Growable[Instruction] {
         case DivInst => "div"
       }
     }
-
 
   }
 

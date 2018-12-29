@@ -281,11 +281,15 @@ object Compiler {
             case "-" => NegInst
           })
       case StructureAST( _, name, args ) if Math exists functor( name, args.length ) =>
+        val f = functor(name, args.length)
+
         args foreach compileExpression
-        prog += NativeInst( Math.function(functor(name, args.length)) )
+        prog += NativeInst( Math.function(f), f )
       case StructureAST( pos, name, args ) => pos.error( s"function $name/${args.length} not found" )
       case AtomAST( _, name ) if Math exists functor( name, 0 ) =>
-        prog += NativeInst( Math.function(functor( name, 0)) )
+        val f = functor(name, 0)
+
+        prog += NativeInst( Math.function(f), f )
       case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
     }
 
@@ -325,7 +329,7 @@ object Compiler {
         dbg( s"call (compile)", r )
         prog += PushFrameInst
         prog += VarInst( vars.num(name) )
-        prog += NativeInst( Runtime.compileCall )
+        prog += NativeInst( Runtime.compileCall, Functor('$compileCall, 0) )
         prog += MarkInst( 2 )
         prog += CallBlockInst
         prog += UnmarkInst
@@ -422,7 +426,7 @@ object Compiler {
 
         dbg( s"built-in $f", r )
         args foreach compileTerm
-        prog += NativeInst( Builtin.predicate(f) )
+        prog += NativeInst( Builtin.predicate(f), f )
       case StructureAST( pos, name, args ) =>
         val f = functor( name, args.length )
 
@@ -440,7 +444,7 @@ object Compiler {
         val f = functor( name, 0 )
 
         dbg( s"built-in $f", r )
-        prog += NativeInst( Builtin.predicate(f) )
+        prog += NativeInst( Builtin.predicate(f), f )
       case AtomAST( r, name ) =>
         val f = functor( name, 0 )
 
@@ -633,7 +637,7 @@ object Compiler {
           prog += CallProcedureInst( p )
       case Structure( f, args ) if Builtin exists f =>
         args foreach compileTerm
-        prog += NativeInst( Builtin.predicate(f) )
+        prog += NativeInst( Builtin.predicate(f), f )
       case Structure( f, args ) =>
         prog += PushFrameInst
         args foreach compileTerm
@@ -649,7 +653,10 @@ object Compiler {
           sys.error( s"procedure entry point unknown: $p" )
         else
           prog += CallProcedureInst( p )
-      case a: Symbol if Builtin exists Functor( a, 0 ) => prog += NativeInst( Builtin predicate Functor( a, 0 ) )
+      case a: Symbol if Builtin exists Functor( a, 0 ) =>
+        val f = Functor( a, 0 )
+
+        prog += NativeInst( Builtin predicate f, f )
       case a: Symbol =>
         prog += PushFrameInst
         prog += CallIndirectInst( null, Functor( a, 0 ) )

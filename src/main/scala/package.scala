@@ -169,7 +169,7 @@ package object prolog {
       case DropInst => "drop"
       case PushFrameInst => "pushfr"
       case FrameInst( vars ) => s"frame $vars"
-      case NativeInst( pred ) => s"native $pred"
+      case NativeInst( pred, _ ) => s"native $pred"
       case UnifyInst => "unify"
       case EvalInst( _, _, v ) => s"eval $v"
       case AddInst => "add"
