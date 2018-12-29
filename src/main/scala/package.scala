@@ -69,6 +69,13 @@ package object prolog {
     def evalSet = evals map (_ + '\'') toSet
   }
 
+  def groundTerm( term: Any ): Boolean =
+    term match {
+      case Structure( _, args ) => args forall groundTerm
+      case _: Symbol | _: Number => true
+      case _: VM#Variable => false
+    }
+
   def vareval( a: Any ): Any =
     a match {
       case v: VM#Variable => v.eval

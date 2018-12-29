@@ -11,8 +11,8 @@ object Runtime {
         implicit val vars = new Vars
         val block = prog.block( "runtime compile" )
 
-        prog += FrameInst( 0 )
-        Compiler.compileGoal( t, vm.prog )
+        prog.patch( (_, _) => FrameInst(vars.count) ) {
+          Compiler.compileGoal( t, vm.prog ) }
         prog += ReturnInst
         vm push block
     }

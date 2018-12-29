@@ -198,13 +198,6 @@ object Compiler {
       case AnonymousAST( _ ) | VariableAST( _, _ ) => false
     }
 
-  def ground( term: Any ): Boolean =
-    term match {
-      case Structure( _, args ) => args forall ground
-      case _: Symbol | _: Number => true
-      case _: VM#Variable => false
-    }
-
   def constant( term: TermAST ): Any =
     term match {
       case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toArray )
@@ -454,19 +447,18 @@ object Compiler {
         dbg( s"procedure (indirect) $f", r )
         prog += PushFrameInst
         prog += CallIndirectInst( r, functor(name, 0) )
+      case _ => sys.error( s"illegal goal term: $ast" )
     }
 
   def compileTerm( term: Any )( implicit prog: Program, vars: Vars ): Unit =
     term match {
-      case s: Structure if ground( s ) => prog += PushInst( s )
+      case s: Structure if groundTerm( s ) => prog += PushInst( s )
       case Structure( f, args ) =>
         args foreach compileTerm
         prog += StructureInst( f )
       case s: Symbol => prog += PushInst( s )
-//      case AnonymousAST( r ) =>
-//        prog += VarInst( vars.anon )
-//      case VariableAST( r, name ) =>
-//        prog += VarInst( vars.num(name) )
+//      case v: VM#Variable if v.name == "_" => prog += VarInst( vars.anon )
+      case v: VM#Variable => prog += PushInst( v )//VarInst( vars.num(v.name) )
       case n: NumericAST => prog += PushInst( n.v )
     }
 

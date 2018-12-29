@@ -352,14 +352,11 @@ class VM( val prog: Program ) {
   }
 
   def copy( a: Any ): Any =
-    a match {
+    vareval( a ) match {
+      case s: Structure if groundTerm( s ) => s
       case Structure( functor, args ) => Structure( functor, args map copy )
-      case v: Variable =>
-        v eval match {
-          case _: Variable => new Variable
-          case x => copy( x )
-        }
-      case _ => a
+      case v: Variable => new Variable( v.name )
+      case a1 => a1
     }
 
   def unify( a: Any, b: Any ): Boolean =
@@ -391,7 +388,7 @@ class VM( val prog: Program ) {
       out.println( dataStack )
 
     if (success)
-      Some( SortedMap( vars.varMap map { case (k, v) => (k, copy(frame.vars(v).eval)) }
+      Some( SortedMap( vars.varMap map { case (k, v) => (k, copy( frame.vars(v) )) }
         filterNot {case (k, _) => vars.evalSet(k) || k.startsWith("$")} toList: _* ) )
     else
       None
@@ -493,6 +490,7 @@ class VM( val prog: Program ) {
 
     override def toString: String =
       eval match {
+        case v: Variable if name ne null => s"#${v.name}"
         case v: Variable => s"#${v.num}"
         case v => v.toString
       }

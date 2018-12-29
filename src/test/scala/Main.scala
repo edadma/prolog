@@ -12,7 +12,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-       |A = writeln(asdf), call( A ), writeln( done )
+       |A = (X = asdf, writeln(X)), call( A ), writeln( done )
     """.stripMargin
   val prog = new Program
 
