@@ -59,6 +59,9 @@ object Main extends App {
                     |license                          print the license
                     |quit (q)                         exit the REPL
                   """.trim.stripMargin )
+              case List("import"|"i", module) =>
+                program = new Program { load( module + ".pcc" ) }
+                out.println( program.procedures map (_.func) mkString "\n" )
               case List("license") =>
                 out.println(
                   """
@@ -82,7 +85,6 @@ object Main extends App {
                 Parser.source( Reader.fromFile(file + ".prolog") ) match {
                   case Parser.Match( ast, _ ) =>
                     Compiler.compile( ast, program )
-
                     out.println( program.procedures map (_.func) mkString "\n" )
                   case m: Parser.Mismatch => m.error
                 }

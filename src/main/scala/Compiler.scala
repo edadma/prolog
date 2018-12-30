@@ -5,7 +5,7 @@ import xyz.hyperreal.pattern_matcher.Reader
 import scala.collection.mutable
 
 
-object Compiler {
+object Compiler extends App {
 
   var debug = false
 
@@ -17,6 +17,20 @@ object Compiler {
       functor( "repeat", 0 ),
       functor( "is", 2 )
     )
+
+  if (args.length < 1) {
+    println( "expected name of source file" )
+    sys.exit( 1 )
+  }
+
+  Parser.source( Reader.fromFile(args(0) + ".prolog") ) match {
+    case Parser.Match( ast, _ ) =>
+      val prog = new Program
+
+      compile( ast, prog )
+      prog.save( args(0) + ".pcc" )
+    case m: Parser.Mismatch => m.error
+  }
 
   def compile( ast: PrologAST, prog: Program ): Unit = {
     phase1( ast, prog )
