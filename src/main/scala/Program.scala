@@ -18,6 +18,7 @@ class Program extends Growable[Instruction] {
 
   var code: ArrayBuffer[Instruction] = _
   val procedureMap = new mutable.HashMap[Functor, Procedure]
+  val loadSet = new mutable.HashSet[String]
 
   def save( s: String ): Unit = save( new FileOutputStream(s) )
 
@@ -143,99 +144,100 @@ class Program extends Growable[Instruction] {
     out.close
   }
 
-  def load( s: String ): Unit = {
-    val f = new RandomAccessFile( s, "r" )
+  def load( s: String ): Unit =
+    if (!loadSet(s)) {
+      val f = new RandomAccessFile( s, "r" )
 
-    if (f.length < 7 + 4)
-      sys.error( "load: invalid pcc file: too short" )
+      if (f.length < 7 + 4)
+        sys.error( "load: invalid pcc file: too short" )
 
-    val magic = new Array[Byte]( 7 )
+      val magic = new Array[Byte]( 7 )
 
-    f readFully magic
+      f readFully magic
 
-    if (new String(magic) != "PCC V1 ")
-      sys.error( "load: invalid pcc file: wrong magic value" )
+      if (new String(magic) != "PCC V1 ")
+        sys.error( "load: invalid pcc file: wrong magic value" )
 
-    val procs = f.readInt
+      val procs = f.readInt
 
-    if (procs <= 0)
-      sys.error( s"load: invalid pcc file: expected positive number of procedures" )
+      if (procs <= 0)
+        sys.error( s"load: invalid pcc file: expected positive number of procedures" )
 
-    def readFunctor = functor( f.readUTF, f.readByte )
+      def readFunctor = functor( f.readUTF, f.readByte )
 
-    for (_ <- 1 to procs) {
-      val p = procedure( readFunctor )
+      for (_ <- 1 to procs) {
+        val p = procedure( readFunctor )
 
-      p.block = block( p.func.toString )
-      p.entry = pointer
+        p.block = block( p.func.toString )
+        p.entry = pointer
 
-      def read: Any =
-        f readUnsignedByte match {
-          case ATOM => Symbol( f readUTF )
-          case INTEGER => f.readInt
-          case FLOAT => f.readDouble
-          case STRING => f.readUTF
-          case STRUCTURE =>
-            val f = readFunctor
+        def read: Any =
+          f readUnsignedByte match {
+            case ATOM => Symbol( f readUTF )
+            case INTEGER => f.readInt
+            case FLOAT => f.readDouble
+            case STRING => f.readUTF
+            case STRUCTURE =>
+              val f = readFunctor
 
-            Structure( f, (for (_ <- 1 to f.arity) yield read).toArray )
-        }
+              Structure( f, (for (_ <- 1 to f.arity) yield read).toArray )
+          }
 
-      for (_ <- 1 to f.readInt)
-        code +=
-          (f readUnsignedByte match {
-            case 0 => DebugInst( f.readUTF, null )
-            case 1 => PushInst( read )
-            case 2 => VarInst( f.readUnsignedByte )
-            case 3 => VarUnifyInst( f.readUnsignedByte )
-            case 4 => StructureInst( readFunctor )
-            case 5 => ElementUnifyInst( f.readUnsignedByte )
-            case 6 => ReturnInst
-            case 7 => FunctorInst( readFunctor )
-            case 8 => DupInst
-            case 9 => EqInst
-            case 10 => NeInst
-            case 11 => LtInst
-            case 12 => LeInst
-            case 13 => GtInst
-            case 14 => GeInst
-            case 15 => BranchIfInst( f.readInt )
-            case 16 => BranchInst( f.readInt )
-            case 17 => FailInst
-            case 18 => ChoiceInst( f.readInt )
-            case 19 => CutChoiceInst( f.readInt )
-            case 20 => CutInst
-            case 21 => MarkInst( f.readInt )
-            case 22 => UnmarkInst
-            case 23 => CallBlockInst
-            case 24 => CallProcedureInst( procedure(readFunctor) )
-            case 25 => CallIndirectInst( null, readFunctor )
-            case 26 => DropInst
-            case 27 => PushFrameInst
-            case 28 => FrameInst( f.readUnsignedByte )
-            case 29 =>
-              val group = f.readUnsignedByte
-              val func = readFunctor
-              val native =
-                group match {
-                  case NATIVE_PREDICATE => Builtin predicate func
-                  case NATIVE_MATH => Math function func
-                  case NATIVE_RUNTIME =>
-                    func.name match {
-                      case '$compile => Runtime.compileCall _
-                    }
-                }
+        for (_ <- 1 to f.readInt)
+          code +=
+            (f readUnsignedByte match {
+              case 0 => DebugInst( f.readUTF, null )
+              case 1 => PushInst( read )
+              case 2 => VarInst( f.readUnsignedByte )
+              case 3 => VarUnifyInst( f.readUnsignedByte )
+              case 4 => StructureInst( readFunctor )
+              case 5 => ElementUnifyInst( f.readUnsignedByte )
+              case 6 => ReturnInst
+              case 7 => FunctorInst( readFunctor )
+              case 8 => DupInst
+              case 9 => EqInst
+              case 10 => NeInst
+              case 11 => LtInst
+              case 12 => LeInst
+              case 13 => GtInst
+              case 14 => GeInst
+              case 15 => BranchIfInst( f.readInt )
+              case 16 => BranchInst( f.readInt )
+              case 17 => FailInst
+              case 18 => ChoiceInst( f.readInt )
+              case 19 => CutChoiceInst( f.readInt )
+              case 20 => CutInst
+              case 21 => MarkInst( f.readInt )
+              case 22 => UnmarkInst
+              case 23 => CallBlockInst
+              case 24 => CallProcedureInst( procedure(readFunctor) )
+              case 25 => CallIndirectInst( null, readFunctor )
+              case 26 => DropInst
+              case 27 => PushFrameInst
+              case 28 => FrameInst( f.readUnsignedByte )
+              case 29 =>
+                val group = f.readUnsignedByte
+                val func = readFunctor
+                val native =
+                  group match {
+                    case NATIVE_PREDICATE => Builtin predicate func
+                    case NATIVE_MATH => Math function func
+                    case NATIVE_RUNTIME =>
+                      func.name match {
+                        case '$compile => Runtime.compileCall _
+                      }
+                  }
 
-              NativeInst( native, func, group )
-            case 30 => UnifyInst
-            case 31 => EvalInst( null, f.readUTF, f.readUnsignedByte )
-            case 32 => AddInst
-            case 33 => SubInst
-            case 34 => MulInst
-            case 35 => DivInst
-          })
+                NativeInst( native, func, group )
+              case 30 => UnifyInst
+              case 31 => EvalInst( null, f.readUTF, f.readUnsignedByte )
+              case 32 => AddInst
+              case 33 => SubInst
+              case 34 => MulInst
+              case 35 => DivInst
+            })
+      }
     }
-  }
 
   def block( name: String ) = {
     val b = new Block( name )

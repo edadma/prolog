@@ -9,6 +9,7 @@ object Main extends App {
 
   val code =
     """
+       |:- a(b).
        |repeat(_N).
        |repeat(N) :- N > 1, N1 is N-1, repeat(N1).
     """.stripMargin
