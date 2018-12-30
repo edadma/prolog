@@ -56,9 +56,13 @@ object Main extends App {
                 out.println(
                   """
                     |help (h)                         print this summary
+                    |compile (c) <file>               save the compiled Prolog database as <file>.pcc
+                    |import (i) <file>                import (load) the compiled Prolog file <file>.pcc
                     |license                          print the license
                     |quit (q)                         exit the REPL
                   """.trim.stripMargin )
+              case List("compile"|"c", module) =>
+                program.save( module + ".pcc" )
               case List("import"|"i", module) =>
                 program = new Program { load( module + ".pcc" ) }
                 out.println( program.procedures map (_.func) mkString "\n" )
