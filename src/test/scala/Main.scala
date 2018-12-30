@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayOutputStream, FileOutputStream}
 
 import xyz.hyperreal.pattern_matcher.StringReader
 
@@ -9,13 +9,15 @@ object Main extends App {
 
   val code =
     """
-       |main :- writeln( "wow" ).
+       |coocoo( A ) :- writeln( A ).
+       |
+       |main :- coocoo( "wow" ).
     """.stripMargin
   val query =
     """
        |main
     """.stripMargin
-  val prog = new Program
+  var prog = new Program
 
 //  Compiler.debug = true
 
@@ -31,11 +33,15 @@ object Main extends App {
       Compiler.compile( ast, prog )
       //prog.printProcedures
 
-      val pcc = new ByteArrayOutputStream
+      val pcc = new FileOutputStream( "test.pcc" )//new ByteArrayOutputStream
 
       prog.save( pcc )
-      dump( pcc.toByteArray, 0, 3 )
-//      println( pcc.toByteArray map (b => f"$b%02x") mkString ", " )
+      //dump( pcc.toByteArray, 0, 3 )
+
+      prog =
+        new Program {
+          load( "test.pcc" )
+        }
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>

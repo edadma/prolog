@@ -23,6 +23,7 @@ class Program extends Growable[Instruction] {
     val s = new DataOutputStream( out )
 
     s writeBytes "PCC V1 "
+    s writeInt procedureMap.size
 
     for (Procedure( Functor(Symbol(name), arity), block, _, _, _ ) <- procedureMap.values) {
       s writeUTF name
@@ -133,12 +134,33 @@ class Program extends Growable[Instruction] {
       s write blockpcc.toByteArray
     }
 
+    out.close
   }
 
-  def load( in: InputStream ): Unit = {
-    val s = new DataInputStream( in )
+  def load( s: String ): Unit = {
+    val f = new RandomAccessFile( s, "r" )
 
+    if (f.length < 7 + 4)
+      sys.error( "load: invalid pcc file: too short" )
 
+    val magic = new Array[Byte]( 7 )
+
+    f readFully magic
+
+    if (new String(magic) != "PCC V1 ")
+      sys.error( "load: invalid pcc file: wrong magic value" )
+
+    val procs = f.readInt
+
+    if (procs < 0 || procs > 50000)
+      sys.error( s"load: invalid pcc file: insane number of procedures" )
+
+    for (_ <- 1 to procs) {
+      val p = procedure( functor(f.readUTF, f.readByte) )
+
+      println( p.func )
+      f skipBytes f.readInt
+    }
   }
 
   def block( name: String ) = {
