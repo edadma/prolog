@@ -12,7 +12,7 @@ object Runtime {
         val block = prog.block( "runtime compile" )
 
         prog.patch( (_, _) => FrameInst(vars.count) ) {
-          Compiler.compileGoal( t, vm.prog ) }
+          Compilation.compileGoal( t, vm.prog ) }
         prog += ReturnInst
         vm push block
     }

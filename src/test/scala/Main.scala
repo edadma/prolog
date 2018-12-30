@@ -9,13 +9,12 @@ object Main extends App {
 
   val code =
     """
-       |coocoo( A ) :- writeln( A ).
-       |
-       |main :- coocoo( "wow" ).
+       |repeat(_N).
+       |repeat(N) :- N > 1, N1 is N-1, repeat(N1).
     """.stripMargin
   val query =
     """
-       |main
+       |repeat( 3 ), writeln( asdf ), fail
     """.stripMargin
   var prog = new Program
 
@@ -30,20 +29,20 @@ object Main extends App {
     case Parser.Match( ast, _ ) =>
       //println( ast )
       //println( (System.currentTimeMillis - start) )
-      Compiler.compile( ast, prog )
+      Compilation.compile( ast, prog )
       //prog.printProcedures
 
       //val pcc = new ByteArrayOutputStream
 
       //prog.save( pcc )
-      prog.save( "test.pcc" )
+//      prog.save( "test.pcc" )
       //dump( pcc.toByteArray, 0, 3 )
 
       //sys.exit
-      prog =
-        new Program {
-          load( "test.pcc" )
-        }
+//      prog =
+//        new Program {
+//          load( "test.pcc" )
+//        }
 
       Parser.query( new StringReader(query) ) match {
         case Parser.Match( ast, _ ) =>
@@ -52,7 +51,7 @@ object Main extends App {
           val block = query.block( "query" )
           val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
-          Compiler.compileGoal( ast, prog )
+          Compilation.compileGoal( ast, prog )
           //block.print
           println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
           //println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )

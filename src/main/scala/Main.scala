@@ -84,7 +84,7 @@ object Main extends App {
 
                 Parser.source( Reader.fromFile(file + ".prolog") ) match {
                   case Parser.Match( ast, _ ) =>
-                    Compiler.compile( ast, program )
+                    Compilation.compile( ast, program )
                     out.println( program.procedures map (_.func) mkString "\n" )
                   case m: Parser.Mismatch => m.error
                 }
@@ -109,7 +109,7 @@ object Main extends App {
                 vars = new Vars
                 block = query.block( "query" )
                 vm = new VM( program )
-                Compiler.compileGoal( ast, program )
+                Compilation.compileGoal( ast, program )
 
                 val result = if (all) vm.runall( block ) else vm.runfirst( block ).toList
 
