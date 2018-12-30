@@ -277,7 +277,7 @@ class VM( val prog: Program ) {
       case DropInst => pop
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[Block] )
-      case NativeInst( func, _ ) => func( this )
+      case NativeInst( func, _, _ ) => func( this )
       case UnifyInst => unify( pop, pop )
       case EvalInst( pos, name, v ) =>
         frame.vars(v).eval match {

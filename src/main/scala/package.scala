@@ -15,11 +15,15 @@ package object prolog {
   val NIL = Symbol( "[]" )
   val CONS = Functor( Symbol("."), 2 )
 
+  val NATIVE_PREDICATE = 0
+  val NATIVE_MATH = 1
+  val NATIVE_RUNTIME = 2
+
   case object EMPTY { override def toString = "[empty]" }
 
   case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
 
-  case class Procedure( func: Functor, var block: Block, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer ) { override def toString = s"[procedure $func" }
+  case class Procedure( func: Functor, var block: Block, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer ) { override def toString = s"[procedure $func]" }
 
   case class Clause( var vars: Int, ast: TermAST )
 
@@ -171,7 +175,7 @@ package object prolog {
       case DropInst => "drop"
       case PushFrameInst => "pushfr"
       case FrameInst( vars ) => s"frame $vars"
-      case NativeInst( pred, _ ) => s"native $pred"
+      case NativeInst( pred, _, _ ) => s"native $pred"
       case UnifyInst => "unify"
       case EvalInst( _, _, v ) => s"eval $v"
       case AddInst => "add"

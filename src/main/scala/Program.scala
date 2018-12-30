@@ -19,119 +19,125 @@ class Program extends Growable[Instruction] {
   var code: ArrayBuffer[Instruction] = _
   val procedureMap = new mutable.HashMap[Functor, Procedure]
 
+  def save( s: String ): Unit = save( new FileOutputStream(s) )
+
   def save( out: OutputStream ): Unit = {
     val s = new DataOutputStream( out )
 
     s writeBytes "PCC V1 "
     s writeInt procedureMap.size
 
-    for (Procedure( Functor(Symbol(name), arity), block, _, _, _ ) <- procedureMap.values) {
-      s writeUTF name
-      s writeByte arity
-
-      val blockpcc = new ByteArrayOutputStream
-      val b = new DataOutputStream( blockpcc )
-
+    for (Procedure( func, block, _, _, _ ) <- procedureMap.values) {
       def writeFunctor( f: Functor ): Unit = {
-        b writeUTF f.name.name
-        b writeByte f.arity
+        s writeUTF f.name.name
+        s writeByte f.arity
       }
+
+      writeFunctor( func )
+      //      s writeUTF name
+//      s writeByte arity
+      s writeInt block.length
+
+//      val blockpcc = new ByteArrayOutputStream
+//      val b = new DataOutputStream( blockpcc )
 
       def write( d: Any ): Unit =
         d match {
           case Symbol( atom ) =>
-            b writeByte ATOM
-            b writeUTF atom
+            s writeByte ATOM
+            s writeUTF atom
           case n: Int =>
-            b writeByte INTEGER
-            b writeInt n
+            s writeByte INTEGER
+            s writeInt n
           case n: Double =>
-            b writeByte FLOAT
-            b writeDouble n
+            s writeByte FLOAT
+            s writeDouble n
           case a: String =>
-            b writeByte STRING
-            b writeUTF a
+            s writeByte STRING
+            s writeUTF a
           case Structure( f, args ) =>
-            b writeByte STRUCTURE
+            s writeByte STRUCTURE
             writeFunctor( f )
             args foreach write
         }
 
       block.code foreach {
         case DebugInst( msg, _ ) =>
-          b writeByte 0
-          b writeUTF msg
+          s writeByte 0
+          s writeUTF msg
         case PushInst( d ) =>
-          b writeByte 1
+          s writeByte 1
           write( d )
         case VarInst( n ) =>
-          b writeByte 2
-          b writeByte n
+          s writeByte 2
+          s writeByte n
         case VarUnifyInst( n ) =>
-          b writeByte 3
-          b writeByte n
+          s writeByte 3
+          s writeByte n
         case StructureInst( f ) =>
-          b writeByte 4
+          s writeByte 4
           writeFunctor( f )
         case ElementUnifyInst( n ) =>
-          b writeByte 5
-          b writeByte n
-        case ReturnInst => b writeByte 6
+          s writeByte 5
+          s writeByte n
+        case ReturnInst => s writeByte 6
         case FunctorInst( f ) =>
-          b writeByte 7
+          s writeByte 7
           writeFunctor( f )
-        case DupInst => b writeByte 8
-        case EqInst => b writeByte 9
-        case NeInst => b writeByte 10
-        case LtInst => b writeByte 11
-        case LeInst => b writeByte 12
-        case GtInst => b writeByte 13
-        case GeInst => b writeByte 14
+        case DupInst => s writeByte 8
+        case EqInst => s writeByte 9
+        case NeInst => s writeByte 10
+        case LtInst => s writeByte 11
+        case LeInst => s writeByte 12
+        case GtInst => s writeByte 13
+        case GeInst => s writeByte 14
         case BranchIfInst( disp ) =>
-          b writeByte 15
-          b writeInt disp
+          s writeByte 15
+          s writeInt disp
         case BranchInst( disp ) =>
-          b writeByte 16
-          b writeInt disp
-        case FailInst => b writeByte 17
+          s writeByte 16
+          s writeInt disp
+        case FailInst => s writeByte 17
         case ChoiceInst( disp ) =>
-          b writeByte 17
-          b writeInt disp
+          s writeByte 18
+          s writeInt disp
         case CutChoiceInst( disp ) =>
-          b writeByte 18
-          b writeInt disp
-        case CutInst => b writeByte 19
+          s writeByte 19
+          s writeInt disp
+        case CutInst => s writeByte 20
         case MarkInst( disp ) =>
-          b writeByte 20
-          b writeInt disp
-        case UnmarkInst => b writeByte 21
-        case CallBlockInst => b writeByte 22
+          s writeByte 21
+          s writeInt disp
+        case UnmarkInst => s writeByte 22
+        case CallBlockInst => s writeByte 23
         case CallProcedureInst( p ) =>
-          b writeByte 23
+          s writeByte 24
           writeFunctor( p.func )
         case CallIndirectInst( _, f ) =>
-          b writeByte 24
+          s writeByte 25
           writeFunctor( f )
-        case DropInst => b writeByte 25
-        case PushFrameInst => b writeByte 26
+        case DropInst => s writeByte 26
+        case PushFrameInst => s writeByte 27
         case FrameInst( vars ) =>
-          b writeByte 27
-          b writeInt vars
-        case NativeInst( _, func ) =>
-          b writeByte 28
+          s writeByte 28
+          s writeByte vars
+        case NativeInst( _, func, group ) =>
+          s writeByte 29
+          s writeByte group
           writeFunctor( func )
-        case UnifyInst => b writeByte 29
-        case EvalInst( _, _, v ) =>
-          b writeByte 30
-          b writeInt v
-        case AddInst => b writeByte 31
-        case SubInst => b writeByte 32
-        case MulInst => b writeByte 33
-        case DivInst => b writeByte 34
+        case UnifyInst => s writeByte 30
+        case EvalInst( _, name, v ) =>
+          s writeByte 31
+          s writeUTF name
+          s writeByte v
+        case AddInst => s writeByte 32
+        case SubInst => s writeByte 33
+        case MulInst => s writeByte 34
+        case DivInst => s writeByte 35
       }
 
-      s writeInt blockpcc.size
-      s write blockpcc.toByteArray
+//      s writeInt blockpcc.size
+//      s write blockpcc.toByteArray
     }
 
     out.close
@@ -152,14 +158,82 @@ class Program extends Growable[Instruction] {
 
     val procs = f.readInt
 
-    if (procs < 0 || procs > 50000)
-      sys.error( s"load: invalid pcc file: insane number of procedures" )
+    if (procs <= 0)
+      sys.error( s"load: invalid pcc file: expected positive number of procedures" )
+
+    def readFunctor = functor( f.readUTF, f.readByte )
 
     for (_ <- 1 to procs) {
-      val p = procedure( functor(f.readUTF, f.readByte) )
+      val p = procedure( readFunctor )
 
-      println( p.func )
-      f skipBytes f.readInt
+      p.block = block( p.func.toString )
+      p.entry = pointer
+
+      def read: Any =
+        f readUnsignedByte match {
+          case ATOM => Symbol( f readUTF )
+          case INTEGER => f.readInt
+          case FLOAT => f.readDouble
+          case STRING => f.readUTF
+          case STRUCTURE =>
+            val f = readFunctor
+
+            Structure( f, (for (_ <- 1 to f.arity) yield read).toArray )
+        }
+
+      for (_ <- 1 to f.readInt)
+        code +=
+          (f readUnsignedByte match {
+            case 0 => DebugInst( f.readUTF, null )
+            case 1 => PushInst( read )
+            case 2 => VarInst( f.readUnsignedByte )
+            case 3 => VarUnifyInst( f.readUnsignedByte )
+            case 4 => StructureInst( readFunctor )
+            case 5 => ElementUnifyInst( f.readUnsignedByte )
+            case 6 => ReturnInst
+            case 7 => FunctorInst( readFunctor )
+            case 8 => DupInst
+            case 9 => EqInst
+            case 10 => NeInst
+            case 11 => LtInst
+            case 12 => LeInst
+            case 13 => GtInst
+            case 14 => GeInst
+            case 15 => BranchIfInst( f.readInt )
+            case 16 => BranchInst( f.readInt )
+            case 17 => FailInst
+            case 18 => ChoiceInst( f.readInt )
+            case 19 => CutChoiceInst( f.readInt )
+            case 20 => CutInst
+            case 21 => MarkInst( f.readInt )
+            case 22 => UnmarkInst
+            case 23 => CallBlockInst
+            case 24 => CallProcedureInst( procedure(readFunctor) )
+            case 25 => CallIndirectInst( null, readFunctor )
+            case 26 => DropInst
+            case 27 => PushFrameInst
+            case 28 => FrameInst( f.readUnsignedByte )
+            case 29 =>
+              val group = f.readUnsignedByte
+              val func = readFunctor
+              val native =
+                group match {
+                  case NATIVE_PREDICATE => Builtin predicate func
+                  case NATIVE_MATH => Math function func
+                  case NATIVE_RUNTIME =>
+                    func.name match {
+                      case '$compile => Runtime.compileCall _
+                    }
+                }
+
+              NativeInst( native, func, group )
+            case 30 => UnifyInst
+            case 31 => EvalInst( null, f.readUTF, f.readUnsignedByte )
+            case 32 => AddInst
+            case 33 => SubInst
+            case 34 => MulInst
+            case 35 => DivInst
+          })
     }
   }
 

@@ -33,11 +33,13 @@ object Main extends App {
       Compiler.compile( ast, prog )
       //prog.printProcedures
 
-      val pcc = new FileOutputStream( "test.pcc" )//new ByteArrayOutputStream
+      //val pcc = new ByteArrayOutputStream
 
-      prog.save( pcc )
+      //prog.save( pcc )
+      prog.save( "test.pcc" )
       //dump( pcc.toByteArray, 0, 3 )
 
+      //sys.exit
       prog =
         new Program {
           load( "test.pcc" )
