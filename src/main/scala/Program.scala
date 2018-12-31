@@ -20,7 +20,7 @@ class Program extends Growable[Instruction] {
   val procedureMap = new mutable.HashMap[Functor, Procedure]
   val loadSet = new mutable.HashSet[String]
 
-//  getClass.getResourceAsStream( "predef.pcc" )
+  load( new DataInputStream(getClass.getResourceAsStream("$predef.pcc")), null )
 
   def save( s: String ): Unit = save( new FileOutputStream(s) )
 
