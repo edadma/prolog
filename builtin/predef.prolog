@@ -1,0 +1,1 @@
+writeln( A ) :- write( A ), nl.

@@ -21,9 +21,4 @@ object BuiltinTermIO {
     }
   }
 
-  def writeln( vm: VM, a: Any ) = {
-    println( display(a) )
-    true
-  }
-
 }
