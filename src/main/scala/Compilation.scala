@@ -295,7 +295,7 @@ object Compilation {
         val f = functor(name, 0)
 
         prog += NativeInst( Math.function(f), f, NATIVE_MATH )
-      case AtomAST( pos, name ) => pos.error( s"constant '$name' not found" )
+      case AtomAST( pos, name ) => pos.error( s"constant or system value '$name' not found" )
     }
 
   def compileGoal( ast: TermAST, lookup: Program )( implicit prog: Program, vars: Vars ): Unit =

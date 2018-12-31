@@ -144,9 +144,12 @@ class Program extends Growable[Instruction] {
     out.close
   }
 
-  def load( s: String ): Unit =
-    if (!loadSet(s)) {
+  def load( s: String ) =
+    if (loadSet(s))
+      Nil
+    else {
       val f = new RandomAccessFile( s, "r" )
+      val loaded = new ArrayBuffer[Functor]
 
       if (f.length < 7 + 4)
         sys.error( "load: invalid pcc file: too short" )
@@ -168,6 +171,7 @@ class Program extends Growable[Instruction] {
       for (_ <- 1 to procs) {
         val p = procedure( readFunctor )
 
+        loaded += p.func
         p.block = block( p.func.toString )
         p.entry = pointer
 
@@ -237,6 +241,8 @@ class Program extends Growable[Instruction] {
               case 35 => DivInst
             })
       }
+
+      loaded.sorted.toList
     }
 
   def block( name: String ) = {

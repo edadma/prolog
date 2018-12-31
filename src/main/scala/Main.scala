@@ -57,15 +57,16 @@ object Main extends App {
                   """
                     |help (h)                         print this summary
                     |compile (c) <file>               save the compiled Prolog database as <file>.pcc
-                    |import (i) <file>                import (load) the compiled Prolog file <file>.pcc
+                    |import (i) <file>                import (load) the compiled Prolog file <file>.pcc into current database
                     |license                          print the license
+                    |load (l) <file>                  load and compile source file <file>.prolog into new database
+                    |new (n)                          new database (current database is lost)
                     |quit (q)                         exit the REPL
                   """.trim.stripMargin )
               case List("compile"|"c", module) =>
                 program.save( module + ".pcc" )
               case List("import"|"i", module) =>
-                program = new Program { load( module + ".pcc" ) }
-                out.println( program.procedures map (_.func) mkString "\n" )
+                out.println( program.load(module + ".pcc") mkString "\n" )
               case List("license") =>
                 out.println(
                   """
@@ -92,6 +93,7 @@ object Main extends App {
                     out.println( program.procedures map (_.func) mkString "\n" )
                   case m: Parser.Mismatch => m.error
                 }
+              case List( "new"|"n" ) => program = new Program
               case List( "" ) =>
                 if (vm.fail)
                   vm.run( block ) match {

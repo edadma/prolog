@@ -46,9 +46,7 @@
 	** Also check the code for calculate_lips/4 below.
    ---------------------------------------------------------------------- */
 
-get_cpu_time(T) :- statistics(runtime,[T,_]).	/* Quintus Prolog version */
-
-/* get_cpu_time(T) :- T is cputime.		   C-Prolog version       */
+get_cpu_time(T) :- T is time.
 
 
 /* ----------------------------------------------------------------------
@@ -103,7 +101,7 @@ eg_count(1000).
 eg_count(2000).
 eg_count(5000).
 eg_count(10000).
-eg_count(100000). % UWN
+eg_count(100000).
 
 
 /* ----------------------------------------------------------------------

@@ -317,37 +317,35 @@ class VM( val prog: Program ) {
       case Structure( f, args ) if Math exists f => Math.function( f ).call( args map eval )
       case Structure( name, args ) => sys.error( s"function $name/${args.length} not found" )
       case s@Symbol( name ) if Math exists functor( name, 0 ) => Math.function( Functor(s, 0) ).call( Array() )
-      case Symbol( name ) => sys.error( s"constant '$name' not found" )
+      case Symbol( name ) => sys.error( s"constant or system value '$name' not found" )
     }
 
   def fail = {
     if (trace || debug)
       out.println( "*** fail ***" )
 
-    if (choiceStack nonEmpty)
-      choiceStack.head match {
-        case State( _dataStack, _pb, _pc, _frame, _trail, _mark, _cut ) =>
-          choiceStack = choiceStack.tail
-          dataStack = _dataStack
-          pb = _pb
-          pc = _pc
-          frame = _frame
-          mark = _mark
-          cut = _cut
+    choiceStack.headOption match {
+      case None =>
+        success = false
+        false
+      case Some( State(_dataStack, _pb, _pc, _frame, _trail, _mark, _cut) ) =>
+        choiceStack = choiceStack.tail
+        dataStack = _dataStack
+        pb = _pb
+        pc = _pc
+        frame = _frame
+        mark = _mark
+        cut = _cut
 
-          var p = trail
+        var p = trail
 
-          while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
-            p.head.unbind
-            p = p.tail
-          }
+        while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
+          p.head.unbind
+          p = p.tail
+        }
 
-          trail = _trail
-          true
-      }
-    else {
-      success = false
-      false
+        trail = _trail
+        true
     }
   }
 

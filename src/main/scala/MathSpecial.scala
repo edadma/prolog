@@ -9,4 +9,6 @@ object MathSpecial {
 
   def rnd( a: Number ): Number = nextInt( a.intValue )
 
+  def time: Number = BigInt( System.currentTimeMillis )
+
 }

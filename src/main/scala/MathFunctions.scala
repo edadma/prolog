@@ -23,4 +23,10 @@ object MathFunctions {
 
   def floor( a: Number ) = lia.Math.floorFunction( a )
 
+  def float( a: Number ): Number =
+    a match {
+      case _: java.lang.Double | _: BigDecimal => a
+      case _: Integer | _: BigInt => a.doubleValue
+    }
+
 }
