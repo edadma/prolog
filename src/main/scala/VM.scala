@@ -166,10 +166,10 @@ class VM( val prog: Program ) {
   }
 
   def top =
-    dataStack.headOption match {
-      case None => sys.error( "data stack underflow" )
-      case Some( t ) => vareval( t )
-    }
+    if (dataStack nonEmpty)
+      vareval( dataStack.head )
+    else
+      sys.error( "data stack underflow" )
 
   def pop = {
     val res = top
@@ -202,6 +202,7 @@ class VM( val prog: Program ) {
     pc += 1
 
     inst match {
+      case TermEqInst => pop
       case DebugInst( _, _ ) if !debug =>
       case DebugInst( msg, null ) => out.println( msg )
       case DebugInst( msg, pos ) => out.println( pos.longErrorText(msg) )
@@ -324,28 +325,29 @@ class VM( val prog: Program ) {
     if (trace || debug)
       out.println( "*** fail ***" )
 
-    choiceStack.headOption match {
-      case None =>
-        success = false
-        false
-      case Some( State(_dataStack, _pb, _pc, _frame, _trail, _mark, _cut) ) =>
-        choiceStack = choiceStack.tail
-        dataStack = _dataStack
-        pb = _pb
-        pc = _pc
-        frame = _frame
-        mark = _mark
-        cut = _cut
+    if (choiceStack nonEmpty) {
+      val State( _dataStack, _pb, _pc, _frame, _trail, _mark, _cut ) = choiceStack.head
 
-        var p = trail
+      choiceStack = choiceStack.tail
+      dataStack = _dataStack
+      pb = _pb
+      pc = _pc
+      frame = _frame
+      mark = _mark
+      cut = _cut
 
-        while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
-          p.head.unbind
-          p = p.tail
-        }
+      var p = trail
 
-        trail = _trail
-        true
+      while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
+        p.head.unbind
+        p = p.tail
+      }
+
+      trail = _trail
+      true
+    } else {
+      success = false
+      false
     }
   }
 
