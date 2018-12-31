@@ -9,7 +9,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 package object prolog {
 
   implicit val symbolOrdering = Ordering by Symbol.unapply
-  implicit val functorOrdering = Ordering by Functor.unapply
+  implicit val functorOrdering = Ordering by { f: Functor => (f.arity, f.name) }
   implicit val procedureOrdering = Ordering by [Procedure, Functor] (_.func)
 
   val NIL = Symbol( "[]" )

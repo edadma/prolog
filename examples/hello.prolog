@@ -1,1 +1,1 @@
-hello :- writeln( 'hello world' ).
+hello :- writeln( "hello world" ).
