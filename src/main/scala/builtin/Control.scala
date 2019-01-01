@@ -1,7 +1,9 @@
-package xyz.hyperreal.prolog
+package xyz.hyperreal.prolog.builtin
+
+import xyz.hyperreal.prolog.VM
 
 
-object BuiltinControl {
+object Control {
 
   def halt( vm: VM ) = sys.exit
 

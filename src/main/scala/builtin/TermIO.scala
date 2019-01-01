@@ -1,11 +1,12 @@
-package xyz.hyperreal.prolog
+package xyz.hyperreal.prolog.builtin
 
 import java.io.InputStream
 
 import xyz.hyperreal.pattern_matcher.StringReader
+import xyz.hyperreal.prolog.{Parser, VM, display}
 
 
-object BuiltinTermIO {
+object TermIO {
 
   val repl: InputStream = null
 

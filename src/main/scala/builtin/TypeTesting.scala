@@ -1,7 +1,9 @@
-package xyz.hyperreal.prolog
+package xyz.hyperreal.prolog.builtin
+
+import xyz.hyperreal.prolog.{Structure, VM, vareval}
 
 
-object BuiltinTypeTesting {
+object TypeTesting {
 
   def `var`( vm: VM, a: Any ) = a.isInstanceOf[VM#Variable]
 

@@ -1,7 +1,9 @@
-package xyz.hyperreal.prolog
+package xyz.hyperreal.prolog.builtin
+
+import xyz.hyperreal.prolog.VM
 
 
-object BuiltinAtomManipulation {
+object AtomManipulation {
 
   def atom_length( vm: VM, atom: Any, length: Any ) =
     atom match {

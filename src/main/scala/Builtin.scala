@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog
 
-import java.lang.reflect.{Modifier, Method}
+import java.lang.reflect.{Method, Modifier}
 
 import scala.collection.mutable
 
@@ -49,11 +49,11 @@ object Builtin {
   }
 
   List(
-    BultinCharacterIO,
-    BuiltinTermIO,
-    BuiltinTypeTesting,
-    BuiltinTermManipulation,
-    BuiltinControl
+    builtin.CharacterIO,
+    builtin.TermIO,
+    builtin.TypeTesting,
+    builtin.TermManipulation,
+    builtin.Control
   ) foreach load
 
 }

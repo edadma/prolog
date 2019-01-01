@@ -1,7 +1,9 @@
-package xyz.hyperreal.prolog
+package xyz.hyperreal.prolog.builtin
+
+import xyz.hyperreal.prolog.{CONS, Compound, Functor, NIL, Structure, VM, array2list, cons, list2array}
 
 
-object BuiltinTermManipulation {
+object TermManipulation {
 
   def `=..`( vm: VM, list: Any, term: Any ) =
     term match {

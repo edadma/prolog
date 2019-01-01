@@ -1,7 +1,9 @@
-package xyz.hyperreal.prolog
+package xyz.hyperreal.prolog.builtin
+
+import xyz.hyperreal.prolog.{Structure, VM, array2list, list2array}
 
 
-object BuiltinStringManipulation {
+object StringManipulation {
 
   def string_length( vm: VM, string: Any, length: Any ) =
     string match {
