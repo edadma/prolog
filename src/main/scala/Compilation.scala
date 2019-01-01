@@ -221,10 +221,10 @@ object Compilation {
         prog += PushInst( Symbol(name) )
       case AnonymousAST( r ) =>
         dbg( "put anonymous", r )
-        prog += VarInst( vars.anon )
+        prog += PushVarInst( vars.anon )
       case VariableAST( r, name ) =>
         dbg( "put variable", r )
-        prog += VarInst( vars.num(name) )
+        prog += PushVarInst( vars.num(name) )
       case n: NumericAST =>
         dbg( "put number", n.pos )
         prog += PushInst( n.v )
@@ -267,7 +267,7 @@ object Compilation {
     expr match {
       case x: NumericAST => prog += PushInst( x.v )
       case v@VariableAST( pos, name ) if v.eval => prog += EvalInst( pos, name, vars.num(name) )
-      case VariableAST( _, name ) => prog += VarInst( vars.num(name) )
+      case VariableAST( _, name ) => prog += PushVarInst( vars.num(name) )
       case StructureAST( pos, op@("+"|"-"|"*"|"/"|"mod"), List(left, right) ) =>
         compileExpression( left )
         compileExpression( right )
@@ -333,7 +333,7 @@ object Compilation {
       case StructureAST( r, "call", List(VariableAST(pos, name)) ) =>
         dbg( s"call (compile)", r )
         prog += PushFrameInst
-        prog += VarInst( vars.num(name) )
+        prog += PushVarInst( vars.num(name) )
         prog += NativeInst( Runtime.compileCall, Functor('$compileCall, 0), NATIVE_RUNTIME )
         prog += MarkInst( 2 )
         prog += CallBlockInst

@@ -156,7 +156,7 @@ package object prolog {
       case DebugInst( msg, null ) => s"-----  $msg"
       case DebugInst( msg, pos ) => s"-----  $msg -- ${pos.line}:${pos.col}"
       case PushInst( d ) => s"push $d"
-      case VarInst( n ) => s"pushv $n"
+      case PushVarInst( n ) => s"pushv $n"
       case VarUnifyInst( n ) => s"unifyv $n"
       case StructureInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
       case ElementUnifyInst( n ) => s"unifye $n"

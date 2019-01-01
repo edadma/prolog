@@ -71,7 +71,7 @@ class Program extends Growable[Instruction] {
         case PushInst( d ) =>
           s writeByte 1
           write( d )
-        case VarInst( n ) =>
+        case PushVarInst( n ) =>
           s writeByte 2
           s writeByte n
         case VarUnifyInst( n ) =>
@@ -202,7 +202,7 @@ class Program extends Growable[Instruction] {
           (s readUnsignedByte match {
             case 0 => DebugInst( s.readUTF, null )
             case 1 => PushInst( read )
-            case 2 => VarInst( s.readUnsignedByte )
+            case 2 => PushVarInst( s.readUnsignedByte )
             case 3 => VarUnifyInst( s.readUnsignedByte )
             case 4 => StructureInst( readFunctor )
             case 5 => ElementUnifyInst( s.readUnsignedByte )

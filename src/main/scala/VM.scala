@@ -237,11 +237,17 @@ class VM( val prog: Program ) {
           case None => fail
           case _ =>
         }
+      case VarInst =>
+        if (!pop.isInstanceOf[Variable])
+          fail
+      case NonvarInst =>
+        if (pop.isInstanceOf[Variable])
+          fail
       case DebugInst( _, _ ) if !debug =>
       case DebugInst( msg, null ) => out.println( msg )
       case DebugInst( msg, pos ) => out.println( pos.longErrorText(msg) )
       case PushInst( d ) => push( d )
-      case VarInst( n ) => push( frame.vars(n) )
+      case PushVarInst( n ) => push( frame.vars(n) )
       case VarUnifyInst( n ) =>
         val v = frame.vars(n).eval
         val p = pop
