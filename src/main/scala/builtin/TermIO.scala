@@ -10,11 +10,6 @@ object TermIO {
 
   val repl: InputStream = null
 
-//  def write( vm: VM, a: Any ) = {
-//    print( display(a) )
-//    true
-//  }
-
   def write_term( vm: VM, options: Any, term: Any, stream: Any ) =
     stream match {
       case _: vm.Variable => sys.error( "write_term: stream is a variable" )
@@ -38,13 +33,5 @@ object TermIO {
           case m: Parser.Mismatch => m.error
         }
     }
-
-
-//  def read( vm: VM, term: Any ) = {
-//    Parser.term( new StringReader(if (repl eq null) io.StdIn.readLine else ) ) match {
-//      case Parser.Match( ast, _ ) => vm.unify( vm.data(ast), term )
-//      case m: Parser.Mismatch => m.error
-//    }
-//  }
 
 }

@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog.builtin
 
-import java.io.{BufferedReader, PrintStream, Reader}
+import java.io.{BufferedReader, PrintStream}
 
 import xyz.hyperreal.prolog.VM
 

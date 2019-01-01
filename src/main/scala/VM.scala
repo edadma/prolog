@@ -202,7 +202,15 @@ class VM( val prog: Program ) {
     pc += 1
 
     inst match {
-      case TermEqInst => pop
+      case TermEqInst( pos ) =>
+        val r = copy( pop )
+        val l = copy( pop )
+
+        if (l.isInstanceOf[Variable] || r.isInstanceOf[Variable])
+          problem( pos, "variables used in term comparison must be instantiated" )
+
+        if (l != r)
+          fail
       case DebugInst( _, _ ) if !debug =>
       case DebugInst( msg, null ) => out.println( msg )
       case DebugInst( msg, pos ) => out.println( pos.longErrorText(msg) )
