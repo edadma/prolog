@@ -193,6 +193,26 @@ class VM( val prog: Program ) {
 
   def choice( disp: Int ) = choiceStack ::= State( dataStack, pb, pc + disp, frame, trail, mark, cut )
 
+  def compare( term1: Any, term2: Any ): Option[Int] =
+    (vareval( term1 ), vareval( term2 )) match {
+      case (v1: Variable, v2: Variable) => Some( v2.num - v1.num )
+      case (Structure( f1, args1 ), Structure( f2, args2 )) =>
+        functorOrdering.compare( f1, f2 ) match {
+          case 0 =>
+            for ((a1, a2) <- args1 zip args2)
+              compare( a1, a2 ) match {
+                case Some( 0 ) =>
+                case c => return c
+              }
+
+            Some( 0 )
+          case c => Some( c )
+        }
+      case (Symbol( s1 ), Symbol( s2 )) => Some( s1 compareTo s2 )
+      case (a1: Comparable[_], a2: Comparable[_]) if a1.getClass == a2.getClass => Some( a1.asInstanceOf[Comparable[Any]] compareTo a2 )
+      case _ => None
+    }
+
   def execute {
     val inst = pb(pc)
 
@@ -202,12 +222,21 @@ class VM( val prog: Program ) {
     pc += 1
 
     inst match {
-      case TermEqInst( pos ) =>
-        val r = copy( pop )
-        val l = copy( pop )
-
-        if (l != r)
+      case TermEqInst =>
+        if (copy( pop ) != copy( pop ))
           fail
+      case TermLtInst =>
+        compare( copy( pop ), copy( pop ) ) match {
+          case Some( c ) if c <= 0 => fail
+          case None => fail
+          case _ =>
+        }
+      case TermLeInst =>
+        compare( copy( pop ), copy( pop ) ) match {
+          case Some( c ) if c < 0 => fail
+          case None => fail
+          case _ =>
+        }
       case DebugInst( _, _ ) if !debug =>
       case DebugInst( msg, null ) => out.println( msg )
       case DebugInst( msg, pos ) => out.println( pos.longErrorText(msg) )

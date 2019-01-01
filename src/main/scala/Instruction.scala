@@ -29,9 +29,9 @@ case class NativeInst( pred: VM => Unit, func: Functor, group: Int ) extends Ins
 case object PushFrameInst extends Instruction
 case object UnifyInst extends Instruction
 
-case class TermEqInst( pos: Reader ) extends Instruction
-case class TermLtInst( pos: Reader ) extends Instruction
-case class TermLeInst( pos: Reader ) extends Instruction
+case object TermEqInst extends Instruction
+case object TermLtInst extends Instruction
+case object TermLeInst extends Instruction
 
 case object EqInst extends Instruction
 case object NeInst extends Instruction

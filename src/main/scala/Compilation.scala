@@ -367,7 +367,41 @@ object Compilation {
         dbg( "term equals", pos )
         compileTerm( left )
         compileTerm( right )
-        prog += TermEqInst( pos )
+        prog += TermEqInst
+      case StructureAST( pos, "\\==", List(left, right) ) =>
+        dbg( "term equals", pos )
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+          compileTerm( left )
+          compileTerm( right )
+          prog += TermEqInst }
+        prog += UnmarkInst
+        prog += FailInst
+      case StructureAST( pos, "@<", List(left, right) ) =>
+        dbg( "term less than", pos )
+        compileTerm( left )
+        compileTerm( right )
+        prog += TermLtInst
+      case StructureAST( pos, "@>", List(left, right) ) =>
+        dbg( "term equals", pos )
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+          compileTerm( left )
+          compileTerm( right )
+          prog += TermLeInst }
+        prog += UnmarkInst
+        prog += FailInst
+      case StructureAST( pos, "@=<", List(left, right) ) =>
+        dbg( "term less than or equal", pos )
+        compileTerm( left )
+        compileTerm( right )
+        prog += TermLeInst
+      case StructureAST( pos, "@>=", List(left, right) ) =>
+        dbg( "term greater than or equal", pos )
+        prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
+          compileTerm( left )
+          compileTerm( right )
+          prog += TermLtInst }
+        prog += UnmarkInst
+        prog += FailInst
       case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
         dbg( "unify", pos )
         compileTerm( right )
