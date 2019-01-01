@@ -1,13 +1,13 @@
 package xyz.hyperreal.prolog.builtin
 
-import java.io.{PrintStream, Reader}
+import java.io.{BufferedReader, PrintStream, Reader}
 
 import xyz.hyperreal.prolog.VM
 
 
 object StreamSelection {
 
-  var input: Reader = Console.in
+  var input: BufferedReader = Console.in
   var output: PrintStream = Console.out
 
   def current_input( vm: VM, stream: Any ) = vm.unify( stream, input )
@@ -17,7 +17,7 @@ object StreamSelection {
   def set_input( vm: VM, stream: Any ) =
     stream match {
       case _: vm.Variable => sys.error( "set_input: stream is a variable" )
-      case r: Reader =>
+      case r: BufferedReader =>
         input = r
         true
       case _ => sys.error( "set_input: stream is not an input stream" )
