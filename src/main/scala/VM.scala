@@ -206,9 +206,6 @@ class VM( val prog: Program ) {
         val r = copy( pop )
         val l = copy( pop )
 
-        if (l.isInstanceOf[Variable] || r.isInstanceOf[Variable])
-          problem( pos, "variables used in term comparison must be instantiated" )
-
         if (l != r)
           fail
       case DebugInst( _, _ ) if !debug =>

@@ -363,6 +363,11 @@ object Compilation {
       case AtomAST( r, "repeat" ) =>
         dbg( "repeat", r )
         prog += ChoiceInst( -1 )
+      case StructureAST( pos, "==", List(left, right) ) =>
+        dbg( "term equals", pos )
+        compileTerm( left )
+        compileTerm( right )
+        prog += TermEqInst( pos )
       case StructureAST( pos, "=", List(VariableAST(_, lname), right) ) =>
         dbg( "unify", pos )
         compileTerm( right )
