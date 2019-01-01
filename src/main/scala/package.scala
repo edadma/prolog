@@ -2,6 +2,8 @@ package xyz.hyperreal
 
 import java.io.PrintStream
 
+import xyz.hyperreal.pattern_matcher.Reader
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
@@ -74,6 +76,12 @@ package object prolog {
 
     def evalSet = evals map (_ + '\'') toSet
   }
+
+  def problem( r: Reader, msg: String ) =
+    if (r eq null)
+      sys.error( msg )
+    else
+      r.error( msg )
 
   def groundTerm( term: Any ): Boolean =
     term match {

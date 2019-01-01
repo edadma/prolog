@@ -53,7 +53,8 @@ object Builtin {
     builtin.TermIO,
     builtin.TypeTesting,
     builtin.TermManipulation,
-    builtin.Control
+    builtin.Control,
+    builtin.StreamSelection
   ) foreach load
 
 }

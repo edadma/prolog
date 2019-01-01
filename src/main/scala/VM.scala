@@ -272,7 +272,7 @@ class VM( val prog: Program ) {
       case CallProcedureInst( p ) => call( p.block, p.entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {
-          case None => pos.error( s"rule $name/$arity not defined" )
+          case None => problem( pos, s"rule $name/$arity not defined" )
           case Some( p ) => call( p.block, p.entry )
         }
       case DropInst => pop
@@ -282,7 +282,7 @@ class VM( val prog: Program ) {
       case UnifyInst => unify( pop, pop )
       case EvalInst( pos, name, v ) =>
         frame.vars(v).eval match {
-          case _: Variable => pos.error( s"variable '$name' is unbound" )
+          case _: Variable => problem( pos, s"variable '$name' is unbound" )
           case t => push( eval(t) )
         }
       case AddInst => push( lia.Math(FM_ADD, pop, pop) )
