@@ -19,6 +19,7 @@ object Main extends App {
     """.stripMargin
   var prog = new Program
 
+  prog.loadPredef
 //  Compiler.debug = true
 
 //  System.gc

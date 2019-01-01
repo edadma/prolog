@@ -22,6 +22,9 @@ object Main extends App {
     implicit var vars: Vars = null
     var block: Block = null
     var vm: VM = null
+    var stackTrack = false
+
+    program.loadPredef
 
     if (!historyFile.exists)
       historyFile.createNewFile
@@ -86,6 +89,7 @@ object Main extends App {
               case List( "quit"|"q" ) => sys.exit
               case List( "load"|"l", file ) =>
                 program = new Program
+                program.loadPredef
 
                 Parser.source( Reader.fromFile(file + ".prolog") ) match {
                   case Parser.Match( ast, _ ) =>
@@ -93,7 +97,11 @@ object Main extends App {
                     out.println( program.procedures map (_.func) mkString "\n" )
                   case m: Parser.Mismatch => m.error
                 }
-              case List( "new"|"n" ) => program = new Program
+              case List( "new"|"n" ) =>
+                program = new Program
+                program.loadPredef
+              case List( "stack"|"s", s@("on"|"off") ) =>
+                stackTrack = s == "on"
               case List( "" ) =>
                 if (vm.fail)
                   vm.run( block ) match {
@@ -112,6 +120,7 @@ object Main extends App {
               case Parser.Match( ast, _ ) =>
                 implicit val query = new Program
 
+                program.loadPredef
                 vars = new Vars
                 block = query.block( "query" )
                 vm = new VM( program )
@@ -131,9 +140,12 @@ object Main extends App {
           out.println
         } catch {
           case e: Exception =>
-            out.println( e )
+            if (stackTrack)
+              e.printStackTrace( out )
+            else
+              out.println( e )
             //out.println( e.getMessage )
-            //e.printStackTrace( out )
+
             out.println
         }
       }
