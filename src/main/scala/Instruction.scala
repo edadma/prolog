@@ -8,6 +8,7 @@ case class PushInst( a: Any ) extends Instruction
 case class PushVarInst( n: Int ) extends Instruction
 case object VarInst extends Instruction
 case object NonvarInst extends Instruction
+case object NilUnifyInst extends Instruction
 case class VarUnifyInst( n: Int ) extends Instruction
 case class StructureInst( f: Functor ) extends Instruction
 case class ElementUnifyInst( n: Int ) extends Instruction

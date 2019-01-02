@@ -243,6 +243,7 @@ class VM( val prog: Program ) {
       case NonvarInst =>
         if (pop.isInstanceOf[Variable])
           fail
+      case NilUnifyInst => unify( pop, NIL )
       case DebugInst( _, _ ) if !debug =>
       case DebugInst( msg, null ) => out.println( msg )
       case DebugInst( msg, pos ) => out.println( pos.longErrorText(msg) )

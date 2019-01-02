@@ -146,6 +146,9 @@ object Compilation {
 //          compileHead( head, pos, namespaces )
 //          code += ListTailInst
 //          compileHead( tail, pos, namespaces )
+      case AtomAST( r, "[]" ) =>
+        dbg( "get nil", r )
+        prog += NilUnifyInst
       case AtomAST( r, n ) =>
         dbg( s"get atom $n", r )
         prog += PushInst( Symbol(n) )
@@ -325,6 +328,14 @@ object Compilation {
           compileGoal( term, lookup ) }
         prog += UnmarkInst
         prog += FailInst
+      case StructureAST( r, "var", List(term) ) =>
+        dbg( "var", r )
+        compileTerm( term )
+        prog += VarInst
+      case StructureAST( r, "nonvar", List(term) ) =>
+        dbg( "nonvar", r )
+        compileTerm( term )
+        prog += NonvarInst
       case StructureAST( r, "call", List(term@(AtomAST(_, _) | StructureAST( _, _, _ ))) ) =>
         dbg( s"call", r )
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
