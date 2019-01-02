@@ -195,7 +195,7 @@ class VM( val prog: Program ) {
 
   def choice( disp: Int ) = choiceStack ::= State( dataStack, pb, pc + disp, frame, trail, mark, cut )
 
-  def resatisfyable( f: VM => Boolean ) = State( dataStack, pb, pc, frame, trail, mark, cut, f )
+  def resatisfyable( f: VM => Boolean ) = choiceStack ::= State( dataStack, pb, pc, frame, trail, mark, cut, f )
 
   def compare( term1: Any, term2: Any ): Option[Int] =
     (vareval( term1 ), vareval( term2 )) match {
@@ -370,33 +370,32 @@ class VM( val prog: Program ) {
     if (trace || debug)
       out.println( "*** fail ***" )
 
-    if (choiceStack nonEmpty) {
-      val State( _dataStack, _pb, _pc, _frame, _trail, _mark, _cut, resatisfyable ) = choiceStack.head
+    choiceStack match {
+      case Nil =>
+        success = false
+        false
+      case State( _dataStack, _pb, _pc, _frame, _trail, _mark, _cut, resatisfyable ) :: tail =>
+        choiceStack = tail
+        dataStack = _dataStack
+        pb = _pb
+        pc = _pc
+        frame = _frame
+        mark = _mark
+        cut = _cut
 
-      choiceStack = choiceStack.tail
-      dataStack = _dataStack
-      pb = _pb
-      pc = _pc
-      frame = _frame
-      mark = _mark
-      cut = _cut
+        var p = trail
 
-      var p = trail
+        while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
+          p.head.unbind
+          p = p.tail
+        }
 
-      while (p.nonEmpty && (_trail.isEmpty || (p.head ne _trail.head))) {
-        p.head.unbind
-        p = p.tail
-      }
+        trail = _trail
 
-      trail = _trail
-
-      if (resatisfyable ne null)
-        resatisfyable( this )
-      else
-        true
-    } else {
-      success = false
-      false
+        if (resatisfyable ne null)
+          resatisfyable( this )
+        else
+          true
     }
   }
 
