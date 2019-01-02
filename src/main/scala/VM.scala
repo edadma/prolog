@@ -52,7 +52,7 @@ class VM( val prog: Program ) {
 //  }
 
   case class State( dataStack: List[Any], pb: Block, pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
-                    cut: List[State] ) {
+                    cut: List[State], resatisfyable: VM => Boolean = null ) {
     override def toString: String = s"[state pb=$pb pc=$pc]"
   }
 
@@ -171,10 +171,12 @@ class VM( val prog: Program ) {
     else
       sys.error( "data stack underflow" )
 
+  def drop = dataStack = dataStack.tail
+
   def pop = {
     val res = top
 
-    dataStack = dataStack.tail
+    drop
     res
   }
 
@@ -192,6 +194,8 @@ class VM( val prog: Program ) {
   }
 
   def choice( disp: Int ) = choiceStack ::= State( dataStack, pb, pc + disp, frame, trail, mark, cut )
+
+  def resatisfyable( f: VM => Boolean ) = State( dataStack, pb, pc, frame, trail, mark, cut, f )
 
   def compare( term1: Any, term2: Any ): Option[Int] =
     (vareval( term1 ), vareval( term2 )) match {
@@ -279,7 +283,7 @@ class VM( val prog: Program ) {
             val s = Structure( f, Array.fill(f.arity)(EMPTY) )
 
             v bind s
-            pop
+            drop
             push( s )
           case c: Structure if c.functor == f =>
           case _ => fail
@@ -316,7 +320,7 @@ class VM( val prog: Program ) {
           case None => problem( pos, s"rule $name/$arity not defined" )
           case Some( p ) => call( p.block, p.entry )
         }
-      case DropInst => pop
+      case DropInst => drop
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[Block] )
       case NativeInst( func, _, _ ) => func( this )
@@ -367,7 +371,7 @@ class VM( val prog: Program ) {
       out.println( "*** fail ***" )
 
     if (choiceStack nonEmpty) {
-      val State( _dataStack, _pb, _pc, _frame, _trail, _mark, _cut ) = choiceStack.head
+      val State( _dataStack, _pb, _pc, _frame, _trail, _mark, _cut, resatisfyable ) = choiceStack.head
 
       choiceStack = choiceStack.tail
       dataStack = _dataStack
@@ -385,7 +389,11 @@ class VM( val prog: Program ) {
       }
 
       trail = _trail
-      true
+
+      if (resatisfyable ne null)
+        resatisfyable( this )
+      else
+        true
     } else {
       success = false
       false

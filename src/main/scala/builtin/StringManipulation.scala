@@ -7,6 +7,22 @@ import xyz.hyperreal.prolog.{Structure, VM, array2list, list2array}
 
 object StringManipulation {
 
+  def count( vm: VM, limit: Any, i: Any ) =
+    limit match {
+      case 1 => vm.unify( 1, i )
+      case n: Int if n > 1 =>
+        vm.resatisfyable(
+          _ =>
+
+        )
+
+        if (vm.unify( 1, i )) {
+          true
+        } else
+          false
+      case _ => false
+    }
+
   def string_length( vm: VM, string: Any, length: Any ) =
     string match {
       case _: vm.Variable => sys.error( "string_length: string must be given" )
