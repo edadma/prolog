@@ -12,14 +12,23 @@ object StringManipulation {
       case 1 => vm.unify( 1, i )
       case n: Int if n > 1 =>
         vm.resatisfyable(
-          _ =>
+          new (VM => Boolean) {
+            var current = 1
 
+            override def apply( v1: VM ): Boolean = {
+              current += 1
+
+              if (current == n)
+                vm.unify( n, i )
+              else {
+                vm.resatisfyable( this )
+                vm.unify( current, i )
+              }
+            }
+          }
         )
 
-        if (vm.unify( 1, i )) {
-          true
-        } else
-          false
+        vm.unify( 1, i )
       case _ => false
     }
 

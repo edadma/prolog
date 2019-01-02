@@ -9,13 +9,11 @@ object Main extends App {
 
   val code =
     """
-       |:- a(b).
-       |repeat(_N).
-       |repeat(N) :- N > 1, N1 is N-1, repeat(N1).
+       |main.
     """.stripMargin
   val query =
     """
-       |repeat( 3 ), writeln( asdf ), fail
+       |count( 3, X ), writeln( X ), fail
     """.stripMargin
   var prog = new Program
 
