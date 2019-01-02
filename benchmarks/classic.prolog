@@ -176,7 +176,7 @@ repeat(N) :- N > 1, N1 is N-1, repeat(N1).
 report(Count,T0,T1,T2) :-
 	Time1 is T1-T0,
 	Time2 is T2-T1,
-	Time  is Time2-Time1,		/* Time spent on nreving lists */
+	Time  is abs(Time2-Time1),		/* Time spent on nreving lists */
 	calculate_lips(Count,Time,Lips,Units),
 	nl,
 	write(Lips), write(' lips for '), write(Count),

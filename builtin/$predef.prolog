@@ -2,6 +2,9 @@
 
 writeln( A ) :- write( A ), nl.
 
+read_string( String ) :-
+  current_input( S ),
+  read_string( S, String ).
 
 /* Term IO */
 

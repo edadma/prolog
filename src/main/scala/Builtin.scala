@@ -40,10 +40,17 @@ object Builtin {
     }
 
   class Predicate( obj: Any, method: Method ) extends (VM => Unit) {
-    def apply( vm: VM ): Unit =
-      if(!method.invoke( obj, (vm +: (for (_ <- 1 until method.getParameterCount) yield vm.pop)).
-        toArray.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Boolean])
+    def apply( vm: VM ): Unit = {
+      val args = new Array[Object]( method.getParameterCount )
+
+      args(0) = vm
+
+      for (i <- method.getParameterCount - 1 to 1 by -1)
+        args(i) = vm.pop.asInstanceOf[Object]
+
+      if(!method.invoke( obj, args: _* ).asInstanceOf[Boolean])
         vm.fail
+    }
 
     override def toString(): String = s"<predicate ${method.getName}/${method.getParameterCount}>"
   }
@@ -54,7 +61,8 @@ object Builtin {
     builtin.TypeTesting,
     builtin.TermManipulation,
     builtin.Control,
-    builtin.StreamSelection
+    builtin.StreamSelection,
+    builtin.StringManipulation
   ) foreach load
 
 }

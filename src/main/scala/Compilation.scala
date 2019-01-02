@@ -60,7 +60,7 @@ object Compilation {
 
   def phase2( implicit prog: Program ) =
     prog.procedures foreach {
-      case proc@Procedure( f, _, _, _, clauses ) =>
+      case proc@Procedure( f, block, _, _, clauses ) if block eq null =>
         proc.block = prog.block( f.toString )
         proc.entry = prog.pointer
 
@@ -71,6 +71,7 @@ object Compilation {
 
         clauses.last.vars = compileClause( clauses.last.ast )
         proc.end = prog.pointer
+      case _ =>
     }
 
   def dbg( msg: String, pos: Reader )( implicit prog: Program ) =

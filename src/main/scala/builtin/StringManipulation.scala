@@ -1,5 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
+import java.io.BufferedReader
+
 import xyz.hyperreal.prolog.{Structure, VM, array2list, list2array}
 
 
@@ -22,6 +24,28 @@ object StringManipulation {
         }
       case Symbol( a ) => vm.unify( a, string )
       case x => sys.error( s"atom_string: expected atom: $x" )
+    }
+
+  val intRegex = """((?:-|\+)?[0-9]+)"""r
+  val floatRegex = """([+-]?(?:[0-9]*\.[0-9]+(?:[Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+))"""r
+
+  def number_string( vm: VM, number: Any, string: Any ) =
+    number match {
+      case _: vm.Variable =>
+        string match {
+          case _: vm.Variable => sys.error( "number_string: string must be given" )
+          case s: String =>
+            val n =
+              s match {
+                case intRegex( v ) => v.toInt
+                case floatRegex( v ) => v.toDouble
+              }
+
+            vm.unify( n, number )
+          case x => sys.error( s"number_string: expected string: $x" )
+        }
+      case n: Number => vm.unify( n.toString, string )
+      case x => sys.error( s"number_string: expected a number: $x" )
     }
 
   def string_chars( vm: VM, string: Any, chars: Any ) =
@@ -80,6 +104,16 @@ object StringManipulation {
       case _: vm.Variable => sys.error( "string_lower: string must be given" )
       case s: String => vm.unify( s.toLowerCase, lower )
       case x => sys.error( s"string_lower: expected string: $x" )
+    }
+
+  def read_string( vm: VM, stream: Any, string: Any ) =
+    stream match {
+      case _: vm.Variable => sys.error( "read_string: input stream must be given" )
+      case in: BufferedReader =>
+        val line = if (in == Console.in && TermIO.repl != null) Console.withIn( TermIO.repl ){ io.StdIn.readLine } else in.readLine
+
+        vm.unify( line, string )
+      case x => sys.error( s"read_string: expected input stream" )
     }
 
 }

@@ -5,7 +5,7 @@ import xyz.hyperreal.prolog.{CONS, Compound, Functor, NIL, Structure, VM, array2
 
 object TermManipulation {
 
-  def `=..`( vm: VM, list: Any, term: Any ) =
+  def `=..`( vm: VM, term: Any, list: Any ) =
     term match {
       case v: vm.Variable =>
         list match {
@@ -27,9 +27,9 @@ object TermManipulation {
       case _ => sys.error( s"univ: illegal term argument: $term" )
     }
 
-  def copy_term( vm: VM, term2: Any, term1: Any ) = vm.unify( vm.copy(term1), term2 )
+  def copy_term( vm: VM, term1: Any, term2: Any ) = vm.unify( vm.copy(term1), term2 )
 
-  def functor( vm: VM, arity: Any, name: Any, term: Any ) =
+  def functor( vm: VM, term: Any, name: Any, arity: Any ) =
     term match {
       case v: vm.Variable =>
         name match {
@@ -49,7 +49,7 @@ object TermManipulation {
       case Structure( Functor(sname, sarity), _ ) => vm.unify( name, sname ) && vm.unify( arity, sarity )
     }
 
-  def arg( vm: VM, arg: Any, term: Any, n: Any ) = {
+  def arg( vm: VM, n: Any, term: Any, arg: Any ) = {
     n match {
       case idx: Integer =>
         term match {

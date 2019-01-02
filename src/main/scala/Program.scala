@@ -137,6 +137,12 @@ class Program extends Growable[Instruction] {
         case SubInst => s writeByte 33
         case MulInst => s writeByte 34
         case DivInst => s writeByte 35
+        case TermEqInst => s writeByte 36
+        case TermLtInst => s writeByte 37
+        case TermLeInst => s writeByte 38
+        case VarInst => s writeByte 39
+        case NonvarInst => s writeByte 40
+        case NilUnifyInst => s writeByte 41
       }
 
 //      s writeInt blockpcc.size
@@ -249,6 +255,12 @@ class Program extends Growable[Instruction] {
             case 33 => SubInst
             case 34 => MulInst
             case 35 => DivInst
+            case 36 => TermEqInst
+            case 37 => TermLtInst
+            case 38 => TermLeInst
+            case 39 => VarInst
+            case 40 => NonvarInst
+            case 41 => NilUnifyInst
           })
     }
   }

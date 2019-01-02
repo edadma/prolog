@@ -111,6 +111,7 @@ object Main extends App {
                   }
                 else
                   println( "no" )
+              case _ => println( "unrecognized command" )
             }
           } else {
             val all = line endsWith "*"

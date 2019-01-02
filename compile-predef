@@ -1,0 +1,1 @@
+runMain xyz.hyperreal.prolog.Compiler -p -d src/main/resources/xyz/hyperreal/prolog builtin/$predef
