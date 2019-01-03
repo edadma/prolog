@@ -19,7 +19,7 @@ object AllSolutions {
 
       vm.pushFrame
       vm.call( block, 0 )
-      runfirst( block ) match {
+      if (vm.runblock( block ))
         case Some( r ) =>
           def results( res: Map[String, Any] ): Unit = {
             if (trace || debug)

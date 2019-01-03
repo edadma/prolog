@@ -347,6 +347,33 @@ class VM( val prog: Program ) {
         false
     }
 
+  def runblock( block: Block ) = {
+    val retpb = pb
+    val retpc = pc
+
+    push( pb )
+    push( pc )
+    pb = block
+    pc = 0
+
+    while (pb != retpb && pc != retpc && success)
+      execute
+
+    success
+  }
+
+  def rerunblock( block: Block ) =
+    if (fail) {
+      val retpb = pb
+      val retpc = pc
+
+      while (pb != retpb && pc != retpc && success)
+        execute
+
+      success
+    } else
+      false
+
   def run( block: Block )( implicit vars: Vars ) = {
     while (pc < pb.length && pc >= 0 && success)
       execute
