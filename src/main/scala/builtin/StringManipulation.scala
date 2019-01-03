@@ -7,30 +7,30 @@ import xyz.hyperreal.prolog.{Structure, VM, array2list, list2array}
 
 object StringManipulation {
 
-  def count( vm: VM, limit: Any, i: Any ) =
-    limit match {
-      case 1 => vm.unify( 1, i )
-      case n: Int if n > 1 =>
-        vm.resatisfyable(
-          new (VM => Boolean) {
-            var current = 1
-
-            def apply( v1: VM ): Boolean = {
-              current += 1
-
-              if (current == n)
-                vm.unify( n, i )
-              else {
-                vm.resatisfyable( this )
-                vm.unify( current, i )
-              }
-            }
-          }
-        )
-
-        vm.unify( 1, i )
-      case _ => false
-    }
+//  def count( vm: VM, limit: Any, i: Any ) =
+//    limit match {
+//      case 1 => vm.unify( 1, i )
+//      case n: Int if n > 1 =>
+//        vm.resatisfyable(
+//          new (VM => Boolean) {
+//            var current = 1
+//
+//            def apply( v1: VM ): Boolean = {
+//              current += 1
+//
+//              if (current == n)
+//                vm.unify( n, i )
+//              else {
+//                vm.resatisfyable( this )
+//                vm.unify( current, i )
+//              }
+//            }
+//          }
+//        )
+//
+//        vm.unify( 1, i )
+//      case _ => false
+//    }
 
   def string_length( vm: VM, string: Any, length: Any ) =
     string match {

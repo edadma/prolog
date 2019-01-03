@@ -33,23 +33,6 @@ class VM( val prog: Program ) {
 
   var success = true
   var trail: List[Variable] = Nil
-//  implicit var vars: VarMap = _
-//
-//  class VarMap {
-//    val vars = new mutable.HashMap[String, Variable]
-//
-//    def apply( name: String ) =
-//      vars get name match {
-//        case None =>
-//          val v = new Variable
-//
-//          vars(name) = v
-//          v
-//        case Some( v ) => v
-//      }
-//
-//    def map = vars map { case (k, v) => (k, v.eval) } toMap
-//  }
 
   case class State( dataStack: List[Any], pb: Block, pc: Int, frame: Frame, trail: List[Variable], mark: List[State],
                     cut: List[State], resatisfyable: VM => Boolean = null ) {
@@ -69,73 +52,6 @@ class VM( val prog: Program ) {
   var pb: Block = _
   var pc = -1
   var frame: Frame = new Frame( 0, -1, null )
-
-//  def interpall( goal: TermAST ) = {
-//    val resultset = new mutable.HashSet[Map[String, Any]]
-//
-//    interp( goal ) match {
-//      case Some( r ) =>
-//        def results( res: Map[String, Any] ): Unit = {
-//          val res1 = res map { case (k, v) => k -> copy( v ) }
-//
-//          if (trace || debug)
-//            out.println( s"==> $res1" )
-//
-//          resultset += res1
-//
-//          if (fail)
-//            run match {
-//              case Some( r1 ) => results( r1 )
-//              case None =>
-//            }
-//        }
-//
-//        results( r )
-//      case None =>
-//    }
-//
-//    resultset.toSet
-//  }
-//
-//  def interp( goal: TermAST ) = {
-//    success = true
-//    vars = new VarMap
-//    trail = Nil
-//    cut = Nil
-//
-//    goal match {
-//      case StructureAST( _, name, args ) if prog.defined( name, args.length ) =>
-//        pushFrame
-//        args foreach interpTerm
-//        call( prog.procedure(name, args.length).block, prog.procedure(name, args.length).entry )
-//        run
-//      case StructureAST( _, name, args ) if Builtin exists functor( name, args.length ) =>
-//        args foreach interpTerm
-//        Builtin.predicate(functor(name, args.length))( this )
-//        Some( vars.map )
-//      case StructureAST( pos, name, args ) => pos.error( s"rule $name/${args.length} not defined" )
-//      case AtomAST( _, name ) if prog.defined( name, 0 ) =>
-//        pushFrame
-//        call( prog.procedure( name, 0).block, prog.procedure( name, 0).entry )
-//        run
-//      case AtomAST( _, name ) if Builtin exists functor( name, 0 ) =>
-//        Builtin.predicate(functor(name, 0))( this )
-//        Some( vars.map )
-//      case AtomAST( pos, name ) => pos.error( s"rule $name/0 not defined" )
-//      case _ => goal.pos.error( "expected a rule" )
-//    }
-//  }
-//
-//  def interpTerm( term: TermAST )( implicit vars: VarMap ): Unit =
-//    term match {
-//      case StructureAST( pos, name, args ) =>
-//        args foreach interpTerm
-//        pushStructure( Functor(Symbol(name), args.length) )
-//      case AtomAST( pos, name ) => push( Symbol(name) )
-//      case AnonymousAST( pos ) => push( new Variable )
-//      case VariableAST( pos, name ) => push( vars(name).eval )
-//      case n: NumericAST => push( n.v )
-//    }
 
   def data( term: TermAST, vars: mutable.HashMap[String, Variable] = new mutable.HashMap ): Any =
     term match {
@@ -478,18 +394,6 @@ class VM( val prog: Program ) {
 
     resultset.toList
   }
-  //  def run = {
-//    while (pc >= 0 && success)
-//      execute
-//
-//    if (trace)
-//      out.println( dataStack )
-//
-//    if (success)
-//      Some( vars.map )
-//    else
-//      None
-//  }
 
   object Variable {
     private var count = 0
