@@ -1,7 +1,5 @@
 package xyz.hyperreal.prolog
 
-import java.io.{ByteArrayOutputStream, FileOutputStream}
-
 import xyz.hyperreal.pattern_matcher.StringReader
 
 
@@ -13,7 +11,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-       |count( 3, X ), writeln( X ), fail
+       |string_code( Index, "abcbb", 98 )
     """.stripMargin
   var prog = new Program
 
@@ -53,8 +51,8 @@ object Main extends App {
 
           Compilation.compileGoal( ast, prog )
           //block.print
-          println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
-          //println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          //println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
         case m: Parser.Mismatch => m.error
       }
     case m: Parser.Mismatch => m.error

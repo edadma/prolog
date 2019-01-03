@@ -15,7 +15,7 @@ object StringManipulation {
           new (VM => Boolean) {
             var current = 1
 
-            override def apply( v1: VM ): Boolean = {
+            def apply( v1: VM ): Boolean = {
               current += 1
 
               if (current == n)
@@ -129,6 +129,54 @@ object StringManipulation {
       case _: vm.Variable => sys.error( "string_lower: string must be given" )
       case s: String => vm.unify( s.toLowerCase, lower )
       case x => sys.error( s"string_lower: expected string: $x" )
+    }
+
+  def string_code( vm: VM, index: Any, string: Any, code: Any ) =
+    string match {
+      case _: vm.Variable => sys.error( "string_code: string must be given" )
+      case s: String =>
+        index match {
+          case _: vm.Variable =>
+            code match {
+              case _: vm.Variable => sys.error( "string_code: code must be given if index is a variable" )
+              case c: Int =>
+                s indexOf c match {
+                  case -1 => false
+                  case first =>
+                    s.indexOf( c, first + 1 ) match {
+                      case -1 => vm.unify( first, index )
+                      case second =>
+                        vm.resatisfyable(
+                          new (VM => Boolean) {
+                            var next = second
+
+                            def apply( v1: VM ): Boolean = {
+                              s.indexOf( c, next + 1 ) match {
+                                case -1 => vm.unify( next, index )
+                                case after =>
+                                  vm.resatisfyable( this )
+
+                                  val n = next
+
+                                  next = after
+                                  vm.unify( n, index )
+                              }
+                            }
+                          }
+                        )
+
+                        vm.unify( first, index )
+                    }
+                }
+              case _ => sys.error( "string_code: code must be integer" )
+            }
+          case idx: Int =>
+            if (0 <= idx && idx < s.length)
+              vm.unify( s(idx).toInt, code )
+            else
+              false
+          case _ => sys.error( "string_code: index must be integer" )
+        }
     }
 
   def read_string( vm: VM, stream: Any, string: Any ) =
