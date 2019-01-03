@@ -20,8 +20,6 @@ class Program extends Growable[Instruction] {
   val procedureMap = new mutable.HashMap[Functor, Procedure]
   val loadSet = new mutable.HashSet[String]
 
-  def loadPredef = load( new DataInputStream(getClass.getResourceAsStream("$predef.pcc")), null )
-
   def save( s: String ): Unit = save( new FileOutputStream(s) )
 
   def save( out: OutputStream ): Unit = {
@@ -151,6 +149,10 @@ class Program extends Growable[Instruction] {
 
     out.close
   }
+
+  def loadPredef = loadResource( "$predef" )
+
+  def loadResource( name: String ) = load( new DataInputStream(getClass.getResourceAsStream(name + ".pcc")), null )
 
   def load( s: String ): List[Functor] =
     if (loadSet(s))

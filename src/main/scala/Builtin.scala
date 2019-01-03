@@ -62,7 +62,8 @@ object Builtin {
     builtin.TermManipulation,
     builtin.Control,
     builtin.StreamSelection,
-    builtin.StringManipulation
+    builtin.StringManipulation,
+    builtin.AllSolutions
   ) foreach load
 
 }

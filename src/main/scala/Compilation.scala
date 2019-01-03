@@ -26,8 +26,10 @@ object Compilation {
   def phase1( ast: PrologAST, prog: Program ): Unit =
     ast match {
       case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
-      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(r1, "import", List(AtomAST(_, file))))) ) =>
-        prog.load( file )
+      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(r1, "import", List(AtomAST(_, name))))) ) =>
+        prog.loadResource( name )
+      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(r1, "import", List(StringAST(_, name))))) ) =>
+        prog.loadResource( name )
       case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, name, args), body)) ) =>
         val f = functor( name, args.length )
 

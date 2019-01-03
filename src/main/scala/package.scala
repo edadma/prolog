@@ -105,7 +105,7 @@ package object prolog {
       case _ => None
     }
 
-  def array2list( a: Array[Any] ) = {
+  def array2list( a: IndexedSeq[Any] ) = {
     var list: Any = NIL
     var idx = a.length - 1
 

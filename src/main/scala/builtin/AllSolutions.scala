@@ -1,8 +1,8 @@
 package xyz.hyperreal.prolog.builtin
 
-import xyz.hyperreal.prolog.{Compilation, Program, VM, Vars}
+import xyz.hyperreal.prolog.{Compilation, Program, VM, Vars, array2list}
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.ArrayBuffer
 
 
 object AllSolutions {
@@ -15,29 +15,22 @@ object AllSolutions {
 
       Compilation.compileGoal( goal, vm.prog )
 
-      val resultlist = new ListBuffer[Any]
+      val results = new ArrayBuffer[Any]
 
       vm.pushFrame
       vm.call( block, 0 )
-      if (vm.runblock( block ))
-        case Some( r ) =>
-          def results( res: Map[String, Any] ): Unit = {
-            if (trace || debug)
-              out.println( s"==> $res" )
 
-            resultset += res
+      if (vm.runblock( block )) {
+        println( 123)
+        results += 123
 
-            if (fail)
-              run( block ) match {
-                case Some( r1 ) => results( r1 )
-                case None =>
-              }
-          }
-
-          results( r )
-        case None =>
+        while (vm.rerunblock( block )) {
+          println( 456)
+          results += 123
+        }
       }
 
+      vm.unify( array2list(results), instances )
     } else
       sys.error( s"findall: goal must be callable" )
 
