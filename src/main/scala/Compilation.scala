@@ -356,6 +356,15 @@ object Compilation {
         prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the unmark
           compileGoal( term, lookup ) }
         prog += UnmarkInst
+      case StructureAST( r, "once", List(VariableAST(pos, name)) ) =>
+        dbg( s"once (compile)", r )
+        prog += PushFrameInst
+        prog += PushVarInst( vars.num(name) )
+        prog += NativeInst( Runtime.compileCall, Functor('$compileCall, 0), NATIVE_RUNTIME )
+        prog += MarkInst( 2 )
+        prog += CallBlockInst
+        prog += UnmarkInst
+      case StructureAST( r, "once", List(arg) ) => r.error( s"once: term should be callable: $arg" )
       case StructureAST( _, ",", List(left, right) ) =>
         compileGoal( left, lookup )
         compileGoal( right, lookup )

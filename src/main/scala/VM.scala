@@ -267,13 +267,16 @@ class VM( val prog: Program ) {
   def eval( term: Any ): Number =
     term match {
       case n: Number => n
-      case Structure( Functor(Symbol(operator@("+"|"-")), _), Array(left, right) ) =>
+      case Structure( Functor(Symbol(operator@("+"|"-"|"*"|"/"|"mod")), _), Array(left, right) ) =>
         val l = eval( left )
         val r = eval( right )
 
         operator match {
           case "+" => lia.Math( FM_ADD, l, r ).asInstanceOf[Number]
           case "-" => lia.Math( FM_SUB, l, r ).asInstanceOf[Number]
+          case "*" => lia.Math( FM_MUL, l, r ).asInstanceOf[Number]
+          case "/" => lia.Math( FM_DIV, l, r ).asInstanceOf[Number]
+          case "mod" => lia.Math( FM_MOD, l, r ).asInstanceOf[Number]
         }
       case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
       case Structure( f, args ) if Math exists f => Math.function( f ).call( args map eval )
