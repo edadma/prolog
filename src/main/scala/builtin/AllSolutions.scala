@@ -17,9 +17,6 @@ object AllSolutions {
 
       val results = new ArrayBuffer[Any]
 
-      vm.pushFrame
-      vm.call( block, 0 )
-
       if (vm.runblock( block )) {
         println( 123)
         results += 123

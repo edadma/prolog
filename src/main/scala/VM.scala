@@ -351,6 +351,7 @@ class VM( val prog: Program ) {
     val retpb = pb
     val retpc = pc
 
+    pushFrame
     push( pb )
     push( pc )
     pb = block
@@ -362,17 +363,18 @@ class VM( val prog: Program ) {
     success
   }
 
-  def rerunblock( block: Block ) =
-    if (fail) {
-      val retpb = pb
-      val retpc = pc
+  def rerunblock( block: Block ) = {
+    val retpb = pb
+    val retpc = pc
 
+    if (fail) {
       while (pb != retpb && pc != retpc && success)
         execute
 
       success
     } else
       false
+  }
 
   def run( block: Block )( implicit vars: Vars ) = {
     while (pc < pb.length && pc >= 0 && success)

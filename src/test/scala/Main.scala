@@ -11,7 +11,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-       |findall( X, member( X, [1, 2, 3] ), L )
+       |findall( X, member( X, [1] ), L )
     """.stripMargin
   var prog = new Program
 
