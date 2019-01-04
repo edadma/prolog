@@ -117,6 +117,26 @@ object StringManipulation {
       case x => sys.error( s"string_codes: expected string: $x" )
     }
 
+  def string_concat( vm: VM, s1: Any, s2: Any, s3: Any ) =
+    (s1, s2, s3) match {
+      case (b1: String, b2: String, v3: vm.Variable ) => v3 bind (b1 + b2)
+      case (b1: String, v2: vm.Variable, b3: String) =>
+        if (b3.startsWith( b1 ))
+          v2 bind (b3 substring b1.length)
+        else
+          false
+      case (v1: vm.Variable, b2: String, b3: String) =>
+        if (b3.endsWith( b2 ))
+          v1 bind (b3 substring (0, b2.length))
+        else
+          false
+      case (v1: vm.Variable, v2: vm.Variable, "") =>
+        v1 bind ""
+        v2 bind ""
+      case (v1: vm.Variable, v2: vm.Variable, b3: String) => false
+      case _ => sys.error( s"string_concat: expected three strings: $s1, $s2, $s3" )
+    }
+
   def string_upper( vm: VM, string: Any, upper: Any ) =
     string match {
       case _: vm.Variable => sys.error( "string_upper: string must be given" )

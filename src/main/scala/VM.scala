@@ -328,12 +328,8 @@ class VM( val prog: Program ) {
 
   def unify( a: Any, b: Any ): Boolean =
     (vareval( a ), vareval( b )) match {
-      case (a1: Variable, b1) =>
-        a1 bind b1
-        true
-      case (a1, b1: Variable) =>
-        b1 bind a1
-        true
+      case (a1: Variable, b1) => a1 bind b1
+      case (a1, b1: Variable) => b1 bind a1
       case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
         if (n1 == n2 && a1 == a2)
           0 until a1 forall (i => unify( args1(i), args2(i) ))
@@ -441,12 +437,13 @@ class VM( val prog: Program ) {
 
     def unbound = !bound
 
-    def bind( v: Any ): Unit = {
+    def bind( v: Any ) = {
       val last: Variable = end
 
       last.binding = v
       last.bound = true
       trail ::= last
+      true
     }
 
     def unbind: Unit = {

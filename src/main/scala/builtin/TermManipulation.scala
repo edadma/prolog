@@ -10,9 +10,7 @@ object TermManipulation {
       case v: vm.Variable =>
         list match {
           case NIL => sys.error( "univ: empty list" )
-          case Structure( CONS, Array(head: Symbol, NIL) ) =>
-            v bind head
-            true
+          case Structure( CONS, Array(head: Symbol, NIL) ) => v bind head
           case Structure( CONS, Array(head: Symbol, tail) ) =>
             list2array( tail ) match {
               case Some( args ) => v bind Structure( Functor(head, args.length), args )
@@ -35,12 +33,8 @@ object TermManipulation {
         name match {
           case s: Symbol =>
             arity match {
-              case 0 =>
-                v bind s
-                true
-              case argc: Int =>
-                v bind Structure( Functor(s, argc), Array.fill(argc)(new vm.Variable) )
-                true
+              case 0 => v bind s
+              case argc: Int => v bind Structure( Functor(s, argc), Array.fill(argc)(new vm.Variable) )
               case _ => sys.error( "functor: arity must be integer" )
             }
           case _ => sys.error( "functor: name must be atom" )
