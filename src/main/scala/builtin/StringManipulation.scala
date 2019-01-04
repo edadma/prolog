@@ -127,13 +127,30 @@ object StringManipulation {
           false
       case (v1: vm.Variable, b2: String, b3: String) =>
         if (b3.endsWith( b2 ))
-          v1 bind (b3 substring (0, b2.length))
+          v1 bind (b3 substring (0, b3.length - b2.length))
         else
           false
       case (v1: vm.Variable, v2: vm.Variable, "") =>
         v1 bind ""
         v2 bind ""
-      case (v1: vm.Variable, v2: vm.Variable, b3: String) => false
+      case (v1: vm.Variable, v2: vm.Variable, b3: String) =>
+        vm.resatisfyable(
+          new (VM => Boolean) {
+            var idx = 1
+
+            def apply( v: VM ): Boolean = {
+              if (idx < b3.length)
+                vm.resatisfyable( this )
+
+              v1 bind b3.substring( 0, idx )
+              v2 bind b3.substring( idx )
+              idx += 1
+              true
+            }
+          }
+        )
+        v1 bind ""
+        v2 bind b3
       case _ => sys.error( s"string_concat: expected three strings: $s1, $s2, $s3" )
     }
 

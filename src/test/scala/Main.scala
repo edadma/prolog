@@ -11,7 +11,8 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-       |findall( X, member( X, [1] ), L )
+       |string_concat( L, R, "abc" )
+       |//findall( X, member(X, [1]), L )
     """.stripMargin
   var prog = new Program
 
@@ -51,8 +52,8 @@ object Main extends App {
 
           Compilation.compileGoal( ast, prog )
           //block.print
-          println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
-          //println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          //println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
+          println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
         case m: Parser.Mismatch => m.error
       }
     case m: Parser.Mismatch => m.error
