@@ -154,6 +154,30 @@ object StringManipulation {
       case _ => sys.error( s"string_concat: expected three strings: $s1, $s2, $s3" )
     }
 
+  def sub_string( vm: VM, string: Any, before: Any, length: Any, after: Any, sub: Any ) =
+    string match {
+      case str: String =>
+        (before, length, after, sub) match {
+          case (b: Int, l: Int, _, _) if 0 <= b && b < str.length && 0 < l && l <= str.length =>
+            vm.unify( str.length - b - l, after ) && vm.unify( str.substring(b, b + l), sub )
+          case (b: Int, l: Int, _, _) => sys.error( s"sub_string: before or length out of range" )
+          case (_, l: Int, a: Int, _) =>
+            vm.unify( str.length - l - a, before ) && vm.unify( str.substring(str.length - l - a, str.length - a), sub )
+          case (b: Int, _, _, s: String) =>
+            vm.unify( str.length - b - s.length, after ) && vm.unify( str.substring(b, b + s.length), sub )
+          case (_, _, a: Int, s: String) =>
+            vm.unify( str.length - s.length - a, before ) && vm.unify( str.substring(str.length - s.length - a, str.length - a), sub )
+
+          case (b: Int, _, _, _) =>
+          case (_, l: Int, _, _) =>
+          case (_, _, a: Int, _) =>
+          case (_, _, _, s: String) =>
+          case (_: vm.Variable, _: vm.Variable, _: vm.Variable, _: vm.Variable) =>
+          case _ => sys.error( s"sub_string: invalid arguments" )
+        }
+      case _ => sys.error( s"sub_string: string must be given" )
+    }
+
   def string_upper( vm: VM, string: Any, upper: Any ) =
     string match {
       case _: vm.Variable => sys.error( "string_upper: string must be given" )

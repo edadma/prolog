@@ -18,15 +18,14 @@ object AllSolutions {
       val results = new ArrayBuffer[Any]
 
       if (vm.runblock( block )) {
-        println( 123)
         results += 123
 
         while (vm.rerunblock( block )) {
-          println( 456)
           results += 123
         }
       }
 
+      vm.success = true
       vm.unify( array2list(results), instances )
     } else
       sys.error( s"findall: goal must be callable" )

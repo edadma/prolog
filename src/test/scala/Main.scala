@@ -11,8 +11,8 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-       |string_concat( L, R, "abc" )
-       |//findall( X, member(X, [1]), L )
+       |//string_concat( L, "bc", "abc" )
+       |findall( X, X = asdf, L )
     """.stripMargin
   var prog = new Program
 
