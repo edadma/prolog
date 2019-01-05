@@ -167,12 +167,40 @@ object StringManipulation {
             vm.unify( str.length - b - s.length, after ) && vm.unify( str.substring(b, b + s.length), sub )
           case (_, _, a: Int, s: String) =>
             vm.unify( str.length - s.length - a, before ) && vm.unify( str.substring(str.length - s.length - a, str.length - a), sub )
-
-          case (b: Int, _, _, _) =>
-          case (_, l: Int, _, _) =>
-          case (_, _, a: Int, _) =>
+//          case (b: Int, _, _, _) =>
+//          case (_, l: Int, _, _) =>
+//          case (_, _, a: Int, _) =>
           case (_, _, _, s: String) =>
-          case (_: vm.Variable, _: vm.Variable, _: vm.Variable, _: vm.Variable) =>
+            str indexOf s match {
+              case -1 => false
+              case idx =>
+                str.indexOf( s, idx + 1 ) match {
+                  case -1 =>
+                    vm.unify( idx, before ) && vm.unify( s.length, length ) && vm.unify( str.length - (idx + s.length), after )
+                  case idx1 =>
+                    vm.resatisfyable(
+                      new (VM => Boolean) {
+                        var next = idx1
+
+                        def apply( v1: VM ): Boolean = {
+                          str.indexOf( s, next + 1 ) match {
+                            case -1 =>
+                              vm.unify( next, before ) && vm.unify( s.length, length ) && vm.unify( str.length - (next + s.length), after )
+                            case idx3 =>
+                              val idx4 = next
+
+                              next = idx3
+
+                              vm.resatisfyable( this )
+                              vm.unify( idx4, before ) && vm.unify( s.length, length ) && vm.unify( str.length - (idx4 + s.length), after )
+                          }
+                        }
+                      }
+                    )
+                    vm.unify( idx, before ) && vm.unify( s.length, length ) && vm.unify( str.length - (idx + s.length), after )
+                }
+            }
+//          case (_: vm.Variable, _: vm.Variable, _: vm.Variable, _: vm.Variable) =>
           case _ => sys.error( s"sub_string: invalid arguments" )
         }
       case _ => sys.error( s"sub_string: string must be given" )
