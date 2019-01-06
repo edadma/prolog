@@ -33,13 +33,13 @@ object Builtin {
       val name = m.getName
 
       m.getReturnType match {
-        case Void.TYPE =>
-        case java.lang.Boolean.TYPE => predicates(functor(translate(name), m.getParameterCount - 1)) = new Predicate(obj, m)
+        case Void.TYPE => predicates(functor(translate(name), m.getParameterCount - 1)) = new Predicate( obj, m, false )
+        case java.lang.Boolean.TYPE => predicates(functor(translate(name), m.getParameterCount - 1)) = new Predicate( obj, m, true )
         case _ =>
       }
     }
 
-  class Predicate( obj: Any, method: Method ) extends (VM => Unit) {
+  class Predicate( obj: Any, method: Method, ret: Boolean ) extends (VM => Unit) {
     def apply( vm: VM ): Unit = {
       val args = new Array[Object]( method.getParameterCount )
 
@@ -48,14 +48,18 @@ object Builtin {
       for (i <- method.getParameterCount - 1 to 1 by -1)
         args(i) = vm.pop.asInstanceOf[Object]
 
-      if(!method.invoke( obj, args: _* ).asInstanceOf[Boolean])
-        vm.fail
+      if (ret) {
+        if (!method.invoke( obj, args: _* ).asInstanceOf[Boolean])
+          vm.fail
+      } else
+        method.invoke( obj, args: _* )
     }
 
     override def toString(): String = s"<predicate ${method.getName}/${method.getParameterCount}>"
   }
 
   List(
+    builtin.AtomManipulation,
     builtin.CharacterIO,
     builtin.TermIO,
     builtin.TypeTesting,

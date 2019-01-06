@@ -11,12 +11,13 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-       |sub_string( "abcdbc", B, L, A, "bc" )
+       |current_output( S ), put_char( S, a )
+       |//sub_string( "abcdbc", B, L, A, "bc" )
        |//findall( X, X = asdf, L )
     """.stripMargin
   var prog = new Program
 
-  prog.loadPredef
+  //prog.loadPredef
 //  Compiler.debug = true
 
 //  System.gc

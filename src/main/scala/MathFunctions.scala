@@ -13,11 +13,15 @@ object MathFunctions {
 
   def asin( a: Number ) = lia.Math.asinFunction( a )
 
+//  def atan( a: Number ) = lia.Math.atanFunction( a )
+
   def ceiling( a: Number ) = lia.Math.ceilFunction( a )
 
   def cos( a: Number ) = lia.Math.cosFunction( a )
 
   def sin( a: Number ) = lia.Math.sinFunction( a )
+
+//  def tan( a: Number ) = lia.Math.tanFunction( a )
 
   def exp( a: Number ) = lia.Math.expFunction( a )
 
