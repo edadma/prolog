@@ -98,6 +98,52 @@ object Parser extends Matchers[Reader] {
       case head :: tail => StructureAST( head.pos, ".", List(head, mklist(tail, tl)) )
     }
 
+  private def escape( s: String ) = {
+    val buf = new StringBuilder
+
+    def chr( r: Reader ) {
+      if (!r.eoi) {
+        if (r.ch == '\\') {
+          if (r.next.eoi)
+            sys.error( "unexpected end of string" )//todo: nicer error reporting; not easy - will have to return a special "error" object
+
+          if (r.next.ch == 'u') {
+            var u = r.next.next
+
+            def nextc =
+              if (u.eoi)
+                sys.error( "unexpected end of string inside unicode sequence" )
+              else {
+                val res = u.ch
+
+                u = u.next
+                res
+              }
+
+            buf append Integer.valueOf( new String(Array(nextc, nextc, nextc, nextc)), 16 ).toChar
+            chr( u )
+          } else {
+            buf.append(
+              Map (
+                '\\' -> '\\', '\'' -> '\'', '"' -> '"', '$' -> '$', '/' -> '/', 'b' -> '\b', 'f' -> '\f', 'n' -> '\n', 'r' -> '\r', 't' -> '\t'
+              ).get(r.next.ch) match {
+                case Some( c ) => c
+                case _ => sys.error( "illegal escape character " + r.next.ch )
+              } )
+
+            chr( r.next.next )
+          }
+        } else {
+          buf append r.ch
+          chr( r.next )
+        }
+      }
+    }
+
+    chr( new StringReader(s) )
+    buf.toString()
+  }
+
   def p0 =
     pos <~ "!" ^^ (AtomAST( _, "!")) |
     pos ~ floatLit ^^ { case p ~ n => FloatAST( p, n ) } |
@@ -107,15 +153,15 @@ object Parser extends Matchers[Reader] {
     pos <~ "[" ~ "]" ^^ (AtomAST( _, "[]" )) |
     "(" ~> term <~ ")" |
     pos ~ (singleStringLit | identOrReserved) ~ "(" ~ rep1sep(p900, ",") ~ ")" ^^ {
-      case p ~ n ~ _ ~ a ~ _ => StructureAST( p, n, a ) } |
+      case p ~ n ~ _ ~ a ~ _ => StructureAST( p, escape(n), a ) } |
     pos ~ identOrReserved ^^ {
       case p ~ "_" => AnonymousAST( p )
       case p ~ a if a.head.isLower => AtomAST( p, a )
       case p ~ a => VariableAST( p, a ) } |
     pos ~ singleStringLit ^^ {
-      case p ~ a => AtomAST( p, a ) } |
+      case p ~ a => AtomAST( p, escape(a) ) } |
     pos ~ doubleStringLit ^^ {
-      case p ~ s => StringAST( p, s ) }
+      case p ~ s => StringAST( p, escape(s) ) }
 //    pos ~ backStringLit ^^ {
 //      case p ~ s => StringAST( p, s ) }
 

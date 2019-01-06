@@ -7,17 +7,18 @@ object Main extends App {
 
   val code =
     """
-       |:- import( "library/lists" ).
+      |:- import( "library/lists" ).
     """.stripMargin
   val query =
     """
-       |current_output( S ), put_char( S, a )
-       |//sub_string( "abcdbc", B, L, A, "bc" )
-       |//findall( X, X = asdf, L )
+      |writeln( asdf )
+      |//put_char( a ), nl
+      |//sub_string( "abcdbc", B, L, A, "bc" )
+      |//findall( X, X = asdf, L )
     """.stripMargin
   var prog = new Program
 
-  //prog.loadPredef
+  prog.loadPredef
 //  Compiler.debug = true
 
 //  System.gc

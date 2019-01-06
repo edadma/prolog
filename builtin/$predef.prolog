@@ -6,12 +6,63 @@ read_string( String ) :-
   current_input( S ),
   read_string( S, String ).
 
+
 /* Term IO */
+
+write_term( Term, Options ) :-
+  current_output( S ),
+  write_term( S, Term, Options ).
 
 write( Term ) :-
   current_output( S ),
   write_term( S, Term, [numbervars(true)] ).
 
+write_term( S, Term ) :-
+  write_term( S, Term, [numbervars(true)] ).
+
+writeq( Term ) :-
+  current_output( S ),
+  write_term( S, Term, [quoted(true), numbervars(true)]).
+
+writeq( S,Term ) :-
+  write_term( S, Term, [quoted(true), numbervars(true)]).
+
+write_canonical( T ) :-
+  current_output( S ),
+  write_term( S, Term, [quoted(true), ignore_ops(true)]).
+
+write_canonical( S,T ) :-
+  write_term( S, Term, [quoted(true), ignore_ops(true)]).
+
+read_term( Term, Options ) :-
+  current_input( S ),
+  read_term( S, Term, Options ).
+
+read( S, Term ) :-
+  read_term( S, Term, [] ).
+
 read( Term ) :-
   current_input( S ),
   read_term( S, Term, [] ).
+
+
+/* Character IO */
+
+put_code( Code ) :-
+  current_output( S ),
+  char_code( Char, Code ),
+  put_char( S, Char ).
+
+put_code( S, Code ) :-
+  char_code( Char, Code ),
+  put_char( S, Char ).
+
+put_char( Char ) :-
+  current_output( S ),
+  put_char( S, Char ).
+
+nl :-
+  put_char( '\n' ).
+
+nl( S ) :-
+  put_char( S, '\n' ).
