@@ -11,7 +11,7 @@ object Main extends App {
     """.stripMargin
   val query =
     """
-      |writeln( asdf )
+      |repeat, get_char( C ), writeln( C ), C = end_of_file, !
       |//put_char( a ), nl
       |//sub_string( "abcdbc", B, L, A, "bc" )
       |//findall( X, X = asdf, L )

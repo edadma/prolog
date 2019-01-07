@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog.builtin
 
-import java.io.PrintStream
+import java.io.{BufferedReader, PrintStream}
 
 import xyz.hyperreal.prolog.VM
 
@@ -14,6 +14,16 @@ object CharacterIO {
         true
       case (p: PrintStream, Symbol( c )) => sys.error( s"expected one character atom: $c" )
       case _ => sys.error( "put_char: expected an output stream and a one character atom")
+    }
+
+  def get_char( vm: VM, s: Any, char: Any ) =
+    s match {
+      case in: BufferedReader =>
+        in read match {
+          case -1 => vm.unify( 'end_of_file, char )
+          case c => vm.unify( Symbol(c.toChar.toString), char )
+        }
+      case _ => sys.error( "get_char: expected character input stream" )
     }
 
 }

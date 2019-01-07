@@ -22,17 +22,17 @@ write_term( S, Term ) :-
 
 writeq( Term ) :-
   current_output( S ),
-  write_term( S, Term, [quoted(true), numbervars(true)]).
+  write_term( S, Term, [quoted(true), numbervars(true)] ).
 
 writeq( S,Term ) :-
-  write_term( S, Term, [quoted(true), numbervars(true)]).
+  write_term( S, Term, [quoted(true), numbervars(true)] ).
 
 write_canonical( T ) :-
   current_output( S ),
-  write_term( S, Term, [quoted(true), ignore_ops(true)]).
+  write_term( S, Term, [quoted(true), ignore_ops(true)] ).
 
 write_canonical( S,T ) :-
-  write_term( S, Term, [quoted(true), ignore_ops(true)]).
+  write_term( S, Term, [quoted(true), ignore_ops(true)] ).
 
 read_term( Term, Options ) :-
   current_input( S ),
@@ -47,6 +47,22 @@ read( Term ) :-
 
 
 /* Character IO */
+
+get_char( Char ) :-
+    current_input( S ),
+    get_char( S, Char ).
+
+get_code( Code ) :-
+    current_input( S ),
+    get_code( S, Code ).
+
+get_code( S, Code ) :-
+    get_char( S, Char ),
+    (Char = end_of_file ->
+        Code = -1
+    ;
+        char_code( Char, Code )
+    ).
 
 put_code( Code ) :-
   current_output( S ),
