@@ -48,7 +48,7 @@ object Compiler extends App {
     usage( 1 )
   }
 
-  val path = Paths get source
+  val path = Paths get source toAbsolutePath
   val dir =
     if (dest eq null)
       path.getParent
