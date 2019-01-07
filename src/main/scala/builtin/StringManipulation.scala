@@ -167,9 +167,35 @@ object StringManipulation {
             vm.unify( str.length - b - s.length, after ) && vm.unify( str.substring(b, b + s.length), sub )
           case (_, _, a: Int, s: String) =>
             vm.unify( str.length - s.length - a, before ) && vm.unify( str.substring(str.length - s.length - a, str.length - a), sub )
+          case (b: Int, _, a: Int, _) =>
+            val len = str.length - b - a
+
+            vm.unify( len, length ) && vm.unify( str.substring(b, b + len), sub )
 //          case (b: Int, _, _, _) =>
-//          case (_, l: Int, _, _) =>
-//          case (_, _, a: Int, _) =>
+          case (_, l: Int, _, _) =>
+            if (l < str.length) {
+              vm.resatisfyable(
+                new (VM => Boolean) {
+                  var idx = 1
+
+                  def apply( v: VM ): Boolean = {
+                    if (idx + l < str.length)
+                      vm.resatisfyable( this )
+
+                    val cur = idx
+
+                    idx += 1
+                    vm.unify( cur, before ) && vm.unify( str.length - cur - l, after ) && vm.unify( str.substring(cur, cur + l), sub )
+                  }
+                }
+
+              )
+              vm.unify( 0, before ) && vm.unify( str.length - l, after ) && vm.unify( str.substring(0, l), sub )
+            } else if (l == str.length)
+              vm.unify( 0, before ) && vm.unify( 0, after ) && vm.unify( str, sub )
+            else
+              false
+  //        case (_, _, a: Int, _) =>
           case (_, _, _, s: String) =>
             str indexOf s match {
               case -1 => false

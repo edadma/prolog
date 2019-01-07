@@ -7,13 +7,20 @@ object Main extends App {
 
   val code =
     """
-      |:- import( "library/lists" ).
+      |main.
     """.stripMargin
+//    """
+//       |name_value(String, Name, Value) :-
+//       |        sub_string(String, Before, _, After, "="), !,
+//       |        sub_string(String, 0, Before, _, NameString),
+//       |        atom_string(Name, NameString),
+//       |        sub_string(String, _, After, 0, Value).
+//    """.stripMargin
   val query =
     """
-      |repeat, get_char( C ), writeln( C ), C = end_of_file, !
+      |//name_value( "name=value", Name, Value )
       |//put_char( a ), nl
-      |//sub_string( "abcdbc", B, L, A, "bc" )
+      |sub_string( "abcd", B, 2, A, S )
       |//findall( X, X = asdf, L )
     """.stripMargin
   var prog = new Program
