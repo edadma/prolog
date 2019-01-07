@@ -229,6 +229,7 @@ class VM( val prog: Program ) {
       case UnmarkInst =>
         if (mark ne null)
           choiceStack = mark
+      case NopInst =>
       case CallBlockInst => call( pop.asInstanceOf[Block], 0 )
       case CallProcedureInst( p ) => call( p.block, p.entry )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
