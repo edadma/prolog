@@ -27,52 +27,59 @@ object Compilation {
     ast match {
       case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
       case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(r1, "import", List(AtomAST(_, name))))) ) =>
-        prog.loadResource( name )
+        prog.loadAsResource( name )
       case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(r1, "import", List(StringAST(_, name))))) ) =>
-        prog.loadResource( name )
+        prog.loadAsResource( name )
       case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, name, args), body)) ) =>
         val f = functor( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause )
+        prog.procedure( f ).clauses += Clause( 0, clause, null )
       case ClauseAST( clause@StructureAST(r, ":-", List(AtomAST(h, name), body)) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause )
+        prog.procedure( f ).clauses += Clause( 0, clause, null )
       case ClauseAST( clause@StructureAST(r, name, args) ) =>
         val f = functor( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause )
+        prog.procedure( f ).clauses += Clause( 0, clause, null )
       case ClauseAST( clause@AtomAST(r, name) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause )
+        prog.procedure( f ).clauses += Clause( 0, clause, null )
     }
 
   def phase2( implicit prog: Program ) =
     prog.procedures foreach {
-      case proc@Procedure( f, block, _, _, clauses ) if block eq null =>
-        proc.block = prog.block( f.toString )
-        proc.entry = prog.pointer
+      case proc@Procedure( f, block, pub, clauses ) if clauses.nonEmpty && block == null && clauses.head.block == null =>
+        if (!pub)
+          proc.block = prog.block( f.toString )
 
-        for (c <- clauses.init)
+        for ((c, i) <- clauses.init.zipWithIndex) {
+          if (pub)
+            c.block = prog.block( s"$f ${i + 1}" )
+
           prog.patch( (ptr, len) => CutChoiceInst(len - ptr - 1) ) {
             c.vars = compileClause( c.ast )
           }
+        }
 
+        if (pub)
+          clauses.last.block = prog.block( s"$f ${clauses.length}" )
+
+        prog += NopInst
         clauses.last.vars = compileClause( clauses.last.ast )
-        proc.end = prog.pointer
       case _ =>
     }
 
@@ -695,13 +702,7 @@ object Compilation {
       case Structure( f, args ) if lookup defined f =>
         prog += PushFrameInst
         args foreach compileTerm
-
-        val p = lookup.procedure( f )
-
-        if (p.entry == -1)
-          sys.error( s"procedure entry point unknown: $p" )
-        else
-          prog += CallProcedureInst( p )
+        prog += CallProcedureInst( lookup.procedure(f) )
       case Structure( f, args ) if Builtin exists f =>
         args foreach compileTerm
         prog += NativeInst( Builtin.predicate(f), f, NATIVE_PREDICATE )
@@ -710,16 +711,8 @@ object Compilation {
         args foreach compileTerm
         prog += CallIndirectInst( null, f )
       case a: Symbol if lookup defined Functor( a, 0 ) =>
-        val f = Functor( a, 0 )
-
         prog += PushFrameInst
-
-        val p = lookup.procedure( f )
-
-        if (p.entry == -1)
-          sys.error( s"procedure entry point unknown: $p" )
-        else
-          prog += CallProcedureInst( p )
+        prog += CallProcedureInst( lookup.procedure(Functor(a, 0)) )
       case a: Symbol if Builtin exists Functor( a, 0 ) =>
         val f = Functor( a, 0 )
 

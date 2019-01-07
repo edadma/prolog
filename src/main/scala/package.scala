@@ -5,7 +5,7 @@ import java.io.PrintStream
 import xyz.hyperreal.pattern_matcher.Reader
 
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 
 
 package object prolog {
@@ -25,9 +25,9 @@ package object prolog {
 
   case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
 
-  case class Procedure( func: Functor, var block: Block, var entry: Int, var end: Int, clauses: ListBuffer[Clause] = new ListBuffer ) { override def toString = s"[procedure $func]" }
+  case class Procedure( func: Functor, var block: Block, pub: Boolean, clauses: ArrayBuffer[Clause] = new ArrayBuffer ) { override def toString = s"[procedure $func]" }
 
-  case class Clause( var vars: Int, ast: TermAST )
+  case class Clause( var vars: Int, ast: TermAST, var block: Block )
 
   trait Compound extends Product {
     def update( n: Int, value: Any )

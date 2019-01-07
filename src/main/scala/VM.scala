@@ -102,11 +102,13 @@ class VM( val prog: Program ) {
 
   def push( d: Any ): Unit = dataStack ::= d
 
-  def call( block: Block, entry: Int ): Unit = {
+  def callProcedure( proc: Procedure ) = call( if (proc.block eq null) proc.clauses.head.block else proc.block )
+
+  def call( block: Block ): Unit = {
     push( pb )
     push( pc )
     pb = block
-    pc = entry
+    pc = 0
   }
 
   def choice( disp: Int ) = choiceStack ::= State( dataStack, pb, pc + disp, frame, trail, mark, cut )
@@ -230,12 +232,12 @@ class VM( val prog: Program ) {
         if (mark ne null)
           choiceStack = mark
       case NopInst =>
-      case CallBlockInst => call( pop.asInstanceOf[Block], 0 )
-      case CallProcedureInst( p ) => call( p.block, p.entry )
+      case CallBlockInst => call( pop.asInstanceOf[Block] )
+      case CallProcedureInst( p ) => callProcedure( p )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
         prog get f match {
           case None => problem( pos, s"rule $name/$arity not defined" )
-          case Some( p ) => call( p.block, p.entry )
+          case Some( p ) => call( p.block )
         }
       case DropInst => drop
       case PushFrameInst => pushFrame

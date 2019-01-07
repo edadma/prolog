@@ -28,7 +28,7 @@ class Program extends Growable[Instruction] {
     s writeBytes "PCC V1 "
     s writeInt procedureMap.size
 
-    for (Procedure( func, block, _, _, _ ) <- procedureMap.values) {
+    for (Procedure( func, block, _, _ ) <- procedureMap.values) {
       def writeFunctor( f: Functor ): Unit = {
         s writeUTF f.name.name
         s writeByte f.arity
@@ -150,9 +150,16 @@ class Program extends Growable[Instruction] {
     out.close
   }
 
-  def loadPredef = loadResource( "$predef" )
+  def loadPredef = loadAsResource( "$predef" )
 
-  def loadResource( name: String ) = load( new DataInputStream(getClass.getResourceAsStream(name + ".pcc")), null )
+  def loadAsResource( name: String ) = {
+    val res = getClass.getResourceAsStream( name + ".pcc" )
+
+    if (res eq null)
+      sys.error( s"code resource not found: $name" )
+
+    load( new DataInputStream(res), null )
+  }
 
   def load( s: String ): List[Functor] =
     if (loadSet(s))
@@ -191,7 +198,6 @@ class Program extends Growable[Instruction] {
         loaded += p.func
 
       p.block = block( p.func.toString )
-      p.entry = pointer
 
       def read: Any =
         s readUnsignedByte match {
@@ -299,13 +305,17 @@ class Program extends Growable[Instruction] {
   }
 
   def printProcedures: Unit =
-    for (Procedure( Functor(Symbol(name), arity), block, start, end, clauses ) <- procedureMap.values.toList.sorted) {
+    for (Procedure( Functor(Symbol(name), arity), block, pub, clauses ) <- procedureMap.values.toList.sorted) {
       println( s"$name/$arity" )
 
-      if (clauses isEmpty)
-        println( "  undefined\n" )
+      if (block eq null)
+        clauses foreach {
+          case Clause( _, ast, cblock ) =>
+            println( ast )
+            cblock.print
+        }
       else
-        block.print( start, end )
+        block.print
 
       println
     }
@@ -316,12 +326,12 @@ class Program extends Growable[Instruction] {
 
   def get( f: Functor ) = procedureMap get f
 
-  def procedure( name: String, arity: Int ): Procedure = procedure( functor(name, arity) )
+  def procedure( name: String, arity: Int, pub: Boolean ): Procedure = procedure( functor(name, arity), pub )
 
-  def procedure( f: Functor ) =
+  def procedure( f: Functor, pub: Boolean = true ) =
     procedureMap get f match {
       case None =>
-        val p = Procedure( f, null, -1, 0 )
+        val p = Procedure( f, null, pub )
 
         procedureMap(f) = p
         p
