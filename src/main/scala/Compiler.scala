@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog
 
-import java.nio.file.{Paths, Path}
+import java.nio.file.Paths
 
 import xyz.hyperreal.pattern_matcher.Reader
 

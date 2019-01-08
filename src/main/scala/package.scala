@@ -27,7 +27,7 @@ package object prolog {
 
   case class Procedure( func: Functor, var block: Block, pub: Boolean, clauses: ArrayBuffer[Clause] = new ArrayBuffer ) { override def toString = s"[procedure $func]" }
 
-  case class Clause( var vars: Int, ast: TermAST, var block: Block )
+  case class Clause( ast: TermAST, var block: Block )
 
   trait Compound extends Product {
     def update( n: Int, value: Any )

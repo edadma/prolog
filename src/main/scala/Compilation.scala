@@ -26,9 +26,9 @@ object Compilation {
   def phase1( ast: PrologAST, prog: Program ): Unit =
     ast match {
       case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
-      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(r1, "import", List(AtomAST(_, name))))) ) =>
+      case ClauseAST( StructureAST(r, ":-", List(StructureAST(r1, "import", List(AtomAST(_, name))))) ) =>
         prog.loadAsResource( name )
-      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(r1, "import", List(StringAST(_, name))))) ) =>
+      case ClauseAST( StructureAST(r, ":-", List(StructureAST(r1, "import", List(StringAST(_, name))))) ) =>
         prog.loadAsResource( name )
       case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, name, args), body)) ) =>
         val f = functor( name, args.length )
@@ -36,28 +36,28 @@ object Compilation {
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause, null )
+        prog.procedure( f ).clauses += Clause( clause, null )
       case ClauseAST( clause@StructureAST(r, ":-", List(AtomAST(h, name), body)) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause, null )
+        prog.procedure( f ).clauses += Clause( clause, null )
       case ClauseAST( clause@StructureAST(r, name, args) ) =>
         val f = functor( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause, null )
+        prog.procedure( f ).clauses += Clause( clause, null )
       case ClauseAST( clause@AtomAST(r, name) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( 0, clause, null )
+        prog.procedure( f ).clauses += Clause( clause, null )
     }
 
   def phase2( implicit prog: Program ) =
@@ -71,7 +71,7 @@ object Compilation {
             c.block = prog.block( s"$f ${i + 1}" )
 
           prog.patch( (ptr, len) => CutChoiceInst(len - ptr - 1) ) {
-            c.vars = compileClause( c.ast )
+            compileClause( c.ast )
           }
         }
 
@@ -79,7 +79,7 @@ object Compilation {
           clauses.last.block = prog.block( s"$f ${clauses.length}" )
 
         prog += NopInst
-        clauses.last.vars = compileClause( clauses.last.ast )
+        compileClause( clauses.last.ast )
       case _ =>
     }
 
