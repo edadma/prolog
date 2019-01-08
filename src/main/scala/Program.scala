@@ -62,6 +62,30 @@ class Program extends Growable[Instruction] {
             args foreach write
         }
 
+      def writeTerm( c: TermAST ): Unit =
+        c match {
+          case AtomAST( _, atom ) =>
+            s writeByte ATOM
+            s writeUTF atom
+          case IntegerAST( _, n ) =>
+            s writeByte INTEGER
+            s writeInt n
+          case FloatAST( _, n ) =>
+            s writeByte FLOAT
+            s writeDouble n
+          case StringAST( _, a ) =>
+            s writeByte STRING
+            s writeUTF a
+          case StructureAST( _, name, args ) =>
+            s writeByte STRUCTURE
+            s writeUTF name
+            s writeByte args.length
+            args foreach writeTerm
+          case VariableAST( _, v ) =>
+            s writeByte VARIABLE
+            s writeUTF v
+        }
+
       block.code foreach {
         case DebugInst( msg, _ ) =>
           s writeByte 0
@@ -209,6 +233,19 @@ class Program extends Growable[Instruction] {
             val f = readFunctor
 
             Structure( f, (for (_ <- 1 to f.arity) yield read).toArray )
+        }
+
+      def readTerm: TermAST =
+        s readUnsignedByte match {
+          case ATOM => AtomAST( null, s readUTF )
+          case INTEGER => IntegerAST( null, s.readInt )
+          case FLOAT => FloatAST( null, s.readDouble )
+          case STRING => StringAST( null, s.readUTF )
+          case STRUCTURE =>
+            val name = s.readUTF
+            val argc = s.readByte
+
+            StructureAST( null, name, (for (_ <- 1 to argc) yield readTerm).toList )
         }
 
       for (_ <- 1 to s.readInt)

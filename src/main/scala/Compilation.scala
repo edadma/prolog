@@ -213,18 +213,19 @@ object Compilation {
       case AnonymousAST( _ ) | VariableAST( _, _ ) => false
     }
 
-  def constant( term: TermAST ): Any =
+  def toTerm( term: TermAST ): Any =
     term match {
-      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map constant toArray )
+      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map toTerm toArray )
       case AtomAST( _, name ) => Symbol( name )
       case n: NumericAST => n.v
+      case AnonymousAST( _ ) | VariableAST( _, _ ) => false
     }
 
   def compileTerm( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     term match {
       case s: StructureAST if ground( s ) =>
         dbg( s"put structure", s.pos )
-        prog += PushInst( constant(s) )
+        prog += PushInst( toTerm(s) )
       case StructureAST( r, name, args ) =>
         dbg( s"put structure", r )
         args foreach compileTerm
