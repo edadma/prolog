@@ -8,8 +8,6 @@ object Main extends App {
   val code =
     """
       |:- import( "library/lists" ).
-      |
-      |asdf( A, R ) :- append( A, [1, 2, 3], R ).
     """.stripMargin
 //    """
 //       |name_value(String, Name, Value) :-
@@ -20,7 +18,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |asdf( [a, b, c], L )
+      |reverse( [1, 2, 3], L )
       |//name_value( "name=value", Name, Value )
       |//put_char( a ), nl
       |//sub_string( "abcd", B, 2, A, S )

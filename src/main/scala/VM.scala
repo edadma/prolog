@@ -235,9 +235,9 @@ class VM( val prog: Program ) {
       case CallBlockInst => call( pop.asInstanceOf[Block] )
       case CallProcedureInst( p ) => callProcedure( p )
       case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
-        prog get f match {
+        prog get f match {//todo: this instruction is being emitted for predef calls
           case None => problem( pos, s"rule $name/$arity not defined" )
-          case Some( p ) => call( p.block )
+          case Some( p ) => callProcedure( p )
         }
       case DropInst => drop
       case PushFrameInst => pushFrame
