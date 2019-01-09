@@ -46,9 +46,8 @@ class Program extends Growable[Instruction] {
           writeTerm( ast )
           writeBlock( cblock )
         }
-      } else {
+      } else
         writeBlock( pblock )
-      }
 
       def write( d: Any ): Unit =
         d match {

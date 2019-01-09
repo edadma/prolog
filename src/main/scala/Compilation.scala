@@ -62,7 +62,7 @@ object Compilation {
 
   def phase2( implicit prog: Program ) =
     prog.procedures foreach {
-      case proc@Procedure( f, block, pub, clauses ) if clauses.nonEmpty && block == null && clauses.head.block == null =>
+      case proc@Procedure( f, block, pub, clauses ) if (block == null || block.length == 0) && (clauses.isEmpty || clauses.head.block.length == 0) =>
         if (!pub)
           proc.block = prog.block( f.toString )
 
@@ -70,8 +70,10 @@ object Compilation {
         var jumpidx = 0
 
         for ((c, i) <- clauses.init.zipWithIndex) {
+//          if (pub)
+//            c.block = prog.block( s"$f ${i + 1}" )
           if (pub)
-            c.block = prog.block( s"$f ${i + 1}" )
+            prog.block( s"$f ${i + 1}" )
 
           if (jumpblock ne null)
             jumpblock(jumpidx) = JumpInst( c.block )
@@ -86,9 +88,10 @@ object Compilation {
           prog += null
         }
 
-
+//        if (pub)
+//          clauses.last.block = prog.block( s"$f ${clauses.length}" )
         if (pub)
-          clauses.last.block = prog.block( s"$f ${clauses.length}" )
+          prog.block( s"$f ${clauses.length}" )
 
         if (jumpblock ne null)
           jumpblock(jumpidx) = JumpInst( clauses.last.block )
