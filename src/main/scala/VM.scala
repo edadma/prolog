@@ -105,6 +105,7 @@ class VM( val prog: Program ) {
   def callProcedure( proc: Procedure ) = call( if (proc.block eq null) proc.clauses.head.block else proc.block )
 
   def call( block: Block ): Unit = {
+    println( block, block.length)
     push( pb )
     push( pc )
     pb = block

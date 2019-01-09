@@ -21,7 +21,8 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |member( X, [1, 2] )
+      |writeln( asdf )
+      |//member( X, [1, 2] )
       |//name_value( "name=value", Name, Value )
       |//put_char( a ), nl
       |//sub_string( "abcd", B, 2, A, S )
@@ -61,7 +62,7 @@ object Main extends App {
           implicit val query = new Program
           implicit val vars = new Vars
           val block = query.block( "query" )
-          val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
+          val vm = new VM( prog ) {trace = true; debug = false/*; out = new PrintStream( "debug" )*/}
 
           Compilation.compileGoal( ast, prog )
           //block.print

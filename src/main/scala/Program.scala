@@ -178,6 +178,9 @@ class Program extends Growable[Instruction] {
           case NonvarInst => s writeByte 40
           case NilUnifyInst => s writeByte 41
           case NopInst => s writeByte 42
+          case JumpInst( b ) =>
+            s writeByte 43
+            s writeUTF b.name
         }
       }
     }
@@ -241,7 +244,7 @@ class Program extends Growable[Instruction] {
 
         for (i <- 1 to clauses) {
           val c = readTerm
-          val b = block( s"$i" )
+          val b = block( s"${p.func} $i" )
 
           readBlock
           p.clauses += Clause( null, b )
@@ -338,17 +341,24 @@ class Program extends Growable[Instruction] {
               case 40 => NonvarInst
               case 41 => NilUnifyInst
               case 42 => NopInst
-              case 43 => JumpInst( s.readUTF )
+              case 43 => JumpInst( block(s.readUTF) )
             })
     }
   }
 
   def block( name: String ) = {
-    val b = new Block( name )
+    val b =
+      blockMap get name match {
+        case None =>
+          val b = new Block( name )
 
-    blockMap(name) = b
-    code = b.code
-    b
+          blockMap(name) = b
+          b
+        case Some( bl ) => bl
+      }
+
+      code = b.code
+      b
   }
 
   def apply( n: Int ) = code(n)
@@ -396,6 +406,12 @@ class Program extends Growable[Instruction] {
   def defined( f: Functor ) = procedureMap contains f
 
   def get( f: Functor ) = procedureMap get f
+
+  def clause( f: Functor, ast: TermAST ): Unit = {
+    val p = procedure( f )
+
+    p.clauses += Clause( ast, block(s"$f ${p.clauses.length + 1}") )
+  }
 
   def procedure( name: String, arity: Int, pub: Boolean ): Procedure = procedure( functor(name, arity), pub )
 

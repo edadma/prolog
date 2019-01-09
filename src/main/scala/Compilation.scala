@@ -36,28 +36,28 @@ object Compilation {
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( clause, null )
+        prog.clause( f, clause )
       case ClauseAST( clause@StructureAST(r, ":-", List(AtomAST(h, name), body)) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( clause, null )
+        prog.clause( f, clause )
       case ClauseAST( clause@StructureAST(r, name, args) ) =>
         val f = functor( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( clause, null )
+        prog.clause( f, clause )
       case ClauseAST( clause@AtomAST(r, name) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.procedure( f ).clauses += Clause( clause, null )
+        prog.clause( f, clause )
     }
 
   def phase2( implicit prog: Program ) =
