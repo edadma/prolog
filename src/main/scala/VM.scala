@@ -139,11 +139,14 @@ class VM( val prog: Program ) {
     val inst = pb(pc)
 
     if (trace)
-      out.println( pc, instruction(inst), dataStack )
+      out.println( pc, pb, instruction(inst), dataStack )
 
     pc += 1
 
     inst match {
+      case JumpInst( b ) =>
+        pc = 0
+        pb = b
       case TermEqInst =>
         if (copy( pop ) != copy( pop ))
           fail

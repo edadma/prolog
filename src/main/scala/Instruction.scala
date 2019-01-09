@@ -32,6 +32,7 @@ case class FrameInst( vars: Int ) extends Instruction
 case class NativeInst( pred: VM => Unit, func: Functor, group: Int ) extends Instruction
 case object PushFrameInst extends Instruction
 case object UnifyInst extends Instruction
+case class JumpInst( b: Block ) extends Instruction
 
 case object TermEqInst extends Instruction
 case object TermLtInst extends Instruction

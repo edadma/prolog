@@ -19,6 +19,7 @@ class Program extends Growable[Instruction] {
 
   var code: ArrayBuffer[Instruction] = _
   val procedureMap = new mutable.HashMap[Functor, Procedure]
+  val blockMap = new mutable.HashMap[String, Block]
   val loadSet = new mutable.HashSet[String]
 
   def save( s: String ): Unit = save( new FileOutputStream(s) )
@@ -337,6 +338,7 @@ class Program extends Growable[Instruction] {
               case 40 => NonvarInst
               case 41 => NilUnifyInst
               case 42 => NopInst
+              case 43 => JumpInst( s.readUTF )
             })
     }
   }
@@ -344,6 +346,7 @@ class Program extends Growable[Instruction] {
   def block( name: String ) = {
     val b = new Block( name )
 
+    blockMap(name) = b
     code = b.code
     b
   }
@@ -413,6 +416,8 @@ class Block( val name: String ) {
   val code: ArrayBuffer[Instruction] = new ArrayBuffer
 
   def apply( idx: Int ) = code(idx)
+
+  def update( n: Int, elem: Instruction ) = code(n) = elem
 
   def length = code.length
 

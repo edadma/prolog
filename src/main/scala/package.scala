@@ -153,6 +153,7 @@ package object prolog {
   def instruction( inst: Instruction ) =
     inst match {
       case null => "*** null ***"
+      case JumpInst( b ) => s"jump $b"
       case NopInst => "nop"
       case NilUnifyInst => "nil unify"
       case DebugInst( msg, null ) => s"-----  $msg"

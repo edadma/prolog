@@ -66,20 +66,36 @@ object Compilation {
         if (!pub)
           proc.block = prog.block( f.toString )
 
+        var jumpblock: Block = null
+        var jumpidx = 0
+
         for ((c, i) <- clauses.init.zipWithIndex) {
           if (pub)
             c.block = prog.block( s"$f ${i + 1}" )
 
+          if (jumpblock ne null)
+            jumpblock(jumpidx) = JumpInst( c.block )
+
           prog.patch( (ptr, len) => CutChoiceInst(len - ptr - 1) ) {
             compileClause( c.ast )
           }
+
+          jumpblock = c.block
+          jumpidx = c.block.length
+
+          prog += null
         }
+
 
         if (pub)
           clauses.last.block = prog.block( s"$f ${clauses.length}" )
 
+        if (jumpblock ne null)
+          jumpblock(jumpidx) = JumpInst( clauses.last.block )
+
         prog += NopInst
         compileClause( clauses.last.ast )
+        prog += NopInst
       case _ =>
     }
 

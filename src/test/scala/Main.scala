@@ -7,7 +7,10 @@ object Main extends App {
 
   val code =
     """
-      |:- import( "library/lists" ).
+      |//:- import( "library/lists" ).
+      |
+      |member( T, [T | _] ).
+      |member( X, [_ | Q] ) :- member( X, Q ).
     """.stripMargin
 //    """
 //       |name_value(String, Name, Value) :-
@@ -18,7 +21,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |reverse( [1, 2, 3], L )
+      |member( X, [1, 2] )
       |//name_value( "name=value", Name, Value )
       |//put_char( a ), nl
       |//sub_string( "abcd", B, 2, A, S )
@@ -58,7 +61,7 @@ object Main extends App {
           implicit val query = new Program
           implicit val vars = new Vars
           val block = query.block( "query" )
-          val vm = new VM( prog ) {trace = true; debug = false/*; out = new PrintStream( "debug" )*/}
+          val vm = new VM( prog ) {trace = false; debug = false/*; out = new PrintStream( "debug" )*/}
 
           Compilation.compileGoal( ast, prog )
           //block.print
