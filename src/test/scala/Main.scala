@@ -8,9 +8,6 @@ object Main extends App {
   val code =
     """
       |:- import( "library/lists" ).
-      |
-      |//member( T, [T | _] ).
-      |//member( X, [_ | Q] ) :- member( X, Q ).
     """.stripMargin
 //    """
 //       |name_value(String, Name, Value) :-

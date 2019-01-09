@@ -239,14 +239,9 @@ class Program extends Growable[Instruction] {
         loaded += p.func
 
       if (pub) {
-        val clauses = s.readInt
-
-        for (i <- 1 to clauses) {
-          val c = readTerm
-          val b = block( s"${p.func} $i" )
-
+        for (i <- 1 to s.readInt) {
+          p.clauses += Clause( readTerm, block(s"${p.func} $i") )
           readBlock
-          p.clauses += Clause( null, b )
         }
       } else {
         p.block = block( p.func.toString )
