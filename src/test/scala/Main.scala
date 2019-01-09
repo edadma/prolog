@@ -39,7 +39,7 @@ object Main extends App {
       //println( ast )
       //println( (System.currentTimeMillis - start) )
       Compilation.compile( ast, prog )
-      //prog.printProcedures
+      prog.printProcedures
 
       //val pcc = new ByteArrayOutputStream
 

@@ -96,9 +96,7 @@ object Compilation {
         if (jumpblock ne null)
           jumpblock(jumpidx) = JumpInst( clauses.last.block )
 
-        prog += NopInst
         compileClause( clauses.last.ast )
-        prog += NopInst
       case _ =>
     }
 
