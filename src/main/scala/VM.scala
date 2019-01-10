@@ -206,7 +206,7 @@ class VM( val prog: Program ) {
             v bind s
             drop
             push( s )
-          case c: Structure if c.functor == f =>
+          case c: Structure if c.ind == f =>
           case _ => fail
         }
       case DupInst => push( top )

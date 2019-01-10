@@ -7,7 +7,8 @@ object Main extends App {
 
   val code =
     """
-      |:- import( "library/lists" ).
+      |//:- import( "library/lists" ).
+      |f( a ).
     """.stripMargin
 //    """
 //       |name_value(String, Name, Value) :-
@@ -18,7 +19,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |member( X, [1, 2] )
+      |current_predicate( X )
       |//name_value( "name=value", Name, Value )
       |//put_char( a ), nl
       |//sub_string( "abcd", B, 2, A, S )
@@ -39,7 +40,7 @@ object Main extends App {
       //println( ast )
       //println( (System.currentTimeMillis - start) )
       Compilation.compile( ast, prog )
-      prog.printProcedures
+      //prog.printProcedures
 
       //val pcc = new ByteArrayOutputStream
 

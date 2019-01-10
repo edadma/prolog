@@ -12,7 +12,7 @@ package object prolog {
 
   implicit val symbolOrdering = Ordering by Symbol.unapply
   implicit val functorOrdering = Ordering by { f: Indicator => (f.arity, f.name) }
-  implicit val procedureOrdering = Ordering by [Procedure, Indicator] (_.func)
+  implicit val procedureOrdering = Ordering by [Procedure, Indicator] (_.ind)
 
   val NIL = Symbol( "[]" )
   val CONS = Indicator( Symbol("."), 2 )
@@ -28,7 +28,7 @@ package object prolog {
 
   case class Procedure( ind: Indicator, var block: Block, pub: Boolean, clauses: ArrayBuffer[Clause] = new ArrayBuffer ) { override def toString = s"[procedure $ind]" }
 
-  case class Clause( ast: TermAST, block: Block )
+  case class Clause( ast: TermAST, head: TermAST, body: TermAST, block: Block )
 
   trait Compound extends Product {
     def update( n: Int, value: Any )
@@ -36,12 +36,12 @@ package object prolog {
     override def productElement( n: Int ): Any
   }
 
-  case class Structure(functor: Indicator, args: Array[Any] ) extends Compound {
+  case class Structure( ind: Indicator, args: Array[Any] ) extends Compound {
     override def productArity = args.length
 
     override def productElement( n: Int ): Any = args( n )
 
-    override def productPrefix = functor.name.name
+    override def productPrefix = ind.name.name
 
     def update( n: Int, v: Any ) = args(n) = v
   }
@@ -138,7 +138,7 @@ package object prolog {
 
               tl1 match {
                 case NIL =>
-                case s: Structure if s.functor == CONS => buf ++= ", "
+                case s: Structure if s.ind == CONS => buf ++= ", "
                 case _ => buf ++= " | "
               }
 
