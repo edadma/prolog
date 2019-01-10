@@ -32,4 +32,6 @@ object StreamSelection {
       case _ => sys.error( "set_output: stream is not an output stream" )
     }
 
+
+
 }

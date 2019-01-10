@@ -26,4 +26,6 @@ object TypeTesting {
         case _ => false
       })
 
+  def string( vm: VM, a: Any ) = a.isInstanceOf[String]
+
 }
