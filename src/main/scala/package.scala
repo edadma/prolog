@@ -11,11 +11,12 @@ import scala.collection.mutable.ArrayBuffer
 package object prolog {
 
   implicit val symbolOrdering = Ordering by Symbol.unapply
-  implicit val functorOrdering = Ordering by { f: Functor => (f.arity, f.name) }
-  implicit val procedureOrdering = Ordering by [Procedure, Functor] (_.func)
+  implicit val functorOrdering = Ordering by { f: Indicator => (f.arity, f.name) }
+  implicit val procedureOrdering = Ordering by [Procedure, Indicator] (_.func)
 
   val NIL = Symbol( "[]" )
-  val CONS = Functor( Symbol("."), 2 )
+  val CONS = Indicator( Symbol("."), 2 )
+  val INDICATOR = Indicator( Symbol("/"), 2 )
 
   val NATIVE_PREDICATE = 0
   val NATIVE_MATH = 1
@@ -23,9 +24,9 @@ package object prolog {
 
   case object EMPTY { override def toString = "[empty]" }
 
-  case class Functor( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
+  case class Indicator( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
 
-  case class Procedure( func: Functor, var block: Block, pub: Boolean, clauses: ArrayBuffer[Clause] = new ArrayBuffer ) { override def toString = s"[procedure $func]" }
+  case class Procedure( ind: Indicator, var block: Block, pub: Boolean, clauses: ArrayBuffer[Clause] = new ArrayBuffer ) { override def toString = s"[procedure $ind]" }
 
   case class Clause( ast: TermAST, block: Block )
 
@@ -35,7 +36,7 @@ package object prolog {
     override def productElement( n: Int ): Any
   }
 
-  case class Structure( functor: Functor, args: Array[Any] ) extends Compound {
+  case class Structure(functor: Indicator, args: Array[Any] ) extends Compound {
     override def productArity = args.length
 
     override def productElement( n: Int ): Any = args( n )
@@ -76,6 +77,8 @@ package object prolog {
 
     def evalSet = evals map (_ + '\'') toSet
   }
+
+  def indicator( f: Indicator ) = Structure( INDICATOR, Array(f.name, f.arity) )
 
   def problem( r: Reader, msg: String ) =
     if (r eq null)
@@ -119,7 +122,7 @@ package object prolog {
 
   def cons( head: Any, tail: Any ) = Structure( CONS, Array(head, tail) )
 
-  def functor( name: String, arity: Int ) = Functor( Symbol(name), arity )
+  def functor( name: String, arity: Int ) = Indicator( Symbol(name), arity )
 
   def display( a: Any ): String =
     vareval( a ) match {
@@ -146,7 +149,7 @@ package object prolog {
           }
 
         s"[${elems( a )}]"
-      case Structure( Functor(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
+      case Structure( Indicator(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
       case v => v.toString
     }
 
@@ -161,10 +164,10 @@ package object prolog {
       case PushInst( d ) => s"push $d"
       case PushVarInst( n ) => s"pushv $n"
       case VarUnifyInst( n ) => s"unifyv $n"
-      case StructureInst( Functor(Symbol(name), arity) ) => s"pushf $name/$arity"
+      case StructureInst( Indicator(Symbol(name), arity) ) => s"pushf $name/$arity"
       case ElementUnifyInst( n ) => s"unifye $n"
       case ReturnInst => s"return"
-      case FunctorInst( Functor(Symbol(name), arity) ) => s"functor $name/$arity"
+      case FunctorInst( Indicator(Symbol(name), arity) ) => s"functor $name/$arity"
       case DupInst => "dup"
       case EqInst => "eq"
       case NeInst => "ne"

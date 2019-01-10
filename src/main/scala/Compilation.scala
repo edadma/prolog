@@ -70,8 +70,6 @@ object Compilation {
         var jumpidx = 0
 
         for ((c, i) <- clauses.init.zipWithIndex) {
-//          if (pub)
-//            c.block = prog.block( s"$f ${i + 1}" )
           if (pub)
             prog.block( s"$f ${i + 1}" )
 
@@ -88,8 +86,6 @@ object Compilation {
           prog += null
         }
 
-//        if (pub)
-//          clauses.last.block = prog.block( s"$f ${clauses.length}" )
         if (pub)
           prog.block( s"$f ${clauses.length}" )
 
@@ -188,7 +184,7 @@ object Compilation {
         prog += VarUnifyInst( vars.num(name) )
       case StructureAST( r, name, args ) =>
         dbg( s"get structure $name/${args.length}", r )
-        prog += FunctorInst( Functor(Symbol(name), args.length) )
+        prog += FunctorInst( Indicator(Symbol(name), args.length) )
 
         args.zipWithIndex foreach {
           case (e, i) =>
@@ -373,7 +369,7 @@ object Compilation {
         dbg( s"call (compile)", r )
         prog += PushFrameInst
         prog += PushVarInst( vars.num(name) )
-        prog += NativeInst( Runtime.compileCall, Functor('$compileCall, 0), NATIVE_RUNTIME )
+        prog += NativeInst( Runtime.compileCall, Indicator('$compileCall, 0), NATIVE_RUNTIME )
         prog += MarkInst( 2 )
         prog += CallBlockInst
         prog += UnmarkInst
@@ -387,7 +383,7 @@ object Compilation {
         dbg( s"once (compile)", r )
         prog += PushFrameInst
         prog += PushVarInst( vars.num(name) )
-        prog += NativeInst( Runtime.compileCall, Functor('$compileCall, 0), NATIVE_RUNTIME )
+        prog += NativeInst( Runtime.compileCall, Indicator('$compileCall, 0), NATIVE_RUNTIME )
         prog += MarkInst( 2 )
         prog += CallBlockInst
         prog += UnmarkInst
@@ -623,21 +619,21 @@ object Compilation {
 
   def compileGoal( data: Any, lookup: Program )( implicit prog: Program, vars: Vars ): Unit =
     data match {
-      case Structure( Functor(Symbol(";"), 2), Array(Structure(Functor(Symbol("->"), 2), Array(goal1, goal2)), goal3) ) =>
+      case Structure( Indicator(Symbol(";"), 2), Array(Structure(Indicator(Symbol("->"), 2), Array(goal1, goal2)), goal3) ) =>
         prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the branch
           compileGoal( goal1, lookup )
           prog += UnmarkInst
           compileGoal( goal2, lookup ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
           compileGoal( goal3, lookup ) }
-      case Structure( Functor(Symbol("->"), 2), Array(goal1, goal2) ) =>
+      case Structure( Indicator(Symbol("->"), 2), Array(goal1, goal2) ) =>
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/branch
           compileGoal( goal1, lookup ) }
         prog += UnmarkInst
         prog += BranchInst( 1 )
         prog += FailInst
         compileGoal( goal2, lookup )
-      case Structure( Functor(Symbol("\\+"), 1), Array(term@(_: Symbol | _: Structure)) ) =>
+      case Structure( Indicator(Symbol("\\+"), 1), Array(term@(_: Symbol | _: Structure)) ) =>
         prog.patch( (ptr, len) => MarkInst(len - ptr + 1) ) { // need to skip over the unmark/fail
           compileGoal( term, lookup ) }
         prog += UnmarkInst
@@ -652,10 +648,10 @@ object Compilation {
 //        prog.patch( (ptr, len) => MarkInst(len - ptr) ) { // need to skip over the unmark
 //          compileGoal( term, lookup ) }
 //        prog += UnmarkInst
-      case Structure( Functor(Symbol(","), 2), Array(left, right) ) =>
+      case Structure( Indicator(Symbol(","), 2), Array(left, right) ) =>
         compileGoal( left, lookup )
         compileGoal( right, lookup )
-      case Structure( Functor(Symbol(";"), 2), Array(left, right) ) =>
+      case Structure( Indicator(Symbol(";"), 2), Array(left, right) ) =>
         prog.patch( (ptr, len) => ChoiceInst(len - ptr) ) { // need to skip over the branch
           compileGoal( left, lookup ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
@@ -670,11 +666,11 @@ object Compilation {
 //      case StructureAST( pos, "=", List(left, VariableAST(_, rname)) ) =>
 //        compileTerm( left )
 //        prog += VarUnifyInst( vars.num(rname) )
-      case Structure( Functor(Symbol("="), 2), Array(left, right) ) =>
+      case Structure( Indicator(Symbol("="), 2), Array(left, right) ) =>
         compileTerm( left )
         compileTerm( right )
         prog += UnifyInst
-      case Structure( Functor(Symbol("\\="), 2), Array(left, right) ) =>
+      case Structure( Indicator(Symbol("\\="), 2), Array(left, right) ) =>
         prog.patch( (ptr, len) => MarkInst(len - ptr - 1) ) {
           compileTerm( left )
           compileTerm( right )
@@ -728,16 +724,16 @@ object Compilation {
         prog += PushFrameInst
         args foreach compileTerm
         prog += CallIndirectInst( null, f )
-      case a: Symbol if lookup defined Functor( a, 0 ) =>
+      case a: Symbol if lookup defined Indicator( a, 0 ) =>
         prog += PushFrameInst
-        prog += CallProcedureInst( lookup.procedure(Functor(a, 0)) )
-      case a: Symbol if Builtin exists Functor( a, 0 ) =>
-        val f = Functor( a, 0 )
+        prog += CallProcedureInst( lookup.procedure(Indicator(a, 0)) )
+      case a: Symbol if Builtin exists Indicator( a, 0 ) =>
+        val f = Indicator( a, 0 )
 
         prog += NativeInst( Builtin predicate f, f, NATIVE_PREDICATE )
       case a: Symbol =>
         prog += PushFrameInst
-        prog += CallIndirectInst( null, Functor( a, 0 ) )
+        prog += CallIndirectInst( null, Indicator( a, 0 ) )
     }
 
 }

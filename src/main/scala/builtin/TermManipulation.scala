@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog.builtin
 
-import xyz.hyperreal.prolog.{CONS, Compound, Functor, NIL, Structure, VM, array2list, cons, list2array}
+import xyz.hyperreal.prolog.{CONS, Compound, Indicator, NIL, Structure, VM, array2list, cons, list2array}
 
 
 object TermManipulation {
@@ -13,7 +13,7 @@ object TermManipulation {
           case Structure( CONS, Array(head: Symbol, NIL) ) => v bind head
           case Structure( CONS, Array(head: Symbol, tail) ) =>
             list2array( tail ) match {
-              case Some( args ) => v bind Structure( Functor(head, args.length), args )
+              case Some( args ) => v bind Structure( Indicator(head, args.length), args )
               case None => sys.error( s"univ: illegal list argument: $list" )
             }
 
@@ -21,7 +21,7 @@ object TermManipulation {
           case _ => sys.error( s"univ: illegal list argument: $list" )
         }
       case a: Symbol => vm.unify( list, cons(a, NIL) )
-      case Structure( Functor(name, _), args ) => vm.unify( list, cons(name, array2list(args)) )
+      case Structure( Indicator(name, _), args ) => vm.unify( list, cons(name, array2list(args)) )
       case _ => sys.error( s"univ: illegal term argument: $term" )
     }
 
@@ -34,13 +34,13 @@ object TermManipulation {
           case s: Symbol =>
             arity match {
               case 0 => v bind s
-              case argc: Int => v bind Structure( Functor(s, argc), Array.fill(argc)(new vm.Variable) )
+              case argc: Int => v bind Structure( Indicator(s, argc), Array.fill(argc)(new vm.Variable) )
               case _ => sys.error( "functor: arity must be integer" )
             }
           case _ => sys.error( "functor: name must be atom" )
         }
       case s: Symbol => vm.unify( name, s ) && vm.unify( arity, 0 )
-      case Structure( Functor(sname, sarity), _ ) => vm.unify( name, sname ) && vm.unify( arity, sarity )
+      case Structure( Indicator(sname, sarity), _ ) => vm.unify( name, sname ) && vm.unify( arity, sarity )
     }
 
   def arg( vm: VM, n: Any, term: Any, arg: Any ) = {

@@ -94,7 +94,7 @@ object Main extends App {
                 Parser.source( Reader.fromFile(file + ".prolog") ) match {
                   case Parser.Match( ast, _ ) =>
                     Compilation.compile( ast, program )
-                    out.println( program.procedures map (_.func) mkString "\n" )
+                    out.println( program.procedures map (_.ind) mkString "\n" )
                   case m: Parser.Mismatch => m.error
                 }
               case List( "new"|"n" ) =>

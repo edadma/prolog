@@ -11,10 +11,10 @@ case object VarInst extends Instruction
 case object NonvarInst extends Instruction
 case object NilUnifyInst extends Instruction
 case class VarUnifyInst( n: Int ) extends Instruction
-case class StructureInst( f: Functor ) extends Instruction
+case class StructureInst( f: Indicator ) extends Instruction
 case class ElementUnifyInst( n: Int ) extends Instruction
 case object ReturnInst extends Instruction
-case class FunctorInst( f: Functor ) extends Instruction
+case class FunctorInst( f: Indicator ) extends Instruction
 case object DupInst extends Instruction
 case class BranchIfInst( disp: Int ) extends Instruction
 case class BranchInst( disp: Int ) extends Instruction
@@ -25,11 +25,11 @@ case class ChoiceInst( disp: Int ) extends Instruction
 case class MarkInst( disp: Int ) extends Instruction
 case object UnmarkInst extends Instruction
 case object CallBlockInst extends Instruction
-case class CallProcedureInst( procedure: Procedure ) extends Instruction { var functor: Functor = null }
-case class CallIndirectInst( pos: Reader, f: Functor ) extends Instruction
+case class CallProcedureInst( procedure: Procedure ) extends Instruction { var functor: Indicator = null }
+case class CallIndirectInst( pos: Reader, f: Indicator ) extends Instruction
 case object DropInst extends Instruction
 case class FrameInst( vars: Int ) extends Instruction
-case class NativeInst( pred: VM => Unit, func: Functor, group: Int ) extends Instruction
+case class NativeInst(pred: VM => Unit, func: Indicator, group: Int ) extends Instruction
 case object PushFrameInst extends Instruction
 case object UnifyInst extends Instruction
 case class JumpInst( b: Block ) extends Instruction

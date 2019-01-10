@@ -18,7 +18,7 @@ class Program extends Growable[Instruction] {
   val ANONYMOUS = 6
 
   var code: ArrayBuffer[Instruction] = _
-  val procedureMap = new mutable.HashMap[Functor, Procedure]
+  val procedureMap = new mutable.HashMap[Indicator, Procedure]
   val blockMap = new mutable.HashMap[String, Block]
   val loadSet = new mutable.HashSet[String]
 
@@ -31,7 +31,7 @@ class Program extends Growable[Instruction] {
     s writeInt procedureMap.size
 
     for (Procedure( func, pblock, pub, clauses ) <- procedureMap.values) {
-      def writeFunctor( f: Functor ): Unit = {
+      def writeFunctor( f: Indicator ): Unit = {
         s writeUTF f.name.name
         s writeByte f.arity
       }
@@ -148,7 +148,7 @@ class Program extends Growable[Instruction] {
           case CallBlockInst => s writeByte 23
           case CallProcedureInst( p ) =>
             s writeByte 24
-            writeFunctor( p.func )
+            writeFunctor( p.ind )
           case CallIndirectInst( _, f ) =>
             s writeByte 25
             writeFunctor( f )
@@ -195,13 +195,13 @@ class Program extends Growable[Instruction] {
     if (res eq null)
       sys.error( s"code resource not found: $name" )
 
-    val loaded = new ArrayBuffer[Functor]
+    val loaded = new ArrayBuffer[Indicator]
 
     load( new DataInputStream(res), loaded )
     loaded.sorted.toList
   }
 
-  def load( s: String ): List[Functor] =
+  def load( s: String ): List[Indicator] =
     if (loadSet(s))
       Nil
     else {
@@ -210,13 +210,13 @@ class Program extends Growable[Instruction] {
       if (f.length < 7 + 4)
         sys.error( "load: invalid pcc file: too short" )
 
-      val loaded = new ArrayBuffer[Functor]
+      val loaded = new ArrayBuffer[Indicator]
 
       load( f, loaded )
       loaded.sorted.toList
     }
 
-  def load( s: DataInput, loaded: ArrayBuffer[Functor] ) = {
+  def load( s: DataInput, loaded: ArrayBuffer[Indicator] ) = {
     val magic = new Array[Byte]( 7 )
 
     s readFully magic
@@ -236,15 +236,15 @@ class Program extends Growable[Instruction] {
       val p = procedure( readFunctor, pub )
 
       if (loaded ne null)
-        loaded += p.func
+        loaded += p.ind
 
       if (pub) {
         for (i <- 1 to s.readInt) {
-          p.clauses += Clause( readTerm, block(s"${p.func} $i") )
+          p.clauses += Clause( readTerm, block(s"${p.ind} $i") )
           readBlock
         }
       } else {
-        p.block = block( p.func.toString )
+        p.block = block( p.ind.toString )
         readBlock
       }
 
@@ -357,7 +357,7 @@ class Program extends Growable[Instruction] {
 
   def apply( n: Int ) = code(n)
 
-  def procedures = procedureMap.values
+  def procedures = procedureMap.values.toList
 
   def pointer = code.length
 
@@ -380,7 +380,7 @@ class Program extends Growable[Instruction] {
   }
 
   def printProcedures: Unit =
-    for (Procedure( Functor(Symbol(name), arity), block, pub, clauses ) <- procedureMap.values.toList.sorted) {
+    for (Procedure( Indicator(Symbol(name), arity), block, pub, clauses ) <- procedureMap.values.toList.sorted) {
       println( s"$name/$arity" )
 
       if (block eq null)
@@ -397,11 +397,11 @@ class Program extends Growable[Instruction] {
 
   def defined( name: String, arity: Int ): Boolean = defined( functor(name, arity) )
 
-  def defined( f: Functor ) = procedureMap contains f
+  def defined( f: Indicator ) = procedureMap contains f
 
-  def get( f: Functor ) = procedureMap get f
+  def get( f: Indicator ) = procedureMap get f
 
-  def clause( f: Functor, ast: TermAST ): Unit = {
+  def clause(f: Indicator, ast: TermAST ): Unit = {
     val p = procedure( f )
 
     p.clauses += Clause( ast, block(s"$f ${p.clauses.length + 1}") )
@@ -409,7 +409,7 @@ class Program extends Growable[Instruction] {
 
   def procedure( name: String, arity: Int, pub: Boolean ): Procedure = procedure( functor(name, arity), pub )
 
-  def procedure( f: Functor, pub: Boolean = true ) =
+  def procedure(f: Indicator, pub: Boolean = true ) =
     procedureMap get f match {
       case None =>
         val p = Procedure( f, null, pub )

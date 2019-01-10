@@ -7,12 +7,12 @@ import scala.collection.mutable
 
 object Math {
 
-  private val functions = new mutable.HashMap[Functor, Function]
+  private val functions = new mutable.HashMap[Indicator, Function]
   private val NumberClass = classOf[Number]
 
-  def exists( f: Functor ) = functions contains f
+  def exists( f: Indicator ) = functions contains f
 
-  def function( f: Functor ) = functions(f)
+  def function( f: Indicator ) = functions(f)
 
   def load( obj: Any ): Unit =
     for (m <- obj.getClass.getDeclaredMethods if m.getModifiers == Modifier.PUBLIC && !m.isSynthetic) {

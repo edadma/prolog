@@ -7,7 +7,7 @@ import scala.collection.mutable
 
 object Builtin {
 
-  private val predicates = new mutable.HashMap[Functor, VM => Unit]
+  private val predicates = new mutable.HashMap[Indicator, VM => Unit]
   val segmentRegex = "\\$(?:[a-z]{2,}|u[0-9A-F]{4})"r
 
   def translate( s: String ) =
@@ -24,9 +24,9 @@ object Builtin {
     } else
       s
 
-  def exists( f: Functor ) = predicates contains f
+  def exists( f: Indicator ) = predicates contains f
 
-  def predicate( f: Functor ) = predicates(f)
+  def predicate( f: Indicator ) = predicates(f)
 
   def load( obj: Any ): Unit =
     for (m <- obj.getClass.getDeclaredMethods if m.getModifiers == Modifier.PUBLIC && !m.isSynthetic) {

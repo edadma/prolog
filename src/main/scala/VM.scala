@@ -72,7 +72,7 @@ class VM( val prog: Program ) {
 
   def pushFrame = push( frame )
 
-  def pushStructure( f: Functor ): Unit = {
+  def pushStructure( f: Indicator ): Unit = {
     val args = new Array[Any]( f.arity )
 
     for (i <- f.arity - 1 to 0 by -1)
@@ -237,7 +237,7 @@ class VM( val prog: Program ) {
       case NopInst =>
       case CallBlockInst => call( pop.asInstanceOf[Block] )
       case CallProcedureInst( p ) => callProcedure( p )
-      case CallIndirectInst( pos, f@Functor(Symbol(name), arity) ) =>
+      case CallIndirectInst( pos, f@Indicator(Symbol(name), arity) ) =>
         prog get f match {//todo: this instruction is being emitted for predef calls
           case None => problem( pos, s"rule $name/$arity not defined" )
           case Some( p ) => callProcedure( p )
@@ -273,7 +273,7 @@ class VM( val prog: Program ) {
   def eval( term: Any ): Number =
     term match {
       case n: Number => n
-      case Structure( Functor(Symbol(operator@("+"|"-"|"*"|"/"|"mod")), _), Array(left, right) ) =>
+      case Structure( Indicator(Symbol(operator@("+" | "-" | "*" | "/" | "mod")), _), Array(left, right) ) =>
         val l = eval( left )
         val r = eval( right )
 
@@ -284,10 +284,10 @@ class VM( val prog: Program ) {
           case "/" => lia.Math( FM_DIV, l, r ).asInstanceOf[Number]
           case "mod" => lia.Math( FM_MOD, l, r ).asInstanceOf[Number]
         }
-      case Structure( Functor(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
+      case Structure( Indicator(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
       case Structure( f, args ) if Math exists f => Math.function( f ).call( args map eval )
       case Structure( name, args ) => sys.error( s"function $name/${args.length} not found" )
-      case s@Symbol( name ) if Math exists functor( name, 0 ) => Math.function( Functor(s, 0) ).call( Array() )
+      case s@Symbol( name ) if Math exists functor( name, 0 ) => Math.function( Indicator(s, 0) ).call( Array() )
       case Symbol( name ) => sys.error( s"constant or system value '$name' not found" )
     }
 
@@ -336,7 +336,7 @@ class VM( val prog: Program ) {
     (vareval( a ), vareval( b )) match {
       case (a1: Variable, b1) => a1 bind b1
       case (a1, b1: Variable) => b1 bind a1
-      case (Structure( Functor(n1, a1), args1 ), Structure( Functor(n2, a2), args2 )) =>
+      case (Structure( Indicator(n1, a1), args1 ), Structure( Indicator(n2, a2), args2 )) =>
         if (n1 == n2 && a1 == a2)
           0 until a1 forall (i => unify( args1(i), args2(i) ))
         else {
