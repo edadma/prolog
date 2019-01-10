@@ -9,6 +9,7 @@ object Main extends App {
     """
       |//:- import( "library/lists" ).
       |f( a ).
+      |f( b ).
     """.stripMargin
 //    """
 //       |name_value(String, Name, Value) :-
@@ -19,7 +20,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |current_predicate( X )
+      |clause( f(X), Y )
       |//name_value( "name=value", Name, Value )
       |//put_char( a ), nl
       |//sub_string( "abcd", B, 2, A, S )

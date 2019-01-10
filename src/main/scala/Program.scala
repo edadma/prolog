@@ -42,8 +42,9 @@ class Program extends Growable[Instruction] {
       if (pub) {
         s writeInt clauses.length
 
-        for (Clause( ast, cblock ) <- clauses) {
-          writeTerm( ast )
+        for (Clause( _, head, body, cblock ) <- clauses) {
+          writeTerm( head )
+          writeTerm( body )
           writeBlock( cblock )
         }
       } else
@@ -240,7 +241,7 @@ class Program extends Growable[Instruction] {
 
       if (pub) {
         for (i <- 1 to s.readInt) {
-          p.clauses += Clause( readTerm, block(s"${p.ind} $i") )
+          p.clauses += Clause( null, readTerm, readTerm, block(s"${p.ind} $i") )
           readBlock
         }
       } else {
@@ -385,7 +386,7 @@ class Program extends Growable[Instruction] {
 
       if (block eq null)
         clauses foreach {
-          case Clause( ast, cblock ) =>
+          case Clause( ast, _, _, cblock ) =>
             println( ast )
             cblock.print
         }
@@ -401,10 +402,10 @@ class Program extends Growable[Instruction] {
 
   def get( f: Indicator ) = procedureMap get f
 
-  def clause(f: Indicator, ast: TermAST ): Unit = {
+  def clause(f: Indicator, ast: TermAST, head: TermAST, body: TermAST ): Unit = {
     val p = procedure( f )
 
-    p.clauses += Clause( ast, block(s"$f ${p.clauses.length + 1}") )
+    p.clauses += Clause( ast, head, body, block(s"$f ${p.clauses.length + 1}") )
   }
 
   def procedure( name: String, arity: Int, pub: Boolean ): Procedure = procedure( functor(name, arity), pub )

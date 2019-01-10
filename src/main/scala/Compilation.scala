@@ -30,34 +30,34 @@ object Compilation {
         prog.loadAsResource( name )
       case ClauseAST( StructureAST(r, ":-", List(StructureAST(r1, "import", List(StringAST(_, name))))) ) =>
         prog.loadAsResource( name )
-      case ClauseAST( clause@StructureAST(r, ":-", List(StructureAST(h, name, args), body)) ) =>
+      case ClauseAST( clause@StructureAST(r, ":-", List(head@StructureAST(h, name, args), body)) ) =>
         val f = functor( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.clause( f, clause )
-      case ClauseAST( clause@StructureAST(r, ":-", List(AtomAST(h, name), body)) ) =>
+        prog.clause( f, clause, head, body )
+      case ClauseAST( clause@StructureAST(r, ":-", List(head@AtomAST(h, name), body)) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.clause( f, clause )
+        prog.clause( f, clause, head, body )
       case ClauseAST( clause@StructureAST(r, name, args) ) =>
         val f = functor( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.clause( f, clause )
+        prog.clause( f, clause, clause, TRUE )
       case ClauseAST( clause@AtomAST(r, name) ) =>
         val f = functor( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
-        prog.clause( f, clause )
+        prog.clause( f, clause, clause, TRUE )
     }
 
   def phase2( implicit prog: Program ) =

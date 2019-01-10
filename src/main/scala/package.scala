@@ -17,6 +17,7 @@ package object prolog {
   val NIL = Symbol( "[]" )
   val CONS = Indicator( Symbol("."), 2 )
   val INDICATOR = Indicator( Symbol("/"), 2 )
+  val TRUE = AtomAST( null, "true" )
 
   val NATIVE_PREDICATE = 0
   val NATIVE_MATH = 1
