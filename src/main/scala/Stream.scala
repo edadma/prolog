@@ -73,7 +73,7 @@ abstract class BinarySinkStream( val out: PrintStream, val append: Boolean ) ext
 
 }
 
-class StandardInput extends TextSourceStream( Console.in ) {
+object StandardInput extends TextSourceStream( Console.in ) {
 
   val file_name = None
 
@@ -83,7 +83,7 @@ class StandardInput extends TextSourceStream( Console.in ) {
 
 }
 
-class StandardOutput extends BinarySinkStream( Console.out, false ) {
+object StandardOutput extends BinarySinkStream( Console.out, false ) {
 
   val file_name = None
 
