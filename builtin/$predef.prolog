@@ -82,3 +82,14 @@ nl :-
 
 nl( S ) :-
   put_char( S, '\n' ).
+
+
+/* Binary IO */
+
+get_byte( byte ) :-
+    current_input( S ),
+    get_byte( S, Byte ).
+
+put_byte( byte ) :-
+    current_output( S ),
+    put_byte( S, Byte ).

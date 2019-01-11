@@ -1,14 +1,12 @@
 package xyz.hyperreal.prolog.builtin
 
-import java.io.{BufferedReader, PrintStream}
-
-import xyz.hyperreal.prolog.{SinkStream, SourceStream, StandardInput, StandardOutput, VM}
+import xyz.hyperreal.prolog.{SinkStream, SourceStream, ConsoleInput, ConsoleOutput, VM}
 
 
 object StreamSelection {
 
-  var input: SourceStream = StandardInput
-  var output: SinkStream = StandardOutput
+  var input: SourceStream = ConsoleInput
+  var output: SinkStream = ConsoleOutput
 
   def current_input( vm: VM, stream: Any ) = vm.unify( stream, input )
 
@@ -31,5 +29,7 @@ object StreamSelection {
         true
       case _ => sys.error( "set_output: stream is not a sink stream" )
     }
+
+//  def open( vm: VM, )
 
 }

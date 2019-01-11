@@ -1,14 +1,12 @@
 package xyz.hyperreal.prolog.builtin
 
-import java.io.InputStream
-
 import xyz.hyperreal.pattern_matcher.StringReader
 import xyz.hyperreal.prolog.{Parser, SinkStream, TextSourceStream, VM, display}
 
 
 object TermIO {
 
-  val repl: InputStream = null
+  val repl: java.io.InputStream = null
 
   def write_term( vm: VM, stream: Any, term: Any, options: Any ) =
     stream match {

@@ -68,7 +68,8 @@ object Builtin {
     builtin.StreamSelection,
     builtin.StringManipulation,
     builtin.AllSolutions,
-    builtin.ClauseRetrieval
+    builtin.ClauseRetrieval,
+    builtin.BinaryIO
   ) foreach load
 
 }
