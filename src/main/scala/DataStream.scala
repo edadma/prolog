@@ -3,11 +3,15 @@ package xyz.hyperreal.prolog
 import java.io.{BufferedReader, InputStream, PrintStream, PrintWriter}
 
 
-trait Stream {
+trait DataStream {
 
   def file_name: Option[String]
 
   def mode: Symbol
+
+  def input: Boolean
+
+  def output: Boolean
 
   def alias: Option[Symbol]
 
@@ -21,7 +25,10 @@ trait Stream {
 
 }
 
-trait SourceStream extends Stream {
+trait SourceStream extends DataStream {
+
+  val input = true
+  val output = false
 
   def read: Int
 
@@ -29,7 +36,10 @@ trait SourceStream extends Stream {
 
 }
 
-trait SinkStream extends Stream {
+trait SinkStream extends DataStream {
+
+  val input = false
+  val output = true
 
   def write( b: Int )
 
@@ -65,27 +75,27 @@ abstract class TextSourceStream( val reader: BufferedReader ) extends SourceStre
 
 }
 
-abstract class BinarySourceStream( val input: InputStream ) extends SourceStream {
+abstract class BinarySourceStream( val in: InputStream ) extends SourceStream {
 
   val mode = 'read
   val position = 0
 
   def atEnd =
-    if (input.markSupported) {
-      input.mark( 1 )
+    if (in.markSupported) {
+      in.mark( 1 )
 
-      val c = input.read
+      val c = in.read
 
-      input.reset
+      in.reset
       c == -1
     } else
       sys.error( "not supported" )
 
   val typ = 'binary
 
-  def close = input.close
+  def close = in.close
 
-  def read = input.read
+  def read = in.read
 
   def readLine = sys.error( "BinarySourceStream.readLine: not supported" )
 

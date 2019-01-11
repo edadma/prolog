@@ -1,7 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.StringReader
-import xyz.hyperreal.prolog.{Parser, SinkStream, TextSourceStream, VM, display}
+import xyz.hyperreal.prolog.{ConsoleInput, Parser, SinkStream, TextSourceStream, VM, display}
 
 
 object TermIO {
@@ -24,7 +24,7 @@ object TermIO {
     stream match {
       case _: vm.Variable => sys.error( "read_term: stream is a variable" )
       case in: TextSourceStream =>
-        val line = if (in == Console.in && repl != null) Console.withIn( repl ){ io.StdIn.readLine } else in.readLine
+        val line = if (in == ConsoleInput && repl != null) Console.withIn( repl ){ io.StdIn.readLine } else in.readLine
 
         Parser.term( new StringReader(line) ) match {
           case Parser.Match( ast, _ ) => vm.unify( vm.data(ast), term )
