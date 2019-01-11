@@ -1,9 +1,9 @@
 package xyz.hyperreal.prolog.builtin
 
-import java.io.{InputStream, PrintStream, BufferedReader}
+import java.io.InputStream
 
 import xyz.hyperreal.pattern_matcher.StringReader
-import xyz.hyperreal.prolog.{Parser, VM, display}
+import xyz.hyperreal.prolog.{Parser, SinkStream, TextSourceStream, VM, display}
 
 
 object TermIO {
@@ -13,7 +13,7 @@ object TermIO {
   def write_term( vm: VM, stream: Any, term: Any, options: Any ) =
     stream match {
       case _: vm.Variable => sys.error( "write_term: stream is a variable" )
-      case out: PrintStream =>
+      case out: SinkStream =>
         term match {
           case _: vm.Variable => sys.error( "write_term: term is a variable" )
           case data =>
@@ -25,7 +25,7 @@ object TermIO {
   def read_term( vm: VM, stream: Any, term: Any, options: Any ) =
     stream match {
       case _: vm.Variable => sys.error( "read_term: stream is a variable" )
-      case in: BufferedReader =>
+      case in: TextSourceStream =>
         val line = if (in == Console.in && repl != null) Console.withIn( repl ){ io.StdIn.readLine } else in.readLine
 
         Parser.term( new StringReader(line) ) match {

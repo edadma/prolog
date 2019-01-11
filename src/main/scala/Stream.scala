@@ -26,6 +26,8 @@ trait SinkStream extends Stream {
 
   def write( b: Int )
 
+  def print( a: Any )
+
   def println( a: Any )
 
 }
@@ -68,6 +70,8 @@ abstract class BinarySinkStream( val out: PrintStream, val append: Boolean ) ext
   def close = out.close
 
   def write( b: Int ) = out.write( b )
+
+  def print( a: Any ) = out.print( a )
 
   def println( a: Any ) = out.println( a )
 

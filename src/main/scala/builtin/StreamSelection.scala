@@ -26,12 +26,10 @@ object StreamSelection {
   def set_output( vm: VM, stream: Any ) =
     stream match {
       case _: vm.Variable => sys.error( "set_output: stream is a variable" )
-      case s: PrintStream =>
+      case s: SinkStream =>
         output = s
         true
-      case _ => sys.error( "set_output: stream is not an output stream" )
+      case _ => sys.error( "set_output: stream is not a sink stream" )
     }
-
-
 
 }
