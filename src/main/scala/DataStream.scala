@@ -41,6 +41,8 @@ trait SinkStream extends DataStream {
   val input = false
   val output = true
 
+  def flush
+
   def write( b: Int )
 
   def print( a: Any )
@@ -110,6 +112,8 @@ abstract class TextSinkStream( val out: PrintWriter, val append: Boolean ) exten
 
   val typ = 'text
 
+  def flush = out.flush
+
   def close = out.close
 
   def write( b: Int ) = out.write( b )
@@ -128,6 +132,8 @@ abstract class BinarySinkStream( val out: PrintStream, val append: Boolean ) ext
   def atEnd = false
 
   val typ = 'binary
+
+  def flush = out.flush
 
   def close = out.close
 
@@ -154,6 +160,8 @@ object ConsoleOutput extends BinarySinkStream( Console.out, false ) {
   val file_name = None
 
   val alias = Some( 'user_output )
+
+  override def flush {}
 
   override def close = sys.error( "attempt to close standard output" )
 

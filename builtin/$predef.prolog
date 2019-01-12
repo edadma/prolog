@@ -100,5 +100,9 @@ put_byte( byte ) :-
 open( Source_sink, Mode, Stream ) :-
     open( Source_sink, Mode, Stream, [] ).
 
+flush_output :-
+    current_output( S ),
+    flush_output( S ).
+
 close( S ) :-
     close( S, [] ).

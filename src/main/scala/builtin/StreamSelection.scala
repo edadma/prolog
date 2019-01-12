@@ -74,4 +74,11 @@ object StreamSelection {
       case _ => sys.error( "close/2: invalid arguments" )
     }
 
+  def flush_output( vm: VM, stream: Any ) =
+    stream match {
+      case _: vm.Variable => sys.error( "flush_output/1: output stream must be given" )
+      case s: SinkStream => s.flush
+      case _ => sys.error( "flush_output/1: expected output stream" )
+    }
+
 }
