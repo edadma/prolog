@@ -8,8 +8,13 @@ object Main extends App {
   val code =
     """
       |//:- import( "library/lists" ).
-      |f( a ).
-      |f( b ).
+      |
+      |//main :-
+      |// open( "test", write, S, [] ),
+      |// set_output( S ),
+      |// writeln( "this is a test" ),
+      |// writeln( "this is another test" ),
+      |// close( S ).
     """.stripMargin
 //    """
 //       |name_value(String, Name, Value) :-
@@ -20,7 +25,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |clause( f(X), Y )
+      |main
       |//name_value( "name=value", Name, Value )
       |//put_char( a ), nl
       |//sub_string( "abcd", B, 2, A, S )

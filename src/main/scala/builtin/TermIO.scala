@@ -1,6 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.StringReader
+
 import xyz.hyperreal.prolog.{ConsoleInput, Parser, SinkStream, TextSourceStream, VM, display}
 
 

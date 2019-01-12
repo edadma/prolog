@@ -93,3 +93,12 @@ get_byte( byte ) :-
 put_byte( byte ) :-
     current_output( S ),
     put_byte( S, Byte ).
+
+
+/* Stream Selection */
+
+open( Source_sink, Mode, Stream ) :-
+    open( Source_sink, Mode, Stream, [] ).
+
+close( S ) :-
+    close( S, [] ).

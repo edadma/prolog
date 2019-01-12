@@ -1,6 +1,8 @@
 package xyz.hyperreal.prolog.builtin
 
-import xyz.hyperreal.prolog.{list2array, ConsoleInput, ConsoleOutput, SinkStream, SourceStream, DataStream, VM}
+import java.io.{BufferedReader, FileReader, FileWriter, PrintWriter}
+
+import xyz.hyperreal.prolog.{ConsoleInput, ConsoleOutput, DataStream, SinkStream, SourceStream, TextSinkStream, TextSourceStream, VM, list2array}
 
 import scala.collection.mutable
 
@@ -39,10 +41,37 @@ object StreamSelection {
       case _ => sys.error( "set_output: stream is not a sink stream" )
     }
 
-//  def open( vm: VM, file: Any, mode: Any, stream: Any, options: Any ) =
-//    (file, mode, stream, list2array(options) map (_.toList)) match {
-//      case (file1: String, mode1: Symbol, _: vm.Variable, options1) =>
-//        val
-//    }
+  def open( vm: VM, file: Any, mode: Any, stream: Any, options: Any ) =
+    (file, mode, stream, list2array(options) map (_.toList)) match {
+      case (f: String, m@('read|'write|'append), s: vm.Variable, o) =>
+        val s1 =
+          m match {
+            case 'read =>
+              new TextSourceStream( new BufferedReader(new FileReader(f)) ) {
+                val file_name = Some( f )
+                val alias = None
+              }
+            case 'write =>
+              new TextSinkStream( new PrintWriter(f), false ) {
+                val file_name = Some( f )
+                val alias = None
+              }
+            case 'append =>
+              new TextSinkStream( new PrintWriter( new FileWriter(f, true) ), true ) {
+                val file_name = Some( f )
+                val alias = None
+              }
+          }
+
+        s bind s1
+      case _ => sys.error( "open/4: invalid arguments" )
+    }
+
+  def close( vm: VM, stream: Any, options: Any ) =
+    stream match {
+      case _: vm.Variable => sys.error( "close/2: stream must be given" )
+      case s: DataStream => s.close
+      case _ => sys.error( "close/2: invalid arguments" )
+    }
 
 }
