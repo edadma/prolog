@@ -79,6 +79,8 @@ package object prolog {
     def evalSet = evals map (_ + '\'') toSet
   }
 
+  class PrologException( msg: String, val term: Any ) extends Exception( msg )
+
   def indicator( f: Indicator ) = Structure( INDICATOR, Array(f.name, f.arity) )
 
   def problem( r: Reader, msg: String ) =
