@@ -548,10 +548,9 @@ object Compilation {
       case Structure( f, args ) =>
         args foreach compileTerm
         prog += StructureInst( f )
-      case s: Symbol => prog += PushInst( s )
 //      case v: VM#Variable if v.name == "_" => prog += VarInst( vars.anon )
       case v: VM#Variable => prog += PushInst( v )//VarInst( vars.num(v.name) )
-      case n: NumericAST => prog += PushInst( n.v )
+      case _ => prog += PushInst( term )
     }
 
   /*
