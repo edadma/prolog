@@ -1,6 +1,9 @@
-package xyz.hyperreal.prolog
+package xyz.hyperreal.prolog.builtin
 
-import scala.collection.mutable
+import xyz.hyperreal.prolog.{symbolOrdering, VM}
+
+import scala.collection.immutable.SortedMap
+
 
 
 object ImplementationDefined {
@@ -8,36 +11,61 @@ object ImplementationDefined {
   class Flag( val default: Any ) {
     val changeable = false
 
-    val possible: Any => Boolean = Set[Any]()
+    val valid: Any => Boolean = Set[Any]()
 
     def value = default
 
     def value_=( newvalue: Any ): Unit = sys.error( "unchangeable flag" )
   }
 
-  class ChangeableFlagSet( default: Any, override val possible: Set[Any], action: => Unit = {} ) extends Flag( default ) {
+  class ChangeableFlag( default: Any, override val valid: Set[Any], action: Any => Unit = _ => () ) extends Flag( default ) {
     var v: Any = default
 
     override def value = v
 
-    override def value_=( newvalue: Any ) = v = newvalue
+    override def value_=( newvalue: Any ) = {
+      v = newvalue
+      action( newvalue )
+    }
   }
 
   val flags =
-    mutable.HashMap[Symbol, Flag] (
+    SortedMap[Symbol, Flag] (
       'bounded -> new Flag( true ),
       'integer_rounding_function -> new Flag( 'toward_zero ),
-      'debug -> new ChangeableFlagSet( 'off, Set[Any]('off, 'on) ),
+      'debug -> new ChangeableFlag( 'off, Set[Any]('off, 'on) ),
       'max_arity -> new Flag( 255 )
     )
-  val changeable = Set( 'debug )
 
   def set_prolog_flag( vm: VM, flag: Any, value: Any ) =
     (flag, value) match {
       case (_: vm.Variable, _: vm.Variable) => sys.error( "set_prolog_flag/2: flag and value must be given" )
-      case (f: Symbol, _) if flags.contains(f) && flags(f).changeable =>
-        flags(f) = value
+      case (f: Symbol, _) if flags.contains(f) && flags(f).changeable && flags(f).valid(value) => flags(f).value = value
       case _ => sys.error( "set_prolog_flag/2: expected valid changeable flag and value" )
     }
 
+  def current_prolog_flag( vm: VM, flag: Any, value: Any ) =
+    flag match {
+      case _: vm.Variable =>
+        val values = flags.toList
+
+        vm.resatisfyable(
+          new (VM => Boolean) {
+            var rest = values.tail
+
+            def apply( vm1: VM ): Boolean = {
+              rest match {
+                case List( (k, v) ) => vm.unify( k, flag ) && vm.unify( v.value, value )
+                case (k, v) :: t =>
+                  rest = t
+                  vm.resatisfyable( this )
+                  vm.unify( k, flag ) && vm.unify( v.value, value )
+              }
+            }
+          }
+        )
+        vm.unify( values.head._1, flag ) && vm.unify( values.head._2.value, value )
+      case a: Symbol if flags contains a => vm.unify( flags(a).value, value )
+      case _ => sys.error( "expected valid flag or variable" )
+    }
 }

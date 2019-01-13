@@ -69,7 +69,8 @@ object Builtin {
     builtin.StringManipulation,
     builtin.AllSolutions,
     builtin.ClauseRetrieval,
-    builtin.BinaryIO
+    builtin.BinaryIO,
+    builtin.ImplementationDefined
   ) foreach load
 
 }
