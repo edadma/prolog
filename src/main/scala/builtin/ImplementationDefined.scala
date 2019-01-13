@@ -14,6 +14,12 @@ object ImplementationDefined {
     )
   val changeable = Set( 'debug )
 
-  def set_prolog_flag( vm: VM, flag: Any, value: Any )
+  def set_prolog_flag( vm: VM, flag: Any, value: Any ) =
+    (flag, value) match {
+      case (_: vm.Variable, _: vm.Variable) => sys.error( "set_prolog_flag/2: flag and value must be given" )
+      case (f: Symbol, _) if flags contains f =>
+
+      case _ => sys.error( "set_prolog_flag/2: expected valid flag and value" )
+    }
 
 }
