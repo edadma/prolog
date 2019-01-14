@@ -8,11 +8,22 @@ import xyz.hyperreal.prolog.{ConsoleInput, ConsoleOutput, DataStream, SinkStream
 import scala.collection.mutable
 
 
-object StreamSelection {
+object Streams {
 
   var input: SourceStream = ConsoleInput
   var output: SinkStream = ConsoleOutput
   val aliases = new mutable.HashMap[Symbol, DataStream]
+
+  def apply( s: Any ) =
+    s match {
+      case stream: DataStream => stream
+      case alias: Symbol =>
+        aliases get alias match {
+          case Some( stream1: DataStream ) => stream1
+          case _ => alias
+        }
+      case _ => s
+    }
 
   def current_input( vm: VM, pos: IndexedSeq[Reader], stream: Any ) = vm.unify( stream, input )
 

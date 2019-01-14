@@ -81,7 +81,23 @@ package object prolog {
 
   class PrologException( msg: String, val term: Any ) extends Exception( msg )
 
-  def indicator( f: Indicator ) = Structure( INDICATOR, Array(f.name, f.arity) )
+  def indicator( name: Symbol, arity: Int ) = Structure( INDICATOR, Array(name, arity) )
+
+  def indicator( f: Indicator ) = indicator( f.name, f.arity )
+
+  def exception( r: Reader, msg: String, term: Any ) =
+    throw new PrologException( if (r eq null) msg else r.longErrorText(msg), term )
+
+  def exceptionTerm( error: Any, other: Any ) = Structure( Indicator('error, 2), Array(error, other) )
+
+  def instantiationError( r: Reader, msg: String, name: Symbol, arity: Int ) =
+    exception( r, msg, exceptionTerm('instantiation_error, indicator(name, arity)) )
+
+  def typeError( r: Reader, msg: String, typ: Symbol, culprit: Any, name: Symbol, arity: Int ) =
+    exception( r, msg, exceptionTerm(Structure(Indicator('type_error, 2), Array(typ, culprit)), indicator(name, arity)) )
+
+  def domainError( r: Reader, msg: String, domain: Symbol, culprit: Any, name: Symbol, arity: Int ) =
+    exception( r, msg, exceptionTerm(Structure(Indicator('domain_error, 2), Array(domain, culprit)), indicator(name, arity)) )
 
   def problem( r: Reader, msg: String ) =
     if (r eq null)

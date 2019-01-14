@@ -72,7 +72,7 @@ object Builtin {
 //    builtin.TypeTesting,
 //    builtin.TermManipulation,
 //    builtin.Control,
-    builtin.StreamSelection
+    builtin.Streams
 //    builtin.StringManipulation,
 //    builtin.AllSolutions,
 //    builtin.ClauseRetrieval,

@@ -1,20 +1,22 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.Reader
-import xyz.hyperreal.prolog.{SinkStream, SourceStream, VM, problem}
+import xyz.hyperreal.prolog.{SinkStream, SourceStream, VM, domainError, instantiationError, typeError}
 
 
 object CharacterIO {
 
   def put_char( vm: VM, pos: IndexedSeq[Reader], s: Any, char: Any ) =
-    (s, char) match {
+    (Streams(s), char) match {
       case (p: SinkStream, Symbol( c )) if c.length == 1 =>
         p print c.head
         true
-      case (p: SinkStream, Symbol( c )) => sys.error( s"expected one character atom: $c" )
-      case (_: vm.Variable, _) => problem( pos(0), "put_char: output stream must be given" )
-      case (_, _: vm.Variable) => problem( pos(1), "put_char: one character atom must be given" )
-      case _ => problem( pos(0), "put_char: expected an output stream and a one character atom" )
+//      case (_: SourceStream, _) => domainError( pos(0), "expected output stream", '
+      case (_: SinkStream, _: Symbol) => typeError( pos(1), "expected one character atom", 'character, char, 'put_char, 2 )
+      case (_: vm.Variable, _) => instantiationError( pos(0), "output stream must be given", 'put_char, 2 )
+      case (_, _: vm.Variable) => instantiationError( pos(1), "one character atom must be given", 'put_char, 2 )
+//      case (_, _: Symbol) =>
+//      case _ => problem( pos(0), "put_char: expected an output stream and a one character atom" )
     }
 
   def get_char( vm: VM, pos: IndexedSeq[Reader], s: Any, char: Any ) =
