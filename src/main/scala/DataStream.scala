@@ -153,6 +153,8 @@ object ConsoleInput extends TextSourceStream( Console.in ) {
 
   override def close = sys.error( "attempt to close standard input" )
 
+  override def toString: String = "[stream console input]"
+
 }
 
 object ConsoleOutput extends BinarySinkStream( Console.out, false ) {
@@ -165,6 +167,8 @@ object ConsoleOutput extends BinarySinkStream( Console.out, false ) {
 
   override def close = sys.error( "attempt to close standard output" )
 
+  override def toString: String = "[stream console output]"
+
 }
 
 object SystemInput extends BinarySourceStream( System.in ) {
@@ -174,5 +178,7 @@ object SystemInput extends BinarySourceStream( System.in ) {
   val alias = None
 
   override def close = sys.error( "attempt to close standard input" )
+
+  override def toString: String = "[stream system input]"
 
 }

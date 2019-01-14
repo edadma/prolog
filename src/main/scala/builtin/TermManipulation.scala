@@ -1,11 +1,12 @@
 package xyz.hyperreal.prolog.builtin
 
+import xyz.hyperreal.pattern_matcher.Reader
 import xyz.hyperreal.prolog.{CONS, Compound, Indicator, NIL, Structure, VM, array2list, cons, list2array}
 
 
 object TermManipulation {
 
-  def `=..`( vm: VM, term: Any, list: Any ) =
+  def `=..`( vm: VM, pos: IndexedSeq[Reader], term: Any, list: Any ) =
     term match {
       case v: vm.Variable =>
         list match {
@@ -25,9 +26,9 @@ object TermManipulation {
       case _ => sys.error( s"univ: illegal term argument: $term" )
     }
 
-  def copy_term( vm: VM, term1: Any, term2: Any ) = vm.unify( vm.copy(term1), term2 )
+  def copy_term( vm: VM, pos: IndexedSeq[Reader], term1: Any, term2: Any ) = vm.unify( vm.copy(term1), term2 )
 
-  def functor( vm: VM, term: Any, name: Any, arity: Any ) =
+  def functor( vm: VM, pos: IndexedSeq[Reader], term: Any, name: Any, arity: Any ) =
     term match {
       case v: vm.Variable =>
         name match {
@@ -43,7 +44,7 @@ object TermManipulation {
       case Structure( Indicator(sname, sarity), _ ) => vm.unify( name, sname ) && vm.unify( arity, sarity )
     }
 
-  def arg( vm: VM, n: Any, term: Any, arg: Any ) = {
+  def arg( vm: VM, pos: IndexedSeq[Reader], n: Any, term: Any, arg: Any ) = {
     n match {
       case idx: Integer =>
         term match {

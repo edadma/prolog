@@ -1,6 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
-import xyz.hyperreal.prolog.{symbolOrdering, VM}
+import xyz.hyperreal.pattern_matcher.Reader
+import xyz.hyperreal.prolog.{VM, symbolOrdering}
 
 import scala.collection.immutable.SortedMap
 
@@ -37,14 +38,14 @@ object ImplementationDefined {
       'max_arity -> new Flag( 255 )
     )
 
-  def set_prolog_flag( vm: VM, flag: Any, value: Any ) =
+  def set_prolog_flag( vm: VM, pos: IndexedSeq[Reader], flag: Any, value: Any ) =
     (flag, value) match {
       case (_: vm.Variable, _: vm.Variable) => sys.error( "set_prolog_flag/2: flag and value must be given" )
       case (f: Symbol, _) if flags.contains(f) && flags(f).changeable && flags(f).valid(value) => flags(f).value = value
       case _ => sys.error( "set_prolog_flag/2: expected valid changeable flag and value" )
     }
 
-  def current_prolog_flag( vm: VM, flag: Any, value: Any ) =
+  def current_prolog_flag( vm: VM, pos: IndexedSeq[Reader], flag: Any, value: Any ) =
     flag match {
       case _: vm.Variable =>
         val values = flags.toList

@@ -48,7 +48,7 @@ object Builtin {
       args(0) = vm
       args(1) = pos
 
-      for (i <- method.getParameterCount to 2 by -1)
+      for (i <- method.getParameterCount - 1 to 2 by -1)
         args(i) = vm.pop.asInstanceOf[Object]
 
       try {
@@ -66,18 +66,18 @@ object Builtin {
   }
 
   List(
-    builtin.AtomManipulation,
+//    builtin.AtomManipulation,
     builtin.CharacterIO,
-    builtin.TermIO,
-    builtin.TypeTesting,
-    builtin.TermManipulation,
-    builtin.Control,
-    builtin.StreamSelection,
-    builtin.StringManipulation,
-    builtin.AllSolutions,
-    builtin.ClauseRetrieval,
-    builtin.BinaryIO,
-    builtin.ImplementationDefined
+//    builtin.TermIO,
+//    builtin.TypeTesting,
+//    builtin.TermManipulation,
+//    builtin.Control,
+    builtin.StreamSelection
+//    builtin.StringManipulation,
+//    builtin.AllSolutions,
+//    builtin.ClauseRetrieval,
+//    builtin.BinaryIO,
+//    builtin.ImplementationDefined
   ) foreach load
 
 }

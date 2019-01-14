@@ -1,11 +1,12 @@
 package xyz.hyperreal.prolog.builtin
 
+import xyz.hyperreal.pattern_matcher.Reader
 import xyz.hyperreal.prolog.{BinarySinkStream, BinarySourceStream, VM}
 
 
 object BinaryIO {
 
-  def put_byte( vm: VM, s: Any, byte: Any ) =
+  def put_byte( vm: VM, pos: IndexedSeq[Reader], s: Any, byte: Any ) =
     (s, byte) match {
       case (p: BinarySinkStream, b: Int) if b.isValidByte =>
         p write b
@@ -14,7 +15,7 @@ object BinaryIO {
       case _ => sys.error( "put_char: expected a binary output stream and an integer (byte)" )
     }
 
-  def get_byte( vm: VM, s: Any, byte: Any ) =
+  def get_byte( vm: VM, pos: IndexedSeq[Reader], s: Any, byte: Any ) =
     s match {
       case in: BinarySourceStream =>
         in read match {

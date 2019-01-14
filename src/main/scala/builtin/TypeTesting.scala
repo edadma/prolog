@@ -1,31 +1,32 @@
 package xyz.hyperreal.prolog.builtin
 
+import xyz.hyperreal.pattern_matcher.Reader
 import xyz.hyperreal.prolog.{Structure, VM, vareval}
 
 
 object TypeTesting {
 
-  def atom( vm: VM, a: Any ) = a.isInstanceOf[Symbol]
+  def atom( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[Symbol]
 
-  def integer( vm: VM, a: Any ) = a.isInstanceOf[Int] || a.isInstanceOf[BigInt]
+  def integer( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[Int] || a.isInstanceOf[BigInt]
 
-  def float( vm: VM, a: Any ) = a.isInstanceOf[Double] || a.isInstanceOf[BigDecimal]
+  def float( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[Double] || a.isInstanceOf[BigDecimal]
 
-  def number( vm: VM, a: Any ) = a.isInstanceOf[Number]
+  def number( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[Number]
 
-  def compound( vm: VM, a: Any ) = a.isInstanceOf[Structure]
+  def compound( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[Structure]
 
-  def atomic( vm: VM, a: Any ) = !a.isInstanceOf[VM#Variable] && !compound( vm, a )
+  def atomic( vm: VM, pos: IndexedSeq[Reader], a: Any ) = !a.isInstanceOf[VM#Variable] && !compound( vm, pos, a )
 
-  def callable( vm: VM, a: Any ) = atom( vm, a ) || compound( vm, a )
+  def callable( vm: VM, pos: IndexedSeq[Reader], a: Any ) = atom( vm, pos, a ) || compound( vm, pos, a )
 
-  def ground( vm: VM, a: Any ): Boolean =
-    atomic( vm, a ) ||
+  def ground( vm: VM, pos: IndexedSeq[Reader], a: Any ): Boolean =
+    atomic( vm, pos, a ) ||
       (vareval( a ) match {
-        case Structure( _, args ) => args forall (ground( vm, _ ))
+        case Structure( _, args ) => args forall (ground( vm, pos, _ ))
         case _ => false
       })
 
-  def string( vm: VM, a: Any ) = a.isInstanceOf[String]
+  def string( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[String]
 
 }

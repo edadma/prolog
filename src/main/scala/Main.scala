@@ -121,7 +121,6 @@ object Main extends App {
               case Parser.Match( ast, _ ) =>
                 implicit val query = new Program
 
-                program.loadPredef
                 vars = new Vars
                 block = query.block( "query" )
                 vm = new VM( program )

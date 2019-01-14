@@ -12,10 +12,12 @@ object CharacterIO {
         p print c.head
         true
       case (p: SinkStream, Symbol( c )) => sys.error( s"expected one character atom: $c" )
-      case _ => problem( pos(0), "put_char: expected an output stream and a one character atom")
+      case (_: vm.Variable, _) => problem( pos(0), "put_char: output stream must be given" )
+      case (_, _: vm.Variable) => problem( pos(1), "put_char: one character atom must be given" )
+      case _ => problem( pos(0), "put_char: expected an output stream and a one character atom" )
     }
 
-  def get_char( vm: VM, s: Any, char: Any ) =
+  def get_char( vm: VM, pos: IndexedSeq[Reader], s: Any, char: Any ) =
     s match {
       case in: SourceStream =>
         in read match {

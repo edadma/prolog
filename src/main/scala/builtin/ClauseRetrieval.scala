@@ -1,11 +1,12 @@
 package xyz.hyperreal.prolog.builtin
 
+import xyz.hyperreal.pattern_matcher.Reader
 import xyz.hyperreal.prolog.{Indicator, Procedure, Structure, VM, indicator}
 
 
 object ClauseRetrieval {
 
-  def clause( vm: VM, head: Any, body: Any ) = {
+  def clause( vm: VM, pos: IndexedSeq[Reader], head: Any, body: Any ) = {
     val p =
       head match {
         case _: vm.Variable => sys.error( "clause: head must be given" )
@@ -40,7 +41,7 @@ object ClauseRetrieval {
     }
   }
 
-  def current_predicate( vm: VM, pred: Any ) =
+  def current_predicate( vm: VM, pos: IndexedSeq[Reader], pred: Any ) =
     vm.prog.procedures match {
       case Nil => false
       case List( p ) => vm.unify( indicator(p.ind), pred )

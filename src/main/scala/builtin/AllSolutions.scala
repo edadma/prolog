@@ -1,5 +1,6 @@
 package xyz.hyperreal.prolog.builtin
 
+import xyz.hyperreal.pattern_matcher.Reader
 import xyz.hyperreal.prolog.{Compilation, Program, VM, Vars, array2list}
 
 import scala.collection.mutable.ArrayBuffer
@@ -7,8 +8,8 @@ import scala.collection.mutable.ArrayBuffer
 
 object AllSolutions {
 
-  def findall( vm: VM, template: Any, goal: Any, instances: Any ) =
-    if (TypeTesting.callable( vm, goal )) {
+  def findall( vm: VM, pos: IndexedSeq[Reader], template: Any, goal: Any, instances: Any ) =
+    if (TypeTesting.callable( vm, pos, goal )) {
       implicit val prog = new Program
       implicit val vars = new Vars
       val block = prog.block( "findall" )
