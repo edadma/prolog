@@ -83,7 +83,7 @@ package object prolog {
 
   def indicator( name: Symbol, arity: Int ) = Structure( INDICATOR, Array(name, arity) )
 
-  def indicator( f: Indicator ) = indicator( f.name, f.arity )
+  def indicator( f: Indicator ): Structure = indicator( f.name, f.arity )
 
   def exception( r: Reader, msg: String, term: Any ) =
     throw new PrologException( if (r eq null) msg else r.longErrorText(msg), term )
@@ -96,8 +96,14 @@ package object prolog {
   def typeError( r: Reader, msg: String, typ: Symbol, culprit: Any, name: Symbol, arity: Int ) =
     exception( r, msg, exceptionTerm(Structure(Indicator('type_error, 2), Array(typ, culprit)), indicator(name, arity)) )
 
+  def existenceError( r: Reader, msg: String, obj: Symbol, culprit: Any, name: Symbol, arity: Int ) =
+    exception( r, msg, exceptionTerm(Structure(Indicator('existence_error, 2), Array(obj, culprit)), indicator(name, arity)) )
+
   def domainError( r: Reader, msg: String, domain: Symbol, culprit: Any, name: Symbol, arity: Int ) =
     exception( r, msg, exceptionTerm(Structure(Indicator('domain_error, 2), Array(domain, culprit)), indicator(name, arity)) )
+
+  def permissionError( r: Reader, msg: String, operation: Symbol, typ: Symbol, culprit: Any, name: Symbol, arity: Int ) =
+    exception( r, msg, exceptionTerm(Structure(Indicator('permission_error, 3), Array(operation, typ, culprit)), indicator(name, arity)) )
 
   def problem( r: Reader, msg: String ) =
     if (r eq null)

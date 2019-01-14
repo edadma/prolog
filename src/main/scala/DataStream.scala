@@ -3,7 +3,11 @@ package xyz.hyperreal.prolog
 import java.io.{BufferedReader, InputStream, PrintStream, PrintWriter}
 
 
-trait DataStream {
+abstract class DataStream {
+
+  protected var _open = true
+
+  def open = _open
 
   def file_name: Option[String]
 
@@ -21,11 +25,11 @@ trait DataStream {
 
   def typ: Symbol
 
-  def close
+  def close = _open = false
 
 }
 
-trait SourceStream extends DataStream {
+abstract class SourceStream extends DataStream {
 
   val input = true
   val output = false
@@ -36,7 +40,7 @@ trait SourceStream extends DataStream {
 
 }
 
-trait SinkStream extends DataStream {
+abstract class SinkStream extends DataStream {
 
   val input = false
   val output = true
@@ -69,7 +73,10 @@ abstract class TextSourceStream( val reader: BufferedReader ) extends SourceStre
 
   val typ = 'text
 
-  def close = reader.close
+  override def close = {
+    super.close
+    reader.close
+  }
 
   def read = reader.read
 
@@ -95,7 +102,10 @@ abstract class BinarySourceStream( val in: InputStream ) extends SourceStream {
 
   val typ = 'binary
 
-  def close = in.close
+  override def close = {
+    super.close
+    in.close
+  }
 
   def read = in.read
 
@@ -114,7 +124,10 @@ abstract class TextSinkStream( val out: PrintWriter, val append: Boolean ) exten
 
   def flush = out.flush
 
-  def close = out.close
+  override def close = {
+    super.close
+    out.close
+  }
 
   def write( b: Int ) = out.write( b )
 
@@ -135,7 +148,10 @@ abstract class BinarySinkStream( val out: PrintStream, val append: Boolean ) ext
 
   def flush = out.flush
 
-  def close = out.close
+  override def close = {
+    super.close
+    out.close
+  }
 
   def write( b: Int ) = out.write( b )
 
