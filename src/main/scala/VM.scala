@@ -55,7 +55,7 @@ class VM( val prog: Program ) {
 
   def data( term: TermAST, vars: mutable.HashMap[String, Variable] = new mutable.HashMap ): Any =
     term match {
-      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map (data(_, vars)) toArray )
+      case StructureAST( _, name, args ) => Structure( indicator(name, args.length), args map (data(_, vars)) toArray )
       case AtomAST( _, name ) => Symbol( name )
       case AnonymousAST( _ ) => new Variable( "_" )
       case VariableAST( _, name ) =>
@@ -245,7 +245,7 @@ class VM( val prog: Program ) {
       case DropInst => drop
       case PushFrameInst => pushFrame
       case FrameInst( vars ) => frame = new Frame( vars, popInt, pop.asInstanceOf[Block] )
-      case NativeInst( func, _, _ ) => func( this )
+      case NativeInst( func, pos, _, _ ) => func( this, pos )
       case UnifyInst => unify( pop, pop )
       case EvalInst( pos, name, v ) =>
         frame.vars(v).eval match {
@@ -287,7 +287,7 @@ class VM( val prog: Program ) {
       case Structure( Indicator(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
       case Structure( f, args ) if Math exists f => Math.function( f ).call( args map eval )
       case Structure( name, args ) => sys.error( s"function $name/${args.length} not found" )
-      case s@Symbol( name ) if Math exists functor( name, 0 ) => Math.function( Indicator(s, 0) ).call( Array() )
+      case s@Symbol( name ) if Math exists indicator( name, 0 ) => Math.function( Indicator(s, 0) ).call( Array() )
       case Symbol( name ) => sys.error( s"constant or system value '$name' not found" )
     }
 

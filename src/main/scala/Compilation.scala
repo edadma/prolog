@@ -11,11 +11,11 @@ object Compilation {
 
   val reserved =
     Set(
-      functor( "true", 0 ),
-      functor( "fail", 0 ),
-      functor( "false", 0 ),
-      functor( "repeat", 0 ),
-      functor( "is", 2 )
+      indicator( "true", 0 ),
+      indicator( "fail", 0 ),
+      indicator( "false", 0 ),
+      indicator( "repeat", 0 ),
+      indicator( "is", 2 )
     )
 
   def compile( ast: PrologAST, prog: Program ): Unit = {
@@ -31,28 +31,28 @@ object Compilation {
       case ClauseAST( StructureAST(r, ":-", List(StructureAST(r1, "import", List(StringAST(_, name))))) ) =>
         prog.loadAsResource( name )
       case ClauseAST( clause@StructureAST(r, ":-", List(head@StructureAST(h, name, args), body)) ) =>
-        val f = functor( name, args.length )
+        val f = indicator( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
         prog.clause( f, clause, head, body )
       case ClauseAST( clause@StructureAST(r, ":-", List(head@AtomAST(h, name), body)) ) =>
-        val f = functor( name, 0 )
+        val f = indicator( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
         prog.clause( f, clause, head, body )
       case ClauseAST( clause@StructureAST(r, name, args) ) =>
-        val f = functor( name, args.length )
+        val f = indicator( name, args.length )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
 
         prog.clause( f, clause, clause, TRUE )
       case ClauseAST( clause@AtomAST(r, name) ) =>
-        val f = functor( name, 0 )
+        val f = indicator( name, 0 )
 
         if (Builtin.exists( f ) || Math.exists( f ) || reserved(f))
           r.error( s"builtin procedure '$f' can't be redefined" )
@@ -228,7 +228,7 @@ object Compilation {
 
   def toTerm( term: TermAST ): Any =
     term match {
-      case StructureAST( _, name, args ) => Structure( functor(name, args.length), args map toTerm toArray )
+      case StructureAST( _, name, args ) => Structure( indicator(name, args.length), args map toTerm toArray )
       case AtomAST( _, name ) => Symbol( name )
       case n: NumericAST => n.v
       case AnonymousAST( _ ) | VariableAST( _, _ ) => false
@@ -242,7 +242,7 @@ object Compilation {
       case StructureAST( r, name, args ) =>
         dbg( s"put structure", r )
         args foreach compileTerm
-        prog += StructureInst( functor(name, args.length) )
+        prog += StructureInst( indicator(name, args.length) )
       case AtomAST( r, name ) =>
         dbg( "put atom", r )
         prog += PushInst( Symbol(name) )
@@ -312,16 +312,16 @@ object Compilation {
           (op match {
             case "-" => NegInst
           })
-      case StructureAST( _, name, args ) if Math exists functor( name, args.length ) =>
-        val f = functor(name, args.length)
+      case StructureAST( _, name, args ) if Math exists indicator( name, args.length ) =>
+        val f = indicator(name, args.length)
 
         args foreach compileExpression
-        prog += NativeInst( Math.function(f), f, NATIVE_MATH )
+        prog += NativeInst( Math.function(f), Vector(), f, NATIVE_MATH )
       case StructureAST( pos, name, args ) => pos.error( s"function $name/${args.length} not found" )
-      case AtomAST( _, name ) if Math exists functor( name, 0 ) =>
-        val f = functor(name, 0)
+      case AtomAST( _, name ) if Math exists indicator( name, 0 ) =>
+        val f = indicator(name, 0)
 
-        prog += NativeInst( Math.function(f), f, NATIVE_MATH )
+        prog += NativeInst( Math.function(f), Vector(), f, NATIVE_MATH )
       case AtomAST( pos, name ) => pos.error( s"constant or system value '$name' not found" )
     }
 
@@ -369,7 +369,7 @@ object Compilation {
         dbg( s"call (compile)", r )
         prog += PushFrameInst
         prog += PushVarInst( vars.num(name) )
-        prog += NativeInst( Runtime.compileCall, Indicator('$compileCall, 0), NATIVE_RUNTIME )
+        prog += NativeInst( Runtime.compileCall, Vector(), Indicator('$compileCall, 0), NATIVE_RUNTIME )
         prog += MarkInst( 2 )
         prog += CallBlockInst
         prog += UnmarkInst
@@ -383,7 +383,7 @@ object Compilation {
         dbg( s"once (compile)", r )
         prog += PushFrameInst
         prog += PushVarInst( vars.num(name) )
-        prog += NativeInst( Runtime.compileCall, Indicator('$compileCall, 0), NATIVE_RUNTIME )
+        prog += NativeInst( Runtime.compileCall, Vector(), Indicator('$compileCall, 0), NATIVE_RUNTIME )
         prog += MarkInst( 2 )
         prog += CallBlockInst
         prog += UnmarkInst
@@ -503,42 +503,42 @@ object Compilation {
         compileExpression( left )
         prog += GeInst
       case StructureAST( r, name, args ) if lookup.defined( name, args.length ) =>
-        val f = functor( name, args.length )
+        val f = indicator( name, args.length )
 
         dbg( s"procedure $f", r )
         prog += PushFrameInst
         args foreach compileTerm
         prog += CallProcedureInst( lookup procedure f )
-      case StructureAST( r, name, args ) if Builtin exists functor( name, args.length ) =>
-        val f = functor( name, args.length )
+      case StructureAST( r, name, args ) if Builtin exists indicator( name, args.length ) =>
+        val f = indicator( name, args.length )
 
         dbg( s"built-in $f", r )
         args foreach compileTerm
-        prog += NativeInst( Builtin.predicate(f), f, NATIVE_PREDICATE )
+        prog += NativeInst( Builtin.predicate(f), args map (_.pos) toVector, f, NATIVE_PREDICATE )
       case StructureAST( pos, name, args ) =>
-        val f = functor( name, args.length )
+        val f = indicator( name, args.length )
 
         dbg( s"call procedure (indirect) $f", pos )
         prog += PushFrameInst
         args foreach compileTerm
         prog += CallIndirectInst( pos, f )
       case AtomAST( r, name ) if lookup.defined( name, 0 ) =>
-        val f = functor( name, 0 )
+        val f = indicator( name, 0 )
 
         dbg( s"built-in $f", r )
         prog += PushFrameInst
         prog += CallProcedureInst( lookup procedure f )
-      case AtomAST( r, name ) if Builtin exists functor( name, 0 ) =>
-        val f = functor( name, 0 )
+      case AtomAST( r, name ) if Builtin exists indicator( name, 0 ) =>
+        val f = indicator( name, 0 )
 
         dbg( s"built-in $f", r )
-        prog += NativeInst( Builtin.predicate(f), f, NATIVE_PREDICATE )
+        prog += NativeInst( Builtin.predicate(f), Vector(), f, NATIVE_PREDICATE )
       case AtomAST( r, name ) =>
-        val f = functor( name, 0 )
+        val f = indicator( name, 0 )
 
         dbg( s"procedure (indirect) $f", r )
         prog += PushFrameInst
-        prog += CallIndirectInst( r, functor(name, 0) )
+        prog += CallIndirectInst( r, indicator(name, 0) )
       case _ => sys.error( s"illegal goal term: $ast" )
     }
 
@@ -718,7 +718,7 @@ object Compilation {
         prog += CallProcedureInst( lookup.procedure(f) )
       case Structure( f, args ) if Builtin exists f =>
         args foreach compileTerm
-        prog += NativeInst( Builtin.predicate(f), f, NATIVE_PREDICATE )
+        prog += NativeInst( Builtin.predicate(f), Vector.fill(args.length)(null), f, NATIVE_PREDICATE )
       case Structure( f, args ) =>
         prog += PushFrameInst
         args foreach compileTerm
@@ -729,7 +729,7 @@ object Compilation {
       case a: Symbol if Builtin exists Indicator( a, 0 ) =>
         val f = Indicator( a, 0 )
 
-        prog += NativeInst( Builtin predicate f, f, NATIVE_PREDICATE )
+        prog += NativeInst( Builtin predicate f, Vector(), f, NATIVE_PREDICATE )
       case a: Symbol =>
         prog += PushFrameInst
         prog += CallIndirectInst( null, Indicator( a, 0 ) )

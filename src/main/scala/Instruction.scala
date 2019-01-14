@@ -29,7 +29,7 @@ case class CallProcedureInst( procedure: Procedure ) extends Instruction { var f
 case class CallIndirectInst( pos: Reader, f: Indicator ) extends Instruction
 case object DropInst extends Instruction
 case class FrameInst( vars: Int ) extends Instruction
-case class NativeInst(pred: VM => Unit, func: Indicator, group: Int ) extends Instruction
+case class NativeInst(pred: (VM, IndexedSeq[Reader]) => Unit, pos: IndexedSeq[Reader], func: Indicator, group: Int ) extends Instruction
 case object PushFrameInst extends Instruction
 case object UnifyInst extends Instruction
 case class JumpInst( b: Block ) extends Instruction

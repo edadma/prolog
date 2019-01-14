@@ -2,6 +2,8 @@ package xyz.hyperreal.prolog
 
 import java.lang.reflect.{Method, Modifier}
 
+import xyz.hyperreal.pattern_matcher.Reader
+
 import scala.collection.mutable
 
 
@@ -19,13 +21,13 @@ object Math {
       val name = m.getName
 
       m.getReturnType match {
-        case NumberClass => functions(functor(name, m.getParameterCount)) = new Function(obj, m)
+        case NumberClass => functions(indicator(name, m.getParameterCount)) = new Function(obj, m)
         case _ =>
       }
     }
 
-  class Function( obj: Any, method: Method ) extends (VM => Unit) {
-    def apply( vm: VM ) =
+  class Function( obj: Any, method: Method ) extends ((VM, IndexedSeq[Reader]) => Unit) {
+    def apply( vm: VM, pos: IndexedSeq[Reader] ) =
       vm.push( method.invoke( obj, (for (_ <- 1 to method.getParameterCount) yield vm.pop).reverse.
         toArray.asInstanceOf[Array[Object]]: _* ).asInstanceOf[Number] )
 

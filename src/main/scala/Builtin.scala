@@ -1,13 +1,15 @@
 package xyz.hyperreal.prolog
 
-import java.lang.reflect.{Method, Modifier}
+import java.lang.reflect.{InvocationTargetException, Method, Modifier}
+
+import xyz.hyperreal.pattern_matcher.Reader
 
 import scala.collection.mutable
 
 
 object Builtin {
 
-  private val predicates = new mutable.HashMap[Indicator, VM => Unit]
+  private val predicates = new mutable.HashMap[Indicator, (VM, IndexedSeq[Reader]) => Unit]
   val segmentRegex = "\\$(?:[a-z]{2,}|u[0-9A-F]{4})"r
 
   def translate( s: String ) =
@@ -33,29 +35,34 @@ object Builtin {
       val name = m.getName
 
       m.getReturnType match {
-        case Void.TYPE => predicates(functor(translate(name), m.getParameterCount - 1)) = new Predicate( obj, m, false )
-        case java.lang.Boolean.TYPE => predicates(functor(translate(name), m.getParameterCount - 1)) = new Predicate( obj, m, true )
+        case Void.TYPE => predicates(indicator(translate(name), m.getParameterCount - 2)) = new Predicate( obj, m, false )
+        case java.lang.Boolean.TYPE => predicates(indicator(translate(name), m.getParameterCount - 2)) = new Predicate( obj, m, true )
         case _ =>
       }
     }
 
-  class Predicate( obj: Any, method: Method, ret: Boolean ) extends (VM => Unit) {
-    def apply( vm: VM ): Unit = {
+  class Predicate( obj: Any, method: Method, ret: Boolean ) extends ((VM, IndexedSeq[Reader]) => Unit) {
+    def apply( vm: VM, pos: IndexedSeq[Reader] ): Unit = {
       val args = new Array[Object]( method.getParameterCount )
 
       args(0) = vm
+      args(1) = pos
 
-      for (i <- method.getParameterCount - 1 to 1 by -1)
+      for (i <- method.getParameterCount to 2 by -1)
         args(i) = vm.pop.asInstanceOf[Object]
 
-      if (ret) {
-        if (!method.invoke( obj, args: _* ).asInstanceOf[Boolean])
-          vm.fail
-      } else
-        method.invoke( obj, args: _* )
+      try {
+        if (ret) {
+          if (!method.invoke( obj, args: _* ).asInstanceOf[Boolean])
+            vm.fail
+        } else
+            method.invoke( obj, args: _* )
+      } catch {
+        case e: InvocationTargetException => throw e.getCause
+      }
     }
 
-    override def toString(): String = s"<predicate ${method.getName}/${method.getParameterCount}>"
+    override def toString = s"<predicate ${method.getName}/${method.getParameterCount}>"
   }
 
   List(

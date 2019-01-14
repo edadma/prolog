@@ -125,7 +125,7 @@ package object prolog {
 
   def cons( head: Any, tail: Any ) = Structure( CONS, Array(head, tail) )
 
-  def functor( name: String, arity: Int ) = Indicator( Symbol(name), arity )
+  def indicator( name: String, arity: Int ) = Indicator( Symbol(name), arity )
 
   def display( a: Any ): String =
     vareval( a ) match {
@@ -192,7 +192,7 @@ package object prolog {
       case DropInst => "drop"
       case PushFrameInst => "pushfr"
       case FrameInst( vars ) => s"frame $vars"
-      case NativeInst( pred, _, _ ) => s"native $pred"
+      case NativeInst( pred, _, _, _ ) => s"native $pred"
       case UnifyInst => "unify"
       case EvalInst( _, _, v ) => s"eval $v"
       case AddInst => "add"

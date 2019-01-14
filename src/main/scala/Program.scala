@@ -158,7 +158,7 @@ class Program extends Growable[Instruction] {
           case FrameInst( vars ) =>
             s writeByte 28
             s writeByte vars
-          case NativeInst( _, func, group ) =>
+          case NativeInst( _, _, func, group ) =>
             s writeByte 29
             s writeByte group
             writeFunctor( func )
@@ -230,7 +230,7 @@ class Program extends Growable[Instruction] {
     if (procs <= 0)
       sys.error( s"load: invalid pcc file: expected positive number of procedures" )
 
-    def readFunctor = functor( s.readUTF, s.readByte )
+    def readFunctor = indicator( s.readUTF, s.readByte )
 
     for (_ <- 1 to procs) {
       val pub = s readBoolean
@@ -322,7 +322,7 @@ class Program extends Growable[Instruction] {
                       }
                   }
 
-                NativeInst( native, func, group )
+                NativeInst( native, Vector.fill(func.arity)(null), func, group )
               case 30 => UnifyInst
               case 31 => EvalInst( null, s.readUTF, s.readUnsignedByte )
               case 32 => AddInst
@@ -396,7 +396,7 @@ class Program extends Growable[Instruction] {
       println
     }
 
-  def defined( name: String, arity: Int ): Boolean = defined( functor(name, arity) )
+  def defined( name: String, arity: Int ): Boolean = defined( indicator(name, arity) )
 
   def defined( f: Indicator ) = procedureMap contains f
 
@@ -408,7 +408,7 @@ class Program extends Growable[Instruction] {
     p.clauses += Clause( ast, head, body, block(s"$f ${p.clauses.length + 1}") )
   }
 
-  def procedure( name: String, arity: Int, pub: Boolean ): Procedure = procedure( functor(name, arity), pub )
+  def procedure( name: String, arity: Int, pub: Boolean ): Procedure = procedure( indicator(name, arity), pub )
 
   def procedure(f: Indicator, pub: Boolean = true ) =
     procedureMap get f match {

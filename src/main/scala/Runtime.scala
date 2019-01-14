@@ -1,9 +1,11 @@
 package xyz.hyperreal.prolog
 
+import xyz.hyperreal.pattern_matcher.Reader
+
 
 object Runtime {
 
-  def compileCall( vm: VM ) =
+  def compileCall( vm: VM, pos: IndexedSeq[Reader] ) =
     vm.pop match {
       case _: vm.Variable => sys.error( "compile: unbound variable" )
       case t =>
