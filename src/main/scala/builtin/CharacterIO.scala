@@ -1,7 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.Reader
-import xyz.hyperreal.prolog.{SinkStream, SourceStream, VM, domainError, permissionError, instantiationError, typeError}
+import xyz.hyperreal.prolog.{SinkStream, SourceStream, TextSourceStream, VM, domainError, instantiationError, permissionError, typeError}
 
 
 object CharacterIO {
@@ -23,7 +23,7 @@ object CharacterIO {
     s match {
       case _: vm.Variable => instantiationError( pos(0), "input stream must be given", 'get_char, 2 )
       case _: SinkStream => permissionError( pos(0), "expected character input stream", 'input, 'stream, s, 'get_char, 2 )
-      case in: SourceStream if in.typ == 'text =>
+      case in: TextSourceStream =>
         in read match {
           case -1 => vm.unify( 'end_of_file, char )
           case c => vm.unify( Symbol(c.toChar.toString), char )
