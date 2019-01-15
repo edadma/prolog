@@ -1,5 +1,5 @@
-fib(C, P,S, C, N)  :- N is P + S.
-fib(C, P,S, Cv, V) :- Cn is C + 1, N is P + S, !, fib(Cn, S,N, Cv, V).
+fib(C, P,S, C, N)  :- !, N is P + S.
+fib(C, P,S, Cv, V) :- Cn is C + 1, N is P + S, fib(Cn, S,N, Cv, V).
 
 fib(0, 0).
 fib(1, 1).
