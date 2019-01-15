@@ -241,6 +241,41 @@ object Compilation {
         prog += UnifyInst
     }
 
+  def compileHead( term: Any )( implicit prog: Program, vars: Vars ): Unit =
+    term match {
+      case AtomAST( r, "[]" ) =>
+        dbg( "get nil", r )
+        prog += NilUnifyInst
+      case AtomAST( r, n ) =>
+        dbg( s"get atom $n", r )
+        prog += PushInst( Symbol(n) )
+        prog += UnifyInst
+      case AnonymousAST( r ) =>
+        dbg( "get anonymous", r )
+        prog += DropInst
+      case VariableAST( r, name ) =>
+        dbg( s"get variable $name", r )
+        prog += VarUnifyInst( vars.num(name) )
+      case StructureAST( r, name, args ) =>
+        dbg( s"get structure $name/${args.length}", r )
+        prog += FunctorInst( Indicator(Symbol(name), args.length) )
+
+        args.zipWithIndex foreach {
+          case (e, i) =>
+            dbg( s"get arg $i", e.pos )
+
+            if (i < args.length - 1)
+              prog += DupInst
+
+            compileTerm( e )
+            prog += ElementUnifyInst( i )
+        }
+      case n: NumericAST =>
+        dbg( s"get number ${n.v}", n.pos )
+        prog += PushInst( n.v )
+        prog += UnifyInst
+    }
+
   def ground( term: TermAST ): Boolean =
     term match {
       case StructureAST( _, _, args ) => args forall ground
