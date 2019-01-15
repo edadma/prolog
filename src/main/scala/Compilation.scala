@@ -129,6 +129,31 @@ object Compilation {
     vars.count
   }
 
+  def compileClause( term: Any )( implicit prog: Program ) = {
+    implicit val vars = new Vars
+
+    term match {
+      case Structure( Indicator(Symbol(":-"), 2), Array(Structure(f, args), body) ) =>
+        prog.patch( (_, _) => FrameInst(vars.count) ) {
+          args.reverse foreach compileHead
+          compileGoal( body, prog ) }
+        prog += ReturnInst
+      case StructureAST( r, ":-", List(AtomAST(pos, n), body) ) =>
+        prog.patch( (_, _) => FrameInst(vars.count) ) {
+          compileGoal( body, prog ) }
+        prog += ReturnInst
+      case StructureAST( r, f, args ) =>
+        prog.patch( (_, _) => FrameInst(vars.count) ) {
+          args.reverse foreach compileHead }
+        prog += ReturnInst
+      case AtomAST( r, name ) =>
+        prog += FrameInst( 0 )
+        prog += ReturnInst
+    }
+
+    vars.count
+  }
+
   def compileHead( term: TermAST )( implicit prog: Program, vars: Vars ): Unit =
     term match {
 //        case TupleStructureAST( _, args ) =>
@@ -142,9 +167,6 @@ object Compilation {
 //              code += TupleElementInst( i )
 //              compileHead( e, pos, namespaces )
 //          }
-//        case NilStructureAST =>
-//          code += TypeCheckInst( term, pos )
-//          code += DropInst
 //        case ListStructureAST( _, l ) =>
 //          code += TypeCheckInst( term, pos )
 //
