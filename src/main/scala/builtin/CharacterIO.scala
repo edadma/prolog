@@ -13,7 +13,7 @@ object CharacterIO {
       case (p: SinkStream, Symbol( c )) if c.length == 1 && p.open =>
         p print c.head
         true
-      case (_: SinkStream, Symbol( c )) if c.length == 1 => typeError( pos(0), "input stream is closed", 'stream, char, 'put_char, 2 )
+      case (_: SinkStream, Symbol( c )) if c.length == 1 => typeError( pos(0), "output stream is closed", 'stream, char, 'put_char, 2 )
       case (_: SourceStream, _) => permissionError( pos(0), "expected output stream", 'output, 'stream, s, 'put_char, 2 )
       case (_: SinkStream, _) => typeError( pos(1), "expected one character atom", 'character, char, 'put_char, 2 )
       case _ => domainError( pos(0), "expected output stream", 'stream_or_alias, s, 'put_char, 2 )
