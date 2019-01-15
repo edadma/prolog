@@ -15,8 +15,8 @@ object Compiler extends App {
 
   def usage( status: Int ) = {
     """
-      |Prolog compiler v0.1
-      |Usage:  java -cp <path/to/prolog-0.1.jar> xyz.hyperreal.prolog.Compiler <options> <source>
+      |Prolog compiler v0.2
+      |Usage:  java -cp <path/to/prolog-0.2.jar> xyz.hyperreal.prolog.Compiler <options> <source>
       |  where
       |    <source> is the path to the source file without .prolog extension
       |    <options> is one of

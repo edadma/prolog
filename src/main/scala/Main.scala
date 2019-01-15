@@ -40,7 +40,7 @@ object Main extends App {
     reader.setHistory( history )
     out.println(
       """
-        |Welcome to the Prolog REPL v0.1
+        |Welcome to the Prolog REPL v0.2
         |Prolog comes with ABSOLUTELY NO WARRANTY. This is free software.
         |Please type “;license” for legal details.
         |

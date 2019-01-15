@@ -21,12 +21,15 @@ object CharacterIO {
 
   def get_char( vm: VM, pos: IndexedSeq[Reader], s: Any, char: Any ) =
     s match {
-      case in: SourceStream =>
+      case _: vm.Variable => instantiationError( pos(0), "input stream must be given", 'get_char, 2 )
+      case _: SinkStream => permissionError( pos(0), "expected character input stream", 'input, 'stream, s, 'get_char, 2 )
+      case in: SourceStream if in.typ == 'text =>
         in read match {
           case -1 => vm.unify( 'end_of_file, char )
           case c => vm.unify( Symbol(c.toChar.toString), char )
         }
-      case _ => sys.error( "get_char: expected character input stream" )
+      case _: SourceStream => permissionError( pos(0), "expected character input stream", 'input, 'binary_stream, s, 'get_char, 2 )
+      case _ => domainError( pos(0), "expected character input stream", 'stream_or_alias, s, 'get_char, 2 )
     }
 
 }

@@ -1,1 +1,1 @@
-java -cp target/scala-2.12/prolog-0.1.jar xyz.hyperreal.prolog.Compiler -p -d src/main/resources/xyz/hyperreal/prolog/library libraries/$1
+java -cp target/scala-2.12/prolog-0.2.jar xyz.hyperreal.prolog.Compiler -p -d src/main/resources/xyz/hyperreal/prolog/library libraries/$1
