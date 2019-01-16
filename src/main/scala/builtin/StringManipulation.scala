@@ -161,7 +161,7 @@ object StringManipulation {
         (before, length, after, sub) match {
           case (b: Int, l: Int, _, _) if 0 <= b && b <= str.length && 0 <= l && l <= str.length && b + l <= str.length =>
             vm.unify( str.length - b - l, after ) && vm.unify( str.substring(b, b + l), sub )
-          case (b: Int, l: Int, _, _) => sys.error( s"sub_string: before or length out of range: before: $b, length: $l, string: ${str.length}" )
+          case (b: Int, l: Int, _, _) => sys.error( s"sub_string: before or length out of range: before: $b, length: $l, string: '$str'" )
           case (_, l: Int, a: Int, _) =>
             vm.unify( str.length - l - a, before ) && vm.unify( str.substring(str.length - l - a, str.length - a), sub )
           case (b: Int, _, _, s: String) =>
