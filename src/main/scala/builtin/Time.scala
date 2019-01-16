@@ -27,10 +27,10 @@ object Time {
       case _ => typeError( pos(0), "expected Scala date time format string", 'string, format, 'timeFormatter, 1 )
     }
 
-  def formatTime( vm: VM, pos: IndexedSeq[Reader], time: Any, format: Any, formatted: Any ) =
-    (time, format) match {
+  def formatTime( vm: VM, pos: IndexedSeq[Reader], time: Any, formatter: Any, formatted: Any ) =
+    (time, formatter) match {
       case (t: TemporalAccessor, f: DateTimeFormatter) => vm.unify( f format t, formatted )
-      case _ => typeError( pos(0), "expected Java time and date time formatter", 'string, format, 'formatTime, 2 )
+      case _ => typeError( pos(0), "expected Java time and date time formatter", 'string, formatter, 'formatTime, 2 )
     }
 
 }

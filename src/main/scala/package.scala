@@ -23,6 +23,8 @@ package object prolog {
   val NATIVE_MATH = 1
   val NATIVE_RUNTIME = 2
 
+  case class Operator( priority: Int, specifier: Symbol, operator: Symbol )
+
   case object EMPTY { override def toString = "[empty]" }
 
   case class Indicator( name: Symbol, arity: Int ) { override def toString = s"${name.name}/$arity" }
