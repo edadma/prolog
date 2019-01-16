@@ -26,6 +26,8 @@ object Parser extends Matchers[Reader] {
     ".", "[", "|", "]", "(", ")", "!"
   )
 
+  override val lineComment = '%'
+
   def unary( pos: Reader, o: String, x: TermAST ) =
     (o, x) match {
       case ("-", IntegerAST( r, v )) => IntegerAST( r, -v )
