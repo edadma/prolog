@@ -191,7 +191,7 @@ object SystemInput extends BinarySourceStream( System.in ) {
 
   val file_name = None
 
-  val alias = None
+  val alias = Some( 'stdin )
 
   override def close = sys.error( "attempt to close standard input" )
 

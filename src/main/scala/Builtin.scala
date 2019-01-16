@@ -66,18 +66,19 @@ object Builtin {
   }
 
   List(
-//    builtin.AtomManipulation,
+    builtin.AtomManipulation,
     builtin.CharacterIO,
-//    builtin.TermIO,
-//    builtin.TypeTesting,
-//    builtin.TermManipulation,
-//    builtin.Control,
-    builtin.Streams
-//    builtin.StringManipulation,
-//    builtin.AllSolutions,
-//    builtin.ClauseRetrieval,
-//    builtin.BinaryIO,
-//    builtin.ImplementationDefined
+    builtin.TermIO,
+    builtin.TypeTesting,
+    builtin.TermManipulation,
+    builtin.Control,
+    builtin.Streams,
+    builtin.StringManipulation,
+    builtin.AllSolutions,
+    builtin.ClauseRetrieval,
+    builtin.BinaryIO,
+    builtin.ImplementationDefined,
+    builtin.Time
   ) foreach load
 
 }

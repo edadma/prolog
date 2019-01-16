@@ -3,7 +3,8 @@ package xyz.hyperreal.prolog.builtin
 import java.io.{BufferedReader, FileReader, FileWriter, PrintWriter}
 
 import xyz.hyperreal.pattern_matcher.Reader
-import xyz.hyperreal.prolog.{ConsoleInput, ConsoleOutput, DataStream, SinkStream, SourceStream, TextSinkStream, TextSourceStream, VM, list2array}
+import xyz.hyperreal.prolog.{ConsoleInput, ConsoleOutput, SystemInput,
+  DataStream, SinkStream, SourceStream, TextSinkStream, TextSourceStream, VM, list2array}
 
 import scala.collection.mutable
 
@@ -12,7 +13,12 @@ object Streams {
 
   var input: SourceStream = ConsoleInput
   var output: SinkStream = ConsoleOutput
-  val aliases = new mutable.HashMap[Symbol, DataStream]
+  val aliases =
+    mutable.HashMap[Symbol, DataStream] (
+      'user_input -> ConsoleInput,
+      'stdin -> SystemInput,
+      'user_output -> ConsoleOutput
+    )
 
   def apply( s: Any ) =
     s match {
