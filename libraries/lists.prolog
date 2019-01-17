@@ -28,6 +28,13 @@ select( X, [X | Xs], Xs ).
 select( X, [Y | Ys], [Y | Zs] ) :-
     select( X, Ys, Zs ).
 
+length( Xs, L ) :- length( Xs, 0, L ) .
+
+length( [], L, L ).
+length( [_ | Xs], T, L ) :-
+  T1 is T + 1,
+  length( Xs, T1, L ).
+
 permutation( [], [] ).
 permutation( List, [First | Perm] ) :-
     select( First, List, Rest ),
