@@ -3,21 +3,21 @@ package xyz.hyperreal.prolog.builtin
 import java.io.{BufferedReader, FileReader, FileWriter, PrintWriter}
 
 import xyz.hyperreal.pattern_matcher.Reader
-import xyz.hyperreal.prolog.{ConsoleInput, ConsoleOutput, SystemInput,
-  DataStream, SinkStream, SourceStream, TextSinkStream, TextSourceStream, VM, list2array}
+import xyz.hyperreal.prolog.{DataStream, SinkStream, SourceStream, SystemInput, SystemOutput, TextSinkStream, TextSourceStream, UserInput, UserOutput, VM, list2array}
 
 import scala.collection.mutable
 
 
 object Streams {
 
-  var input: SourceStream = ConsoleInput
-  var output: SinkStream = ConsoleOutput
+  var input: SourceStream = UserInput
+  var output: SinkStream = UserOutput
   val aliases =
     mutable.HashMap[Symbol, DataStream] (
-      'user_input -> ConsoleInput,
+      'user_input -> UserInput,
+      'user_output -> UserOutput,
       'stdin -> SystemInput,
-      'user_output -> ConsoleOutput
+      'stdout -> SystemOutput
     )
 
   def apply( s: Any ) =
@@ -36,25 +36,19 @@ object Streams {
   def current_output( vm: VM, pos: IndexedSeq[Reader], stream: Any ) = vm.unify( stream, output )
 
   def set_input( vm: VM, pos: IndexedSeq[Reader], stream: Any ) =
-    stream match {
-      case _: vm.Variable => sys.error( "set_input: stream is a variable" )
+    Streams( stream ) match {
+      case _: vm.Variable => sys.error( "set_input: input stream must be given" )
       case s: SourceStream =>
         input = s
-        true
-      case a: Symbol if aliases.contains( a ) && aliases(a).input =>
-        input = aliases(a).asInstanceOf[SourceStream]
         true
       case _ => sys.error( "set_input: stream is not a source stream" )
     }
 
   def set_output( vm: VM, pos: IndexedSeq[Reader], stream: Any ) =
-    stream match {
-      case _: vm.Variable => sys.error( "set_output: stream is a variable" )
+    Streams( stream ) match {
+      case _: vm.Variable => sys.error( "set_output: output stream must be given" )
       case s: SinkStream =>
         output = s
-        true
-      case a: Symbol if aliases.contains( a ) && aliases(a).output =>
-        output = aliases(a).asInstanceOf[SinkStream]
         true
       case _ => sys.error( "set_output: stream is not a sink stream" )
     }

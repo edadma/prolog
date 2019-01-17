@@ -1,6 +1,6 @@
 package xyz.hyperreal.prolog
 
-import java.io.{BufferedReader, InputStream, PrintStream, PrintWriter}
+import java.io._
 
 
 abstract class DataStream {
@@ -161,7 +161,7 @@ abstract class BinarySinkStream( val out: PrintStream, val append: Boolean ) ext
 
 }
 
-object ConsoleInput extends TextSourceStream( Console.in ) {
+object UserInput extends TextSourceStream( new BufferedReader(new InputStreamReader(System.in, io.Codec.UTF8.charSet)) ) {
 
   val file_name = None
 
@@ -173,11 +173,25 @@ object ConsoleInput extends TextSourceStream( Console.in ) {
 
 }
 
-object ConsoleOutput extends BinarySinkStream( Console.out, false ) {
+object UserOutput extends TextSinkStream( new PrintWriter(System.out, true, io.Codec.UTF8.charSet), false ) {
 
   val file_name = None
 
   val alias = Some( 'user_output )
+
+  override def flush {}
+
+  override def close = sys.error( "attempt to close standard output" )
+
+  override def toString: String = "[stream console output]"
+
+}
+
+object SystemOutput extends BinarySinkStream( System.out, false ) {
+
+  val file_name = None
+
+  val alias = Some( 'stdout )
 
   override def flush {}
 
