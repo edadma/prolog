@@ -1,7 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.Reader
-import xyz.hyperreal.prolog.{Structure, VM, vareval}
+import xyz.hyperreal.prolog.{DataStream, Structure, VM, vareval}
 
 
 object TypeTesting {
@@ -28,5 +28,7 @@ object TypeTesting {
       })
 
   def string( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[String]
+
+  def is_stream( vm: VM, pos: IndexedSeq[Reader], a: Any ) = a.isInstanceOf[DataStream]
 
 }
