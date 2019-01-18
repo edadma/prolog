@@ -39,7 +39,7 @@ object Flags {
       case (_: vm.Variable, _) => instantiationError( pos(0), "key must be given", 'flag, 3 )
       case (_, _: vm.Variable) => instantiationError( pos(2), "value must be given", 'flag, 3 )
       case (k: Symbol, v: Any) if v.isInstanceOf[Number] || v.isInstanceOf[Symbol] =>
-        if (vm.unify( flags(k), old )) {
+        if (vm.unify( flags.getOrElse(k, 0), old )) {
           flags(k) = v
           true
         } else
