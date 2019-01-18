@@ -1,6 +1,7 @@
 package xyz.hyperreal.prolog
 
 import java.io._
+import java.nio.file.{Files, Paths}
 
 import scala.collection.generic.Growable
 import scala.collection.mutable
@@ -188,36 +189,35 @@ class Program extends Growable[Instruction] {
     out.close
   }
 
-  def loadPredef = loadAsResource( "$predef" )
+  def loadPredef = loadResource( "$predef" )
 
-  def loadAsResource( name: String ) = {
-    val res = getClass.getResourceAsStream( name + ".pcc" )
+  def loadResource( resource: String ) = {
+    val res = getClass.getResourceAsStream( resource + ".pcc" )
 
     if (res eq null)
-      sys.error( s"code resource not found: $name" )
-
-    val loaded = new ArrayBuffer[Indicator]
-
-    load( new DataInputStream(res), loaded )
-    loaded.sorted.toList
-  }
-
-  def load( s: String ): List[Indicator] =
-    if (loadSet(s))
-      Nil
+      null
     else {
-      val f = new RandomAccessFile( s, "r" )
-
-      if (f.length < 7 + 4)
-        sys.error( "load: invalid pcc file: too short" )
-
       val loaded = new ArrayBuffer[Indicator]
 
-      load( f, loaded )
+      load( new DataInputStream(res), loaded )
       loaded.sorted.toList
     }
+  }
 
-  def load( s: DataInput, loaded: ArrayBuffer[Indicator] ) = {
+  def loadFile( file: String ): List[Indicator] =
+    if (loadSet(file))
+      Nil
+    else {
+      if (Files.exists( Paths.get(file) )) {
+        val f = new DataInputStream( new FileInputStream(file) )
+        val loaded = new ArrayBuffer[Indicator]
+
+        load( f, loaded )
+        loaded.sorted.toList
+      }
+    }
+
+  def load( s: DataInputStream, loaded: ArrayBuffer[Indicator] ) = {
     val magic = new Array[Byte]( 7 )
 
     s readFully magic
@@ -339,6 +339,8 @@ class Program extends Growable[Instruction] {
               case 43 => JumpInst( block(s.readUTF) )
             })
     }
+
+    s.close
   }
 
   def block( name: String ) = {

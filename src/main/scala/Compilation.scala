@@ -27,9 +27,9 @@ object Compilation {
     ast match {
       case SourceAST( clauses ) => clauses foreach (phase1( _, prog ))
       case ClauseAST( StructureAST(r, ":-", List(StructureAST(r1, "import", List(AtomAST(_, name))))) ) =>
-        prog.loadAsResource( name )
+        prog.loadResource( name )
       case ClauseAST( StructureAST(r, ":-", List(StructureAST(r1, "import", List(StringAST(_, name))))) ) =>
-        prog.loadAsResource( name )
+        prog.loadResource( name )
       case ClauseAST( clause@StructureAST(r, ":-", List(head@StructureAST(h, name, args), body)) ) =>
         val f = indicator( name, args.length )
 

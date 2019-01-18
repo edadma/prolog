@@ -79,7 +79,8 @@ object Builtin {
     builtin.BinaryIO,
     builtin.ImplementationDefined,
     builtin.Time,
-    builtin.Flags
+    builtin.Flags,
+    builtin.Misc
   ) foreach load
 
 }
