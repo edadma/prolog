@@ -273,6 +273,11 @@ class VM( val prog: Program ) {
   def eval( term: Any ): Number =
     term match {
       case n: Number => n
+      case v: Variable =>
+        vareval(v) match {
+          case Variable => sys.error( "unbound variable in arithmetic expression" )
+          case x => eval( x )
+        }
       case Structure( Indicator(Symbol(operator@("+" | "-" | "*" | "/" | "mod")), _), Array(left, right) ) =>
         val l = eval( left )
         val r = eval( right )

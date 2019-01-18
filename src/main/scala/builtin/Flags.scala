@@ -1,7 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.Reader
-import xyz.hyperreal.prolog.{instantiationError, typeError, VM}
+import xyz.hyperreal.prolog.{Structure, VM, instantiationError, typeError}
 
 import scala.collection.mutable
 
@@ -38,6 +38,12 @@ object Flags {
     (key, value) match {
       case (_: vm.Variable, _) => instantiationError( pos(0), "key must be given", 'flag, 3 )
       case (_, _: vm.Variable) => instantiationError( pos(2), "value must be given", 'flag, 3 )
+      case (k: Symbol, s: Structure) =>
+        if (vm.unify( flags.getOrElse(k, 0), old )) {
+          flags(k) = vm.eval(s)
+          true
+        } else
+          false
       case (k: Symbol, v: Any) if v.isInstanceOf[Number] || v.isInstanceOf[Symbol] =>
         if (vm.unify( flags.getOrElse(k, 0), old )) {
           flags(k) = v

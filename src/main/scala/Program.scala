@@ -191,6 +191,16 @@ class Program extends Growable[Instruction] {
 
   def loadPredef = loadResource( "$predef" )
 
+  def load( name: String ) =
+    loadResource( name ) match {
+      case null =>
+        loadFile( name ) match {
+          case null => sys.error( s"resource or file not found: $name" )
+          case ps => ps
+        }
+      case ps => ps
+    }
+
   def loadResource( resource: String ) = {
     val res = getClass.getResourceAsStream( resource + ".pcc" )
 
@@ -199,7 +209,7 @@ class Program extends Growable[Instruction] {
     else {
       val loaded = new ArrayBuffer[Indicator]
 
-      load( new DataInputStream(res), loaded )
+      loadData( new DataInputStream(res), loaded )
       loaded.sorted.toList
     }
   }
@@ -208,16 +218,19 @@ class Program extends Growable[Instruction] {
     if (loadSet(file))
       Nil
     else {
-      if (Files.exists( Paths.get(file) )) {
-        val f = new DataInputStream( new FileInputStream(file) )
+      val pcc = file + ".pcc"
+
+      if (Files.exists( Paths.get(pcc) )) {
+        val f = new DataInputStream( new FileInputStream(pcc) )
         val loaded = new ArrayBuffer[Indicator]
 
-        load( f, loaded )
+        loadData( f, loaded )
         loaded.sorted.toList
-      }
+      } else
+        null
     }
 
-  def load( s: DataInputStream, loaded: ArrayBuffer[Indicator] ) = {
+  def loadData( s: DataInputStream, loaded: ArrayBuffer[Indicator] ) = {
     val magic = new Array[Byte]( 7 )
 
     s readFully magic

@@ -69,7 +69,7 @@ object Main extends App {
               case List("compile"|"c", module) =>
                 program.save( module + ".pcc" )
               case List("import"|"i", module) =>
-                out.println( program.loadResource(module) mkString "\n" )
+                out.println( program.load(module) mkString "\n" )
               case List("license") =>
                 out.println(
                   """

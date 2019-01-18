@@ -131,7 +131,10 @@ abstract class TextSinkStream( val out: PrintWriter, val append: Boolean ) exten
 
   def write( b: Int ) = out.write( b )
 
-  def print( a: Any ) = out.print( a )
+  def print( a: Any ) = {
+    out.print( a )
+    out.flush
+  }
 
   def println( a: Any ) = out.println( a )
 
@@ -155,7 +158,10 @@ abstract class BinarySinkStream( val out: PrintStream, val append: Boolean ) ext
 
   def write( b: Int ) = out.write( b )
 
-  def print( a: Any ) = out.print( a )
+  def print( a: Any ) = {
+    out.print( a )
+    out.flush
+  }
 
   def println( a: Any ) = out.println( a )
 
