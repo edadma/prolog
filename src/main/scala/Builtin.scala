@@ -78,7 +78,8 @@ object Builtin {
     builtin.ClauseRetrieval,
     builtin.BinaryIO,
     builtin.ImplementationDefined,
-    builtin.Time
+    builtin.Time,
+    builtin.Flags
   ) foreach load
 
 }
