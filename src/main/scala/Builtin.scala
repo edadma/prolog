@@ -77,6 +77,7 @@ object Builtin {
     builtin.AllSolutions,
     builtin.ClauseRetrieval,
     builtin.BinaryIO,
+    builtin.OpTable,
     builtin.ImplementationDefined,
     builtin.Time,
     builtin.Flags,
