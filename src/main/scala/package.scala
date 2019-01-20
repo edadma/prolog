@@ -203,10 +203,16 @@ package object prolog {
             operator.name + operand( args(0), priority )
           case Operator( priority, 'fy, operator ) =>
             operator.name + operand( args(0), priority + 1 )
-          case Operator( priority, 'xf|'yf, operator ) =>
-            display( args(0) ) + operator.name
-          case Operator( priority, 'xfx|'xfy|'yfx, operator ) =>
-            display( args(0) ) + operator.name + display( args(1) )
+          case Operator( priority, 'xf, operator ) =>
+            operand( args(0), priority ) + operator.name
+          case Operator( priority, 'yf, operator ) =>
+            operand( args(0), priority + 1 ) + operator.name
+          case Operator( priority, 'xfx, operator ) =>
+            operand( args(0), priority ) + operator.name + operand( args(1), priority )
+          case Operator( priority, 'xfy, operator ) =>
+            operand( args(0), priority ) + operator.name + operand( args(1), priority + 1 )
+          case Operator( priority, 'yfx, operator ) =>
+            operand( args(0), priority + 1 ) + operator.name + operand( args(1), priority )
         }
       case Structure( Indicator(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
       case s: String => '"' + string( s ) + '"'
