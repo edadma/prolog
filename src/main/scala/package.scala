@@ -151,9 +151,30 @@ package object prolog {
 
   def indicator( name: String, arity: Int ) = Indicator( Symbol(name), arity )
 
-  def display( a: Any ): String =
+  val atomRegex = "([a-zA-Z][a-zA-Z0-9_]*)"r
+
+  def display( a: Any ): String = {
+    def string( s: String ) = {
+      s.
+        replace( "\\", "\\\\" ).
+        replace( "\t", "\\t" ).
+        replace( "\n", "\\n" ).
+        replace( "\r", "\\r" )
+    }
+
+    def operand( a: Any, priority: Int ) =
+      a match {
+        case Structure( Indicator(name, arity), args ) =>
+          Operators get (name, arity) match {
+            case Some( Operator(priority1, _, _) ) if priority1 > priority => '(' + display( a ) + ')'
+            case _ => display( a )
+          }
+        case _ => display( a )
+      }
+
     vareval( a ) match {
-      case Symbol( s ) => s
+      case Symbol( atomRegex(s) ) => s
+      case Symbol( s ) => "'" + string(s) + "'"
       case Structure( CONS, Array(_, _) ) =>
         def elems( term: Any, buf: StringBuilder = new StringBuilder ): String =
           term match {
@@ -176,9 +197,22 @@ package object prolog {
           }
 
         s"[${elems( a )}]"
+      case Structure( Indicator(name: Symbol, arity), args ) if Operators.defined( name, arity ) =>
+        Operators( name, arity ) match {
+          case Operator( priority, 'fx, operator ) =>
+            operator.name + operand( args(0), priority )
+          case Operator( priority, 'fy, operator ) =>
+            operator.name + operand( args(0), priority + 1 )
+          case Operator( priority, 'xf|'yf, operator ) =>
+            display( args(0) ) + operator.name
+          case Operator( priority, 'xfx|'xfy|'yfx, operator ) =>
+            display( args(0) ) + operator.name + display( args(1) )
+        }
       case Structure( Indicator(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
+      case s: String => '"' + string( s ) + '"'
       case v => v.toString
     }
+  }
 
   def instruction( inst: Instruction ) =
     inst match {

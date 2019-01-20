@@ -3,7 +3,7 @@ package xyz.hyperreal.prolog
 import scala.collection.mutable
 
 
-class Operators {
+object Operators {
 
   val optable = new mutable.HashSet[Operator]
   val opmap = new mutable.HashMap[(Symbol, Int), Operator]
@@ -55,9 +55,15 @@ class Operators {
 
   def operator( o: Symbol ) = all filter (_.operator == o)
 
-  def defined( op: Symbol, specifier: Symbol ) = opmap contains (op, specifier.name.length - 1)
+  def defined( op: Symbol, arity: Int ) = opmap contains (op, arity)
 
-  def lookup( op: Symbol, specifier: Symbol ) = opmap get (op, specifier.name.length - 1)
+  def defined( op: Symbol, specifier: Symbol ): Boolean = defined( op, specifier.name.length - 1 )
+
+  def apply( op: Symbol, arity: Int ) = opmap(op, arity)
+
+  def get( op: Symbol, arity: Int ) = opmap get (op, arity)
+
+  def get( op: Symbol, specifier: Symbol ): Option[Operator] = get( op, specifier.name.length - 1 )
 
   def add( priority: Int, specifier: Symbol, operator: Symbol ): Unit = {
     if (defined( operator, specifier ))
