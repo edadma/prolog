@@ -24,14 +24,14 @@ writeq( Term ) :-
   current_output( S ),
   write_term( S, Term, [quoted(true), numbervars(true)] ).
 
-writeq( S,Term ) :-
+writeq( S, Term ) :-
   write_term( S, Term, [quoted(true), numbervars(true)] ).
 
-write_canonical( T ) :-
+write_canonical( Term ) :-
   current_output( S ),
   write_term( S, Term, [quoted(true), ignore_ops(true)] ).
 
-write_canonical( S,T ) :-
+write_canonical( S, Term ) :-
   write_term( S, Term, [quoted(true), ignore_ops(true)] ).
 
 read_term( Term, Options ) :-

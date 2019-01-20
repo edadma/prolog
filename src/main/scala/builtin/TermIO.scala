@@ -1,7 +1,9 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.{Reader, StringReader}
-import xyz.hyperreal.prolog.{UserInput, Parser, SinkStream, TextSourceStream, VM, display}
+import xyz.hyperreal.prolog.{Indicator, Parser, SinkStream, Structure, TextSourceStream, UserInput, VM, display, list2array}
+
+import scala.collection.mutable
 
 
 object TermIO {
@@ -15,7 +17,21 @@ object TermIO {
         term match {
           case _: vm.Variable => sys.error( "write_term: term is a variable" )
           case data =>
-            out.print( display(data) )
+            val optionSet = mutable.HashSet[Symbol]()
+
+            list2array( options ) match {
+              case None => sys.error( "write_term: expected options list" )
+              case Some( a ) =>
+                for (o: Any <- a.toSet)
+                  o match {
+                    case Structure( Indicator(option@('ignore_ops|'numbervars|'quoted), 1), Array(set@('true|'false)) ) =>
+                      if (set == 'true)
+                        optionSet += option
+                    case option => sys.error( s"write_term: unrecognized option: $option" )
+                  }
+            }
+
+            out.print( display(data, optionSet.toSet) )
             true
         }
     }

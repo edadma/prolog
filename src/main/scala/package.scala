@@ -153,7 +153,7 @@ package object prolog {
 
   val atomRegex = "([a-zA-Z][a-zA-Z0-9_]*)"r
 
-  def display( a: Any ): String = {
+  def display( a: Any, flags: Set[Symbol] = Set() ): String = {
     def string( s: String ) = {
       s.
         replace( "\\", "\\\\" ).
@@ -166,10 +166,10 @@ package object prolog {
       a match {
         case Structure( Indicator(name, arity), args ) =>
           Operators get (name, arity) match {
-            case Some( Operator(priority1, _, _) ) if priority1 > priority => '(' + display( a ) + ')'
-            case _ => display( a )
+            case Some( Operator(priority1, _, _) ) if priority1 > priority => '(' + display( a, flags ) + ')'
+            case _ => display( a, flags )
           }
-        case _ => display( a )
+        case _ => display( a, flags )
       }
 
     vareval( a ) match {
@@ -180,7 +180,7 @@ package object prolog {
           term match {
             case NIL => buf.toString
             case Structure( CONS, Array(hd, tl) ) =>
-              buf ++= display( hd )
+              buf ++= display( hd, flags )
 
               val tl1 = vareval( tl )
 
@@ -192,12 +192,12 @@ package object prolog {
 
               elems( tl1, buf )
             case e =>
-              buf ++= display( e )
+              buf ++= display( e, flags )
               buf.toString
           }
 
         s"[${elems( a )}]"
-      case Structure( Indicator(name: Symbol, arity), args ) if Operators.defined( name, arity ) =>
+      case Structure( Indicator(name: Symbol, arity), args ) if (!flags.contains('ignore_ops)) && Operators.defined( name, arity ) =>
         Operators( name, arity ) match {
           case Operator( priority, 'fx, operator ) =>
             operator.name + operand( args(0), priority )
@@ -214,7 +214,7 @@ package object prolog {
           case Operator( priority, 'yfx, operator ) =>
             operand( args(0), priority + 1 ) + operator.name + operand( args(1), priority )
         }
-      case Structure( Indicator(Symbol(name), _), args ) => s"$name(${args.map(display).mkString(",")})"
+      case Structure( Indicator(Symbol(name), _), args ) => s"$name(${args.map(display(_, flags)).mkString(",")})"
       case s: String => '"' + string( s ) + '"'
       case v => v.toString
     }
