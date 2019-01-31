@@ -3,7 +3,7 @@ package xyz.hyperreal.prolog
 import xyz.hyperreal.pattern_matcher._
 
 
-object Parser extends Matchers[Reader] {
+object OldParser extends Matchers[Reader] {
 
   reserved += ("is", "rem", "mod")
   delimiters += (

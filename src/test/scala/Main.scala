@@ -41,8 +41,8 @@ object Main extends App {
 //
 //  val start = System.currentTimeMillis
 
-  Parser.source( new StringReader(code) ) match {
-    case Parser.Match( ast, _ ) =>
+  OldParser.source( new StringReader(code) ) match {
+    case OldParser.Match( ast, _ ) =>
       //println( ast )
       //println( (System.currentTimeMillis - start) )
       Compilation.compile( ast, prog )
@@ -60,8 +60,8 @@ object Main extends App {
 //          load( "test.pcc" )
 //        }
 
-      Parser.query( new StringReader(query) ) match {
-        case Parser.Match( ast, _ ) =>
+      OldParser.query( new StringReader(query) ) match {
+        case OldParser.Match( ast, _ ) =>
           implicit val query = new Program
           implicit val vars = new Vars
           val block = query.block( "query" )
@@ -71,9 +71,9 @@ object Main extends App {
           //block.print
           //println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
           println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
-        case m: Parser.Mismatch => m.error
+        case m: OldParser.Mismatch => m.error
       }
-    case m: Parser.Mismatch => m.error
+    case m: OldParser.Mismatch => m.error
   }
 
 }

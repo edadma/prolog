@@ -1,7 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.{Reader, StringReader}
-import xyz.hyperreal.prolog.{Indicator, Parser, SinkStream, Structure, TextSourceStream, UserInput, VM, display, list2array}
+import xyz.hyperreal.prolog.{Indicator, OldParser, SinkStream, Structure, TextSourceStream, UserInput, VM, display, list2array}
 
 import scala.collection.mutable
 
@@ -42,9 +42,9 @@ object TermIO {
       case in: TextSourceStream =>
         val line = if (in == UserInput && repl != null) Console.withIn( repl ){ io.StdIn.readLine } else in.readLine
 
-        Parser.term( new StringReader(line) ) match {
-          case Parser.Match( ast, _ ) => vm.unify( vm.data(ast), term )
-          case m: Parser.Mismatch => m.error
+        OldParser.term( new StringReader(line) ) match {
+          case OldParser.Match( ast, _ ) => vm.unify( vm.data(ast), term )
+          case m: OldParser.Mismatch => m.error
         }
     }
 

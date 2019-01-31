@@ -55,8 +55,8 @@ object Compiler extends App {
     else
       Paths get dest
 
-  Parser.source( Reader.fromFile(path.getParent resolve (path.getFileName + ".prolog") toString) ) match {
-    case Parser.Match( ast, _ ) =>
+  OldParser.source( Reader.fromFile(path.getParent resolve (path.getFileName + ".prolog") toString) ) match {
+    case OldParser.Match( ast, _ ) =>
       val prog = new Program
 
       if (predef)
@@ -64,7 +64,7 @@ object Compiler extends App {
 
       Compilation.compile( ast, prog )
       prog.save( dir resolve (path.getFileName + ".pcc") toString )
-    case m: Parser.Mismatch => m.error
+    case m: OldParser.Mismatch => m.error
   }
 
 }
