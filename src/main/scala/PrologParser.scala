@@ -3,6 +3,8 @@ package xyz.hyperreal.prolog
 import xyz.hyperreal.pattern_matcher.Reader
 import xyz.hyperreal.recursive_descent_parser._
 
+import scala.collection.mutable.ListBuffer
+
 
 object PrologParser {
 
@@ -48,54 +50,75 @@ object PrologParser {
         Rule.symbol("]")),
       Sequence[(Reader, String), (Reader, String), AtomAST]( Rule.symbol("["), Rule.symbol("]"), (a, _) => AtomAST(a._1, "[]") )
     ) )
-  val (rules, ops) = Builder[TermAST]( primary,
-    List(
-      Op(1200, 'xfx, ":-"),
-      Op(1200, 'xfx, "-->"),
-      Op(1200, 'fx, ":-"),
-      Op(1200, 'fx, "?-"),
-      Op(1100, 'xfy, ";"),
-      Op(1050, 'xfy, "->"),
-      Op(1000, 'xfy, ","),
-      Op(900, 'fy, "\\+"),
-      Op(700, 'xfx, "="),
-      Op(700, 'xfx, "\\="),
-      Op( 700, 'xfx, "==" ),
-      Op( 700, 'xfx, "\\==" ),
-      Op( 700, 'xfx, "@<" ),
-      Op( 700, 'xfx, "@=<" ),
-      Op( 700, 'xfx, "@>" ),
-      Op( 700, 'xfx, "@>=" ),
-      Op( 700, 'xfx, "=.." ),
-      Op( 700, 'xfx, "is" ),
-      Op( 700, 'xfx, "=:=" ),
-      Op( 700, 'xfx, "=\\=" ),
-      Op( 700, 'xfx, "<" ),
-      Op( 700, 'xfx, "=<" ),
-      Op( 700, 'xfx, ">" ),
-      Op( 700, 'xfx, ">=" ),
-      Op(500, 'yfx, "+"),
-      Op(500, 'yfx, "-"),
-      Op(500, 'yfx, "/\\"),
-      Op(500, 'yfx, "\\/"),
-      Op(400, 'yfx, "*"),
-      Op(400, 'yfx, "/"),
-      Op(400, 'yfx, "//"),
-      Op(400, 'yfx, "rem"),
-      Op(400, 'yfx, "mod"),
-      Op(400, 'yfx, "<<"),
-      Op(400, 'yfx, ">>"),
-      Op(200, 'xfx, "**"),
-      Op(200, 'xfy, "^"),
-      Op(200, 'fy, "-"),
-      Op(200, 'fy, "\\")), (r, s, x) => StructureAST( r, s, List(x) ), (x, r, s, y) => StructureAST( r, s, List(x, y) ) )
+  var parser: Parser[TermAST] = _
+  var expression: Rule[TermAST] = _
 
-  rule1200.ref = rules(1200)
-  rule900.ref = rules(900)
+  def build: Unit = {
+    val (rules, ops) = Builder[TermAST]( primary,
+      List(
+        Op(1200, 'xfx, ":-"),
+        Op(1200, 'xfx, "-->"),
+        Op(1200, 'fx, ":-"),
+        Op(1200, 'fx, "?-"),
+        Op(1100, 'xfy, ";"),
+        Op(1050, 'xfy, "->"),
+        Op(1000, 'xfy, ","),
+        Op(900, 'fy, "\\+"),
+        Op(700, 'xfx, "="),
+        Op(700, 'xfx, "\\="),
+        Op( 700, 'xfx, "==" ),
+        Op( 700, 'xfx, "\\==" ),
+        Op( 700, 'xfx, "@<" ),
+        Op( 700, 'xfx, "@=<" ),
+        Op( 700, 'xfx, "@>" ),
+        Op( 700, 'xfx, "@>=" ),
+        Op( 700, 'xfx, "=.." ),
+        Op( 700, 'xfx, "is" ),
+        Op( 700, 'xfx, "=:=" ),
+        Op( 700, 'xfx, "=\\=" ),
+        Op( 700, 'xfx, "<" ),
+        Op( 700, 'xfx, "=<" ),
+        Op( 700, 'xfx, ">" ),
+        Op( 700, 'xfx, ">=" ),
+        Op(500, 'yfx, "+"),
+        Op(500, 'yfx, "-"),
+        Op(500, 'yfx, "/\\"),
+        Op(500, 'yfx, "\\/"),
+        Op(400, 'yfx, "*"),
+        Op(400, 'yfx, "/"),
+        Op(400, 'yfx, "//"),
+        Op(400, 'yfx, "rem"),
+        Op(400, 'yfx, "mod"),
+        Op(400, 'yfx, "<<"),
+        Op(400, 'yfx, ">>"),
+        Op(200, 'xfx, "**"),
+        Op(200, 'xfy, "^"),
+        Op(200, 'fy, "-"),
+        Op(200, 'fy, "\\")), (r, s, x) => StructureAST( r, s, List(x) ), (x, r, s, y) => StructureAST( r, s, List(x, y) ) )
 
-  val parser = new Parser( rules(1200), ops ++ List("(", ")", ".", "[", "]", "|", "!") )
+    rule1200.ref = rules(1200)
+    rule900.ref = rules(900)
+    parser = new Parser( rules(1200), ops ++ List("(", ")", ".", "[", "]", "|", "!") )
+    expression = rules(1200)
+  }
 
-  def expression = rules(1200)
+  def parseSource( r: Reader ) = {
+    val clauses = new ListBuffer[ClauseAST]
 
+    def clause( t: Stream[Token] ): Unit =
+      if (!t.head.isInstanceOf[EOIToken])
+        expression( t ) match {
+          case Success( rest, result ) =>
+            clauses += ClauseAST( result )
+
+            if (rest.head.value == ".")
+              clause( rest.tail )
+            else
+              sys.error( s"expected '.': ${rest.head}" )
+        }
+
+    clause( parser.tokenStream(r) )
+    SourceAST( clauses.toList )
+  }
 
 }

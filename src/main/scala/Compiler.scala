@@ -55,8 +55,8 @@ object Compiler extends App {
     else
       Paths get dest
 
-  OldParser.source( Reader.fromFile(path.getParent resolve (path.getFileName + ".prolog") toString) ) match {
-    case OldParser.Match( ast, _ ) =>
+  PrologParser.parseSource( Reader.fromFile(path.getParent resolve (path.getFileName + ".prolog") toString) ) match {
+    case PrologParser.Success( ast, _ ) =>
       val prog = new Program
 
       if (predef)

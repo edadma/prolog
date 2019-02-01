@@ -1,7 +1,7 @@
 package xyz.hyperreal.prolog.builtin
 
 import xyz.hyperreal.pattern_matcher.{Reader, StringReader}
-import xyz.hyperreal.prolog.{Indicator, OldParser, SinkStream, Structure, TextSourceStream, UserInput, VM, display, list2array}
+import xyz.hyperreal.prolog.{Indicator, PrologParser, SinkStream, Structure, TextSourceStream, UserInput, VM, display, list2array}
 
 import scala.collection.mutable
 
