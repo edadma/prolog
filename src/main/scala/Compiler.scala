@@ -3,8 +3,8 @@ package xyz.hyperreal.prolog
 import java.nio.file.Paths
 
 import xyz.hyperreal.pattern_matcher.Reader
-
 import xyz.hyperreal.args.Options
+import xyz.hyperreal.recursive_descent_parser.Success
 
 
 object Compiler extends App {
@@ -56,7 +56,7 @@ object Compiler extends App {
       Paths get dest
 
   PrologParser.parseSource( Reader.fromFile(path.getParent resolve (path.getFileName + ".prolog") toString) ) match {
-    case PrologParser.Success( ast, _ ) =>
+    case Success( ast, _ ) =>
       val prog = new Program
 
       if (predef)

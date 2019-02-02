@@ -114,7 +114,7 @@ object PrologParser {
             if (rest.head.value == ".")
               clause( rest.tail )
             else
-              sys.error( s"expected '.': ${rest.head}" )
+              Failure( rest.head.pos, s"expected '.': ${rest.head}" )
         }
 
     clause( parser.tokenStream(r) )
