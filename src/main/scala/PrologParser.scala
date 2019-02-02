@@ -35,6 +35,7 @@ object PrologParser {
       cut,
       integer,
       string,
+      variable,
       Parser.middle( Parser.symbol("("), parser1200, Parser.symbol(")") ),
       Sequence[AtomAST, List[TermAST], StructureAST](
         anyAtom,
@@ -103,7 +104,7 @@ object PrologParser {
 
     parser1200.ref = rules(1200)
     parser900.ref = rules(900)
-    lexer = new Lexer( ops ++ List("(", ")", ".", "[", "]", "|", "!") )
+    lexer = new Lexer( ops ++ List("(", ")", ".", "[", "]", "|") )
     expression = rules(1200)
   }
 

@@ -19,7 +19,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |writeln( asdf )
+      |(X = 3; X = 4), writeln( X )
     """.stripMargin
   var prog = new Program
 
