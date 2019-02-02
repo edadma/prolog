@@ -4,8 +4,8 @@ import java.io.{File, PrintStream}
 
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
-
 import xyz.hyperreal.pattern_matcher.{Reader, StringReader}
+import xyz.hyperreal.recursive_descent_parser.{Failure, Success}
 
 
 object Main extends App {
@@ -91,11 +91,11 @@ object Main extends App {
                 program = new Program
                 program.loadPredef
 
-                OldParser.source( Reader.fromFile(file + ".prolog") ) match {
-                  case OldParser.Match( ast, _ ) =>
+                PrologParser.parseSource( Reader.fromFile(file + ".prolog") ) match {
+                  case Success( ast, _ ) =>
                     Compilation.compile( ast, program )
                     out.println( program.procedures map (_.ind) mkString "\n" )
-                  case m: OldParser.Mismatch => m.error
+                  case f: Failure => sys.error( f.msg )
                 }
               case List( "new"|"n" ) =>
                 program = new Program
@@ -117,8 +117,8 @@ object Main extends App {
             val all = line endsWith "*"
             val queryline = if (all) line dropRight 1 else line
 
-            OldParser.query( new StringReader(queryline) ) match {
-              case OldParser.Match( ast, _ ) =>
+            PrologParser.expression( PrologParser.lexer.tokenStream(new StringReader(queryline)) ) match {
+              case Success( ast, _ ) =>
                 implicit val query = new Program
 
                 vars = new Vars
@@ -133,7 +133,7 @@ object Main extends App {
                   case List( r ) if r isEmpty => println( "yes" )
                   case _ => println( result map displayResult mkString "\n\n" )
                 }
-              case m: OldParser.Mismatch => m.error
+              case f: Failure => f.error
             }
           }
 

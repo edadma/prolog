@@ -1,20 +1,14 @@
 package xyz.hyperreal.prolog
 
 import xyz.hyperreal.pattern_matcher.StringReader
+import xyz.hyperreal.recursive_descent_parser.{Failure, Success}
 
 
 object Main extends App {
 
   val code =
     """
-      |//:- import( "library/lists" ).
-      |
-      |//main :-
-      |// open( "test", write, S, [] ),
-      |// set_output( S ),
-      |// writeln( "this is a test" ),
-      |// writeln( "this is another test" ),
-      |// close( S ).
+       |
     """.stripMargin
 //    """
 //       |name_value(String, Name, Value) :-
@@ -25,11 +19,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |main
-      |//name_value( "name=value", Name, Value )
-      |//put_char( a ), nl
-      |//sub_string( "abcd", B, 2, A, S )
-      |//findall( X, X = asdf, L )
+      |writeln( asdf )
     """.stripMargin
   var prog = new Program
 
@@ -41,8 +31,8 @@ object Main extends App {
 //
 //  val start = System.currentTimeMillis
 
-  OldParser.source( new StringReader(code) ) match {
-    case OldParser.Match( ast, _ ) =>
+  PrologParser.parseSource( new StringReader(code) ) match {
+    case Success( ast, _ ) =>
       //println( ast )
       //println( (System.currentTimeMillis - start) )
       Compilation.compile( ast, prog )
@@ -60,8 +50,8 @@ object Main extends App {
 //          load( "test.pcc" )
 //        }
 
-      OldParser.query( new StringReader(query) ) match {
-        case OldParser.Match( ast, _ ) =>
+      PrologParser.expression( PrologParser.lexer.tokenStream(new StringReader(query)) ) match {
+        case Success( ast, _ ) =>
           implicit val query = new Program
           implicit val vars = new Vars
           val block = query.block( "query" )
@@ -71,9 +61,9 @@ object Main extends App {
           //block.print
           //println( vm.runfirst( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
           println( vm.runall( block ) map (_ filter {case (k, _) => !vars.evalSet(k)} map { case (k, v) => s"$k = ${display(v)}" } mkString "\n") mkString "\n\n" )
-        case m: OldParser.Mismatch => m.error
+        case f: Failure => f.error
       }
-    case m: OldParser.Mismatch => m.error
+    case f: Failure => f.error
   }
 
 }

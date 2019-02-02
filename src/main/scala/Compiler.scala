@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import xyz.hyperreal.pattern_matcher.Reader
 import xyz.hyperreal.args.Options
-import xyz.hyperreal.recursive_descent_parser.Success
+import xyz.hyperreal.recursive_descent_parser.{Failure, Success}
 
 
 object Compiler extends App {
@@ -64,7 +64,7 @@ object Compiler extends App {
 
       Compilation.compile( ast, prog )
       prog.save( dir resolve (path.getFileName + ".pcc") toString )
-    case m: OldParser.Mismatch => m.error
+    case f: Failure => f.error
   }
 
 }

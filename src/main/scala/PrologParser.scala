@@ -8,23 +8,26 @@ import scala.collection.mutable.ListBuffer
 
 object PrologParser {
 
-  val rule1200 = new RuleRef[TermAST]
-  val rule900 = new RuleRef[TermAST]
-  val integer = new TokenClassRule( classOf[IntegerToken], (r, s) => IntegerAST(r, s.toInt), "expected integer" )
-  val string = new TokenClassRule( classOf[StringToken], (r, s) => StringAST(r, s), "expected string" )
-  val cut = Action[(Reader, String), AtomAST]( Rule.symbol("!"), {case (pos, _) => AtomAST(pos, "!")} )
+  val parser1200 = new ParserRef[TermAST]
+  val parser900 = new ParserRef[TermAST]
+  val integer = new TokenClassParser( _.isInstanceOf[IntegerToken], (r, s) => IntegerAST(r, s.toInt), "expected integer" )
+  val string = new TokenClassParser( _.isInstanceOf[DoubleQuotedToken], (r, s) => StringAST(r, s), "expected string" )
+  val cut = Action[(Reader, String), AtomAST]( Parser.symbol("!"), {case (pos, _) => AtomAST(pos, "!")} )
   val anyAtom =
     Alternates(
       List(
-        new TokenClassRule( classOf[AtomToken], (r, s) => AtomAST(r, s), "expected atom" ),
-        new TokenClassRule( classOf[SymbolToken], (r, s) => AtomAST(r, s), "expected atom" ),
-        new TokenClassRule( classOf[QuotedAtomToken], (r, s) => AtomAST(r, s), "expected atom" )
+        new TokenClassParser( t => t.isInstanceOf[IdentToken] && t.value.head.isLower, (r, s) => AtomAST(r, s), "expected atom" ),
+        new TokenClassParser( _.isInstanceOf[SymbolToken], (r, s) => AtomAST(r, s), "expected atom" ),
+        new TokenClassParser( _.isInstanceOf[SingleQuotedToken], (r, s) => AtomAST(r, s), "expected atom" )
       ) )
+  val variable = new TokenClassParser( t => t.isInstanceOf[IdentToken] && !t.value.head.isLower, {
+    case (r, "_") => AnonymousAST( r )
+    case (r, s) => VariableAST(r, s) }, "expected variable" )
   val anyNonSymbolAtom =
     Alternates(
       List(
-        new TokenClassRule( classOf[AtomToken], (r, s) => AtomAST(r, s), "expected atom" ),
-        new TokenClassRule( classOf[QuotedAtomToken], (r, s) => AtomAST(r, s), "expected atom" )
+        new TokenClassParser( t => t.isInstanceOf[IdentToken] && t.value.head.isLower, (r, s) => AtomAST(r, s), "expected atom" ),
+        new TokenClassParser( _.isInstanceOf[SingleQuotedToken], (r, s) => AtomAST(r, s), "expected atom" )
       ) )
 
   val primary =
@@ -32,26 +35,28 @@ object PrologParser {
       cut,
       integer,
       string,
-      Rule.middle( Rule.symbol("("), rule1200, Rule.symbol(")") ),
+      Parser.middle( Parser.symbol("("), parser1200, Parser.symbol(")") ),
       Sequence[AtomAST, List[TermAST], StructureAST](
         anyAtom,
-        Rule.middle(
-          Rule.symbol("("),
-          Rule.oneOrMoreSeparated(rule900, Rule.symbol(",")),
-          Rule.symbol(")")),
+        Parser.middle(
+          Parser.symbol("("),
+          Parser.oneOrMoreSeparated(parser900, Parser.symbol(",")),
+          Parser.symbol(")")),
         (atom, args) => StructureAST(atom.pos, atom.name, args) ),
       anyNonSymbolAtom,
       SequenceLeft(
         Sequence[(Reader, String), (List[TermAST], Option[TermAST]), ListAST](
-          Rule.symbol("["),
+          Parser.symbol("["),
           Sequence[List[TermAST], Option[TermAST], (List[TermAST], Option[TermAST])](
-            Rule.oneOrMoreSeparated(rule900, Rule.symbol(",")),
-            Optional(SequenceRight(Rule.symbol("|"), rule1200)), (_, _) ), {case ((pos, _), (l, t)) => ListAST(pos, l, t)} ),
-        Rule.symbol("]")),
-      Sequence[(Reader, String), (Reader, String), AtomAST]( Rule.symbol("["), Rule.symbol("]"), (a, _) => AtomAST(a._1, "[]") )
+            Parser.oneOrMoreSeparated(parser900, Parser.symbol(",")),
+            Optional(SequenceRight(Parser.symbol("|"), parser1200)), (_, _) ), {case ((pos, _), (l, t)) => ListAST(pos, l, t)} ),
+        Parser.symbol("]")),
+      Sequence[(Reader, String), (Reader, String), AtomAST]( Parser.symbol("["), Parser.symbol("]"), (a, _) => AtomAST(a._1, "[]") )
     ) )
-  var parser: Parser[TermAST] = _
-  var expression: Rule[TermAST] = _
+  var lexer: Lexer = _
+  var expression: Parser[TermAST] = _
+
+  build
 
   def build: Unit = {
     val (rules, ops) = Builder[TermAST]( primary,
@@ -96,29 +101,32 @@ object PrologParser {
         Op(200, 'fy, "-"),
         Op(200, 'fy, "\\")), (r, s, x) => StructureAST( r, s, List(x) ), (x, r, s, y) => StructureAST( r, s, List(x, y) ) )
 
-    rule1200.ref = rules(1200)
-    rule900.ref = rules(900)
-    parser = new Parser( rules(1200), ops ++ List("(", ")", ".", "[", "]", "|", "!") )
+    parser1200.ref = rules(1200)
+    parser900.ref = rules(900)
+    lexer = new Lexer( ops ++ List("(", ")", ".", "[", "]", "|", "!") )
     expression = rules(1200)
   }
 
   def parseSource( r: Reader ) = {
     val clauses = new ListBuffer[ClauseAST]
 
-    def clause( t: Stream[Token] ): Unit =
-      if (!t.head.isInstanceOf[EOIToken])
-        expression( t ) match {
-          case Success( rest, result ) =>
-            clauses += ClauseAST( result )
+    def clause( t: Stream[Token] ): Result[SourceAST] =
+      if (t.head.isInstanceOf[EOIToken])
+        Success( SourceAST(clauses.toList), t )
+      else {
+          expression( t ) match {
+            case Success( result, rest ) =>
+              clauses += ClauseAST( result )
 
-            if (rest.head.value == ".")
-              clause( rest.tail )
-            else
-              Failure( rest.head.pos, s"expected '.': ${rest.head}" )
+              if (rest.head.value == ".")
+                clause( rest.tail )
+              else
+                Failure( s"expected '.': ${rest.head}", rest.tail )
+            case f: Failure => f
         }
+      }
 
-    clause( parser.tokenStream(r) )
-    SourceAST( clauses.toList )
+    clause( lexer.tokenStream(r) )
   }
 
 }

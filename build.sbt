@@ -58,7 +58,7 @@ libraryDependencies ++= {
 
 libraryDependencies ++= Seq(
 //  "xyz.hyperreal" %% "pattern-matcher" % "0.2.16",
-  "xyz.hyperreal" %% "recursive-descent-parser" % "0.1.1",
+  "xyz.hyperreal" %% "recursive-descent-parser" % "0.1.2",
   "xyz.hyperreal" %% "lia" % "0.22.2",
   "xyz.hyperreal" %% "args" % "0.1"
 )
