@@ -23,7 +23,7 @@ case class VariableAST( pos: Reader, var name: String ) extends TermAST { var ev
 
 case class AnonymousAST( pos: Reader ) extends TermAST
 
-case class ListAST( pos: Reader, args: List[TermAST], last: Option[TermAST] ) extends TermAST
+//case class ListAST( pos: Reader, args: List[TermAST], last: Option[TermAST] ) extends TermAST
 
 abstract class NumericAST extends TermAST {
   val v: Number
