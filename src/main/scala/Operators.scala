@@ -5,47 +5,58 @@ import scala.collection.mutable
 
 object Operators {
 
-  val optable = new mutable.HashSet[Operator]
-  val opmap = new mutable.HashMap[(Symbol, Int), Operator]
+  lazy val (optable, opmap) = {
+    val _optable = new mutable.HashSet[Operator]
+    val _opmap = new mutable.HashMap[(Symbol, Int), Operator]
 
-  add( 1200, 'xfx, ':- )
-  add( 1200, 'xfx, '--> )
-  add( 1200, 'fx, ':- )
-  add( 1200, 'fx, '?- )
-  add( 1050,	'xfy, '-> )
-  add( 1000,	'xfy, Symbol(",") )
-  add( 900, 'fy, Symbol("\\+") )
-  add( 700, 'xfx, Symbol("\\=") )
-  add( 700, 'xfx, '= )
-  add( 700, 'xfx, '== )
-  add( 700, 'xfx, Symbol("\\==") )
-  add( 700, 'xfx, '@< )
-  add( 700, 'xfx, '@=< )
-  add( 700, 'xfx, '@> )
-  add( 700, 'xfx, '@>= )
-  add( 700, 'xfx, Symbol("=..") )
-  add( 700, 'xfx, 'is )
-  add( 700, 'xfx, '=:= )
-  add( 700, 'xfx, '=\= )
-  add( 700, 'xfx, '< )
-  add( 700, 'xfx, '=< )
-  add( 700, 'xfx, '> )
-  add( 700, 'xfx, '>= )
-  add( 500, 'yfx, '+ )
-  add( 500, 'yfx, '- )
-  add( 500, 'yfx, '/\ )
-  add( 500, 'yfx, Symbol("\\/") )
-  add( 400, 'yfx, '* )
-  add( 400, 'yfx, '/ )
-  add( 400, 'yfx, '// )
-  add( 400, 'yfx, 'rem )
-  add( 400, 'yfx, 'mod )
-  add( 400, 'yfx, '<< )
-  add( 400, 'yfx, '>> )
-  add( 200, 'xfx, '** )
-  add( 200, 'xfy, '^ )
-  add( 200, 'fy, '- )
-  add( 200, 'fy, Symbol("\\") )
+    def init( priority: Int, specifier: Symbol, operator: Symbol ): Unit = {
+      val op = Operator( priority, specifier, operator )
+
+      _optable += op
+      _opmap((operator, specifier.name.length - 1)) = op
+    }
+
+    init( 1200, 'xfx, ':- )
+    init( 1200, 'xfx, '--> )
+    init( 1200, 'fx, ':- )
+    init( 1200, 'fx, '?- )
+    init( 1050,	'xfy, '-> )
+    init( 1000,	'xfy, Symbol(",") )
+    init( 900, 'fy, Symbol("\\+") )
+    init( 700, 'xfx, Symbol("\\=") )
+    init( 700, 'xfx, '= )
+    init( 700, 'xfx, '== )
+    init( 700, 'xfx, Symbol("\\==") )
+    init( 700, 'xfx, '@< )
+    init( 700, 'xfx, '@=< )
+    init( 700, 'xfx, '@> )
+    init( 700, 'xfx, '@>= )
+    init( 700, 'xfx, Symbol("=..") )
+    init( 700, 'xfx, 'is )
+    init( 700, 'xfx, '=:= )
+    init( 700, 'xfx, '=\= )
+    init( 700, 'xfx, '< )
+    init( 700, 'xfx, '=< )
+    init( 700, 'xfx, '> )
+    init( 700, 'xfx, '>= )
+    init( 500, 'yfx, '+ )
+    init( 500, 'yfx, '- )
+    init( 500, 'yfx, '/\ )
+    init( 500, 'yfx, Symbol("\\/") )
+    init( 400, 'yfx, '* )
+    init( 400, 'yfx, '/ )
+    init( 400, 'yfx, '// )
+    init( 400, 'yfx, 'rem )
+    init( 400, 'yfx, 'mod )
+    init( 400, 'yfx, '<< )
+    init( 400, 'yfx, '>> )
+    init( 200, 'xfx, '** )
+    init( 200, 'xfy, '^ )
+    init( 200, 'fy, '- )
+    init( 200, 'fy, Symbol("\\") )
+
+    (_optable, _opmap)
+  }
 
   def all = optable.iterator
 
