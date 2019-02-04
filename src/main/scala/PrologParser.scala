@@ -56,10 +56,15 @@ object PrologParser {
   var lexer: Lexer = _
   var expression: Parser[TermAST] = _
 
-  build( Operators.all.toList map {case Operator(priority, specifier, operator) => Op( priority, specifier, operator.name)} )
+  build
 
-  def build( oplist: List[Op] ): Unit = {
-    val (rules, ops) = Builder[TermAST]( primary, oplist, (r, s, x) => StructureAST( r, s, List(x) ), (x, r, s, y) => StructureAST( r, s, List(x, y) ) )
+  def build: Unit = {
+    val (rules, ops) =
+      Builder[TermAST](
+        primary,
+        Operators.all.toList map {case Operator(priority, specifier, operator) => Op( priority, specifier, operator.name)},
+        (r, s, x) => StructureAST( r, s, List(x) ),
+        (x, r, s, y) => StructureAST( r, s, List(x, y) ) )
 //      List(
 //        Op(1200, 'xfx, ":-"),
 //        Op(1200, 'xfx, "-->"),
@@ -120,18 +125,23 @@ object PrologParser {
     def clause( t: Stream[Token] ): Result[SourceAST] =
       if (t.head.isInstanceOf[EOIToken])
         Success( SourceAST(clauses.toList), t )
-      else {
-          expression( t ) match {
-            case Success( result, rest ) =>
-              clauses += ClauseAST( result )
-
-              if (rest.head.value == ".")
+      else
+        expression( t ) match {
+          case Success( result, rest ) =>
+            result match {
+              case StructureAST( _, ":-", List(StructureAST(pos, "op", List(IntegerAST(_, priority), AtomAST(_, specifier), AtomAST(_, operator)))) ) =>
+                println( priority, specifier, operator )
                 clause( rest.tail )
-              else
-                Failure( s"expected '.': ${rest.head}", rest.tail )
-            case f: Failure => f
+              case _ =>
+                clauses += ClauseAST( result )
+
+                if (rest.head.value == ".")
+                  clause( rest.tail )
+                else
+                  Failure( s"expected '.': ${rest.head}", rest.tail )
+            }
+          case f: Failure => f
         }
-      }
 
     clause( lexer.tokenStream(r) )
   }
