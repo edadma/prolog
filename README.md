@@ -70,16 +70,24 @@ This example is contained in the repo as `examples/family_tree`.  Run the REPL (
     
 to load the example.  To get a list of all the persons in the family tree who are fathers, type
 
-    father( X, _ )*
+    father( F, _ )*
     
 #### Output
 
-X = don
+    F = don
+    
+    F = liam
+    
+    F = logan
 
-X = liam
+To get the father of 'mia', type
 
-X = logan
- 
+     father( F, mia )
+    
+#### Output
+
+    F = liam
+     
 ### Library
 
 This example program shows how to 

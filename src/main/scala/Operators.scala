@@ -20,6 +20,7 @@ object Operators {
     init( 1200, 'xfx, '--> )
     init( 1200, 'fx, ':- )
     init( 1200, 'fx, '?- )
+    init( 1100,	'xfy, Symbol(";") )
     init( 1050,	'xfy, '-> )
     init( 1000,	'xfy, Symbol(",") )
     init( 900, 'fy, Symbol("\\+") )
