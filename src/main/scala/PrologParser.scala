@@ -128,18 +128,21 @@ object PrologParser {
       else
         expression( t ) match {
           case Success( result, rest ) =>
-            result match {
-              case StructureAST( _, ":-", List(StructureAST(pos, "op", List(IntegerAST(_, priority), AtomAST(_, specifier), AtomAST(_, operator)))) ) =>
-                println( priority, specifier, operator )
-                clause( rest.tail )
-              case _ =>
-                clauses += ClauseAST( result )
+            if (rest.head.value == ".") {
+              val next =
+                result match {
+                  case StructureAST( _, ":-", List(StructureAST(pos, "op", List(IntegerAST(_, priority), AtomAST(_, specifier), AtomAST(_, operator)))) ) =>
+                    Operators.add( priority, Symbol(specifier), Symbol(operator) )
+                    PrologParser.build
+                    lexer.tokenStream( rest.tail.head.pos )
+                  case _ =>
+                    clauses += ClauseAST( result )
+                    rest.tail
+                }
 
-                if (rest.head.value == ".")
-                  clause( rest.tail )
-                else
-                  Failure( s"expected '.': ${rest.head}", rest.tail )
-            }
+              clause( next )
+            } else
+              Failure( s"expected '.': ${rest.head}", rest.tail )
           case f: Failure => f
         }
 
