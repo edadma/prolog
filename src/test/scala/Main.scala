@@ -19,7 +19,7 @@ object Main extends App {
 //    """.stripMargin
   val query =
     """
-      |(X = 3; X = 4), writeln( X )
+      |sub_string( "abc", B, L, 0, S )
     """.stripMargin
   var prog = new Program
 

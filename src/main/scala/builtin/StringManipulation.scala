@@ -172,7 +172,44 @@ object StringManipulation {
             val len = str.length - b - a
 
             vm.unify( len, length ) && vm.unify( str.substring(b, b + len), sub )
-//          case (b: Int, _, _, _) =>
+          case (b: Int, _, _, _) if 0 <= b && b <= str.length =>
+            if (str.length > b)
+              vm.resatisfyable(
+                new (VM => Boolean) {
+                  var len = 1
+
+                  def apply( v: VM ): Boolean = {
+                    if (b + len < str.length)
+                      vm.resatisfyable( this )
+
+                    val curlen = len
+
+                    len += 1
+                    vm.unify( curlen, length ) && vm.unify( str.length - b - curlen, after ) && vm.unify( str.substring(b, b + curlen), sub )
+                  }
+                }
+              )
+            vm.unify( 0, length ) && vm.unify( str.length - b, after ) && vm.unify( "", sub )
+          case (b: Int, _, _, _) => sys.error( s"sub_string: before out of range: before: $b, string: '$str'" )
+          case (_, _, a: Int, _) =>
+            if (str.length > a)
+              vm.resatisfyable(
+                new (VM => Boolean) {
+                  var len = 1
+
+                  def apply( v: VM ): Boolean = {
+                    if (a + len < str.length)
+                      vm.resatisfyable( this )
+
+                    val curlen = len
+
+                    len += 1
+                    vm.unify( curlen, length ) && vm.unify( str.length - a - curlen, before ) && vm.unify( str.substring(str.length - a - curlen, str.length - a), sub )
+                  }
+                }
+              )
+            vm.unify( 0, length ) && vm.unify( str.length - a, before ) && vm.unify( "", sub )
+          case (_, _, a: Int, _) => sys.error( s"sub_string: after out of range: after: $a, string: '$str'" )
           case (_, l: Int, _, _) =>
             if (l < str.length) {
               vm.resatisfyable(
@@ -196,7 +233,6 @@ object StringManipulation {
               vm.unify( 0, before ) && vm.unify( 0, after ) && vm.unify( str, sub )
             else
               false
-  //        case (_, _, a: Int, _) =>
           case (_, _, _, s: String) =>
             str indexOf s match {
               case -1 => false
@@ -228,6 +264,39 @@ object StringManipulation {
                 }
             }
 //          case (_: vm.Variable, _: vm.Variable, _: vm.Variable, _: vm.Variable) =>
+//            var b = 0
+//
+//            if (b < str.length) {
+//              vm.resatisfyable(
+//                new (VM => Boolean) {
+//                  def apply( v: VM ): Boolean = {
+//
+//
+//                    if (str.length > b)
+//                      vm.resatisfyable(
+//                        new (VM => Boolean) {
+//                          var len = 1
+//
+//                          def apply( v: VM ): Boolean = {
+//                            if (b + len < str.length)
+//                              vm.resatisfyable( this )
+//
+//                            val curlen = len
+//
+//                            len += 1
+//                            vm.unify( curlen, length ) && vm.unify( str.length - b - curlen, after ) && vm.unify( str.substring(b, b + curlen), sub )
+//                          }
+//                        }
+//                      )
+//
+//                    b += 1
+//
+//                  }
+//                }
+//              )
+//            }
+//
+//            vm.unify( 0, length ) && vm.unify( str.length - b, after ) && vm.unify( "", sub )
           case _ => sys.error( s"sub_string: invalid arguments" )
         }
       case _ => sys.error( s"sub_string: string must be given" )
