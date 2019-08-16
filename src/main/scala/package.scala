@@ -3,6 +3,7 @@ package xyz.hyperreal
 import java.io.PrintStream
 
 import xyz.hyperreal.pattern_matcher.Reader
+import xyz.hyperreal.recursive_descent_parser.{Assoc, XFX, XFY, YFX, FX, FY, XF, YF}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -23,7 +24,7 @@ package object prolog {
   val NATIVE_MATH = 1
   val NATIVE_RUNTIME = 2
 
-  case class Operator( priority: Int, specifier: Symbol, operator: Symbol )
+  case class Operator( priority: Int, specifier: Assoc, operator: Symbol )
 
   case object EMPTY { override def toString = "[empty]" }
 
@@ -199,19 +200,19 @@ package object prolog {
         s"[${elems( a )}]"
       case Structure( Indicator(name: Symbol, arity), args ) if (!flags.contains('ignore_ops)) && Operators.defined( name, arity ) =>
         Operators( name, arity ) match {
-          case Operator( priority, 'fx, operator ) =>
+          case Operator( priority, FX, operator ) =>
             operator.name + operand( args(0), priority )
-          case Operator( priority, 'fy, operator ) =>
+          case Operator( priority, FY, operator ) =>
             operator.name + operand( args(0), priority + 1 )
-          case Operator( priority, 'xf, operator ) =>
+          case Operator( priority, XF, operator ) =>
             operand( args(0), priority ) + operator.name
-          case Operator( priority, 'yf, operator ) =>
+          case Operator( priority, YF, operator ) =>
             operand( args(0), priority + 1 ) + operator.name
-          case Operator( priority, 'xfx, operator ) =>
+          case Operator( priority, XFX, operator ) =>
             operand( args(0), priority ) + operator.name + operand( args(1), priority )
-          case Operator( priority, 'xfy, operator ) =>
+          case Operator( priority, XFY, operator ) =>
             operand( args(0), priority ) + operator.name + operand( args(1), priority + 1 )
-          case Operator( priority, 'yfx, operator ) =>
+          case Operator( priority, YFX, operator ) =>
             operand( args(0), priority + 1 ) + operator.name + operand( args(1), priority )
         }
       case Structure( Indicator(Symbol(name), _), args ) => s"$name(${args.map(display(_, flags)).mkString(",")})"
