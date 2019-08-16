@@ -45,19 +45,19 @@ abstract class SinkStream extends DataStream {
   val input = false
   val output = true
 
-  def flush
+  def flush: Unit
 
-  def write( b: Int )
+  def write( b: Int ): Unit
 
-  def print( a: Any )
+  def print( a: Any ): Unit
 
-  def println( a: Any )
+  def println( a: Any ): Unit
 
 }
 
 abstract class TextSourceStream( val reader: BufferedReader ) extends SourceStream {
 
-  val mode = 'read
+  val mode = Symbol("read")
   val position = 0
 
   def atEnd =
@@ -71,7 +71,7 @@ abstract class TextSourceStream( val reader: BufferedReader ) extends SourceStre
     } else
       sys.error( "not supported" )
 
-  val typ = 'text
+  val typ = Symbol("text")
 
   override def close = {
     super.close
@@ -86,7 +86,7 @@ abstract class TextSourceStream( val reader: BufferedReader ) extends SourceStre
 
 abstract class BinarySourceStream( val in: InputStream ) extends SourceStream {
 
-  val mode = 'read
+  val mode = Symbol("read")
   val position = 0
 
   def atEnd =
@@ -100,7 +100,7 @@ abstract class BinarySourceStream( val in: InputStream ) extends SourceStream {
     } else
       sys.error( "not supported" )
 
-  val typ = 'binary
+  val typ = Symbol("binary")
 
   override def close = {
     super.close
@@ -115,12 +115,12 @@ abstract class BinarySourceStream( val in: InputStream ) extends SourceStream {
 
 abstract class TextSinkStream( val out: PrintWriter, val append: Boolean ) extends SinkStream {
 
-  val mode = if (append) 'append else 'write
+  val mode = if (append) Symbol("append") else Symbol("write")
   val position = 0
 
   def atEnd = false
 
-  val typ = 'text
+  val typ = Symbol("text")
 
   def flush = out.flush
 
@@ -142,12 +142,12 @@ abstract class TextSinkStream( val out: PrintWriter, val append: Boolean ) exten
 
 abstract class BinarySinkStream( val out: PrintStream, val append: Boolean ) extends SinkStream {
 
-  val mode = if (append) 'append else 'write
+  val mode = if (append) Symbol("append") else Symbol("write")
   val position = 0
 
   def atEnd = false
 
-  val typ = 'binary
+  val typ = Symbol("binary")
 
   def flush = out.flush
 
@@ -171,7 +171,7 @@ object UserInput extends TextSourceStream( new BufferedReader(new InputStreamRea
 
   val file_name = None
 
-  val alias = Some( 'user_input )
+  val alias = Some( Symbol("user_input") )
 
   override def close = sys.error( "attempt to close standard input" )
 
@@ -183,9 +183,9 @@ object UserOutput extends TextSinkStream( new PrintWriter(System.out, true, io.C
 
   val file_name = None
 
-  val alias = Some( 'user_output )
+  val alias = Some( Symbol("user_output") )
 
-  override def flush {}
+  override def flush = {}
 
   override def close = sys.error( "attempt to close standard output" )
 
@@ -197,9 +197,9 @@ object SystemOutput extends BinarySinkStream( System.out, false ) {
 
   val file_name = None
 
-  val alias = Some( 'stdout )
+  val alias = Some( Symbol("stdout") )
 
-  override def flush {}
+  override def flush = {}
 
   override def close = sys.error( "attempt to close standard output" )
 
@@ -211,7 +211,7 @@ object SystemInput extends BinarySourceStream( System.in ) {
 
   val file_name = None
 
-  val alias = Some( 'stdin )
+  val alias = Some( Symbol("stdin") )
 
   override def close = sys.error( "attempt to close standard input" )
 

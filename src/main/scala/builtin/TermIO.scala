@@ -25,8 +25,8 @@ object TermIO {
               case Some( a ) =>
                 for (o: Any <- a.toSet)
                   o match {
-                    case Structure( Indicator(option@('ignore_ops|'numbervars|'quoted), 1), Array(set@('true|'false)) ) =>
-                      if (set == 'true)
+                    case Structure( Indicator(option@(Symbol("ignore_ops")|Symbol("numbervars")|Symbol("quoted")), 1), Array(set@(Symbol("true")|Symbol("false"))) ) =>
+                      if (set == Symbol("true"))
                         optionSet += option
                     case option => sys.error( s"write_term: unrecognized option: $option" )
                   }

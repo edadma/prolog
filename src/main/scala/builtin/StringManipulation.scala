@@ -209,7 +209,7 @@ object StringManipulation {
                 }
               )
             vm.unify( 0, length ) && vm.unify( str.length - a, before ) && vm.unify( "", sub )
-          case (_, _, a: Int, _) => sys.error( s"sub_string: after out of range: after: $a, string: '$str'" )
+//          case (_, _, a: Int, _) => sys.error( s"sub_string: after out of range: after: $a, string: '$str'" ) // todo unreachable - check this
           case (_, l: Int, _, _) =>
             if (l < str.length) {
               vm.resatisfyable(

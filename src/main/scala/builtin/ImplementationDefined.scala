@@ -32,10 +32,10 @@ object ImplementationDefined {
 
   val flags =
     SortedMap[Symbol, Flag] (
-      'bounded -> new Flag( true ),
-      'integer_rounding_function -> new Flag( 'toward_zero ),
-      'debug -> new ChangeableFlag( 'off, Set[Any]('off, 'on) ),
-      'max_arity -> new Flag( 255 )
+      Symbol("bounded") -> new Flag( true ),
+      Symbol("integer_rounding_function") -> new Flag( Symbol("toward_zero") ),
+      Symbol("debug") -> new ChangeableFlag( Symbol("off"), Set[Any](Symbol("off"), Symbol("on")) ),
+      Symbol("max_arity") -> new Flag( 255 )
     )
 
   def set_prolog_flag( vm: VM, pos: IndexedSeq[Reader], flag: Any, value: Any ) =

@@ -8,18 +8,18 @@ import scala.collection.immutable.SortedMap
 
 object VM {
 
-  val FM_EQ = lia.Math.lookup( '== )
-  val FM_NE = lia.Math.lookup( '!= )
-  val FM_LT = lia.Math.lookup( '< )
-  val FM_LE = lia.Math.lookup( '<= )
-  val FM_GT = lia.Math.lookup( '> )
-  val FM_GE = lia.Math.lookup( '>= )
+  val FM_EQ = lia.Math.lookup( Symbol("==") )
+  val FM_NE = lia.Math.lookup( Symbol("!=") )
+  val FM_LT = lia.Math.lookup( Symbol("<") )
+  val FM_LE = lia.Math.lookup( Symbol("<=") )
+  val FM_GT = lia.Math.lookup( Symbol(">") )
+  val FM_GE = lia.Math.lookup( Symbol(">=") )
 
-  val FM_ADD = lia.Math.lookup( '+ )
-  val FM_SUB = lia.Math.lookup( '- )
-  val FM_MUL = lia.Math.lookup( '* )
-  val FM_DIV = lia.Math.lookup( '/ )
-  val FM_MOD = lia.Math.lookup( 'mod )
+  val FM_ADD = lia.Math.lookup( Symbol("+") )
+  val FM_SUB = lia.Math.lookup( Symbol("-") )
+  val FM_MUL = lia.Math.lookup( Symbol("*") )
+  val FM_DIV = lia.Math.lookup( Symbol("/") )
+  val FM_MOD = lia.Math.lookup( Symbol("mod") )
 
 }
 
@@ -135,7 +135,7 @@ class VM( val prog: Program ) {
       case _ => None
     }
 
-  def execute {
+  def execute: Unit = {
     val inst = pb(pc)
 
     if (trace)
@@ -266,7 +266,7 @@ class VM( val prog: Program ) {
         val r = pop
 
         push( lia.Math(FM_MOD, pop, r) )
-      case NegInst => push( lia.Math('-, pop) )
+      case NegInst => push( lia.Math(Symbol("-"), pop) )
     }
   }
 
@@ -289,7 +289,7 @@ class VM( val prog: Program ) {
           case "/" => lia.Math( FM_DIV, l, r ).asInstanceOf[Number]
           case "mod" => lia.Math( FM_MOD, l, r ).asInstanceOf[Number]
         }
-      case Structure( Indicator(Symbol("-"), _), Array(expr) ) => lia.Math( '-, eval(expr) ).asInstanceOf[Number]
+      case Structure( Indicator(Symbol("-"), _), Array(expr) ) => lia.Math( Symbol("-"), eval(expr) ).asInstanceOf[Number]
       case Structure( f, args ) if Math exists f => Math.function( f ).call( args map eval )
       case Structure( name, args ) => sys.error( s"function $name/${args.length} not found" )
       case s@Symbol( name ) if Math exists indicator( name, 0 ) => Math.function( Indicator(s, 0) ).call( Array() )

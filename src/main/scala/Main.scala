@@ -12,7 +12,7 @@ object Main extends App {
 
   REPL
 
-  def REPL {
+  def REPL: Unit = {
     val reader = new ConsoleReader
     val out = new PrintStream( reader.getTerminal.wrapOutIfNeeded(System.out), true )
     var line: String = null

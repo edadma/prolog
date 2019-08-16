@@ -14,16 +14,17 @@ object Compiler extends App {
   var dest: String = null
 
   def usage( status: Int ) = {
-    """
-      |Prolog compiler v0.2
-      |Usage:  java -cp <path/to/prolog-0.2.jar> xyz.hyperreal.prolog.Compiler <options> <source>
-      |  where
-      |    <source> is the path to the source file without .prolog extension
-      |    <options> is one of
-      |      --help      display this help and exit
-      |      -d          destination directory
-      |      -p          don't load predef
-    """.trim.stripMargin.lines foreach println
+    println(
+      """
+        |Prolog compiler v0.2
+        |Usage:  java -cp <path/to/prolog-0.2.jar> xyz.hyperreal.prolog.Compiler <options> <source>
+        |  where
+        |    <source> is the path to the source file without .prolog extension
+        |    <options> is one of
+        |      --help      display this help and exit
+        |      -d          destination directory
+        |      -p          don't load predef
+      """.trim.stripMargin )
     sys.exit( status )
   }
 
@@ -55,7 +56,7 @@ object Compiler extends App {
     else
       Paths get dest
 
-  PrologParser.parseSource( Reader.fromFile(path.getParent resolve (path.getFileName + ".prolog") toString) ) match {
+  PrologParser.parseSource( Reader.fromFile(path.getParent resolve (s"${path.getFileName}.prolog") toString) ) match {
     case Success( ast, _ ) =>
       val prog = new Program
 
@@ -63,7 +64,7 @@ object Compiler extends App {
         prog.loadPredef
 
       Compilation.compile( ast, prog )
-      prog.save( dir resolve (path.getFileName + ".pcc") toString )
+      prog.save( dir resolve (s"${path.getFileName}.pcc") toString )
     case f: Failure => f.error
   }
 

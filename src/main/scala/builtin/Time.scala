@@ -22,15 +22,15 @@ object Time {
 
           vm.unify( f, formatter )
         } catch {
-          case e: IllegalArgumentException => domainError( pos(0), e.getMessage, 'datetime_format, format, 'timeFormatter, 1 )
+          case e: IllegalArgumentException => domainError( pos(0), e.getMessage, "datetime_format", format, "timeFormatter", 1 )
         }
-      case _ => typeError( pos(0), "expected Scala date time format string", 'string, format, 'timeFormatter, 1 )
+      case _ => typeError( pos(0), "expected Scala date time format string", "string", format, "timeFormatter", 1 )
     }
 
   def formatTime( vm: VM, pos: IndexedSeq[Reader], time: Any, formatter: Any, formatted: Any ) =
     (time, formatter) match {
       case (t: TemporalAccessor, f: DateTimeFormatter) => vm.unify( f format t, formatted )
-      case _ => typeError( pos(0), "expected Java time and date time formatter", 'string, formatter, 'formatTime, 2 )
+      case _ => typeError( pos(0), "expected Java time and date time formatter", "string", formatter, "formatTime", 2 )
     }
 
 }

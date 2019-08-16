@@ -35,7 +35,7 @@ package object prolog {
   case class Clause( ast: TermAST, head: TermAST, body: TermAST, block: Block )
 
   trait Compound extends Product {
-    def update( n: Int, value: Any )
+    def update( n: Int, value: Any ): Unit
 
     override def productElement( n: Int ): Any
   }
@@ -56,7 +56,7 @@ package object prolog {
 
     def count = varMap.size
 
-    def anon = num( '$' + count.toString )
+    def anon = num( s"$$${count}" )
 
     def num( name: String ) = {
       varMap get name match {
@@ -91,22 +91,22 @@ package object prolog {
   def exception( r: Reader, msg: String, term: Any ) =
     throw new PrologException( if (r eq null) msg else r.longErrorText(msg), term )
 
-  def exceptionTerm( error: Any, other: Any ) = Structure( Indicator('error, 2), Array(error, other) )
+  def exceptionTerm( error: Any, other: Any ) = Structure( Indicator(Symbol("error"), 2), Array(error, other) )
 
-  def instantiationError( r: Reader, msg: String, name: Symbol, arity: Int ) =
-    exception( r, msg, exceptionTerm('instantiation_error, indicator(name, arity)) )
+  def instantiationError( r: Reader, msg: String, name: String, arity: Int ) =
+    exception( r, msg, exceptionTerm(Symbol("instantiation_error"), indicator(name, arity)) )
 
-  def typeError( r: Reader, msg: String, typ: Symbol, culprit: Any, name: Symbol, arity: Int ) =
-    exception( r, msg, exceptionTerm(Structure(Indicator('type_error, 2), Array(typ, culprit)), indicator(name, arity)) )
+  def typeError( r: Reader, msg: String, typ: String, culprit: Any, name: String, arity: Int ) =
+    exception( r, msg, exceptionTerm(Structure(Indicator(Symbol("type_error"), 2), Array(Symbol(typ), culprit)), indicator(name, arity)) )
 
   def existenceError( r: Reader, msg: String, obj: Symbol, culprit: Any, name: Symbol, arity: Int ) =
-    exception( r, msg, exceptionTerm(Structure(Indicator('existence_error, 2), Array(obj, culprit)), indicator(name, arity)) )
+    exception( r, msg, exceptionTerm(Structure(Indicator(Symbol("existence_error"), 2), Array(obj, culprit)), indicator(name, arity)) )
 
-  def domainError( r: Reader, msg: String, domain: Symbol, culprit: Any, name: Symbol, arity: Int ) =
-    exception( r, msg, exceptionTerm(Structure(Indicator('domain_error, 2), Array(domain, culprit)), indicator(name, arity)) )
+  def domainError( r: Reader, msg: String, domain: String, culprit: Any, name: String, arity: Int ) =
+    exception( r, msg, exceptionTerm(Structure(Indicator(Symbol("domain_error"), 2), Array(domain, culprit)), indicator(name, arity)) )
 
-  def permissionError( r: Reader, msg: String, operation: Symbol, typ: Symbol, culprit: Any, name: Symbol, arity: Int ) =
-    exception( r, msg, exceptionTerm(Structure(Indicator('permission_error, 3), Array(operation, typ, culprit)), indicator(name, arity)) )
+  def permissionError( r: Reader, msg: String, operation: String, typ: String, culprit: Any, name: String, arity: Int ) =
+    exception( r, msg, exceptionTerm(Structure(Indicator(Symbol("permission_error"), 3), Array(operation, typ, culprit)), indicator(name, arity)) )
 
   def problem( r: Reader, msg: String ) =
     if (r eq null)
@@ -136,7 +136,7 @@ package object prolog {
       case _ => None
     }
 
-  def array2list( a: IndexedSeq[Any] ) = {
+  def array2list( a: collection.IndexedSeq[Any] ) = {
     var list: Any = NIL
     var idx = a.length - 1
 
@@ -165,9 +165,9 @@ package object prolog {
 
     def operand( a: Any, priority: Int ) =
       a match {
-        case Structure( Indicator(name, arity), args ) =>
+        case Structure( Indicator(name, arity), _ ) =>
           Operators get (name, arity) match {
-            case Some( Operator(priority1, _, _) ) if priority1 > priority => '(' + display( a, flags ) + ')'
+            case Some( Operator(priority1, _, _) ) if priority1 > priority => s"(${display( a, flags )})"
             case _ => display( a, flags )
           }
         case _ => display( a, flags )
@@ -175,7 +175,7 @@ package object prolog {
 
     vareval( a ) match {
       case Symbol( atomRegex(s) ) => s
-      case Symbol( s ) => "'" + string(s) + "'"
+      case Symbol( s ) => s"'${string(s)}'"
       case Structure( CONS, Array(_, _) ) =>
         def elems( term: Any, buf: StringBuilder = new StringBuilder ): String =
           term match {
@@ -198,7 +198,7 @@ package object prolog {
           }
 
         s"[${elems( a )}]"
-      case Structure( Indicator(name: Symbol, arity), args ) if (!flags.contains('ignore_ops)) && Operators.defined( name, arity ) =>
+      case Structure( Indicator(name: Symbol, arity), args ) if !flags.contains(Symbol("ignore_ops")) && Operators.defined( name, arity ) =>
         Operators( name, arity ) match {
           case Operator( priority, FX, operator ) =>
             operator.name + operand( args(0), priority )
@@ -214,9 +214,10 @@ package object prolog {
             operand( args(0), priority ) + operator.name + operand( args(1), priority + 1 )
           case Operator( priority, YFX, operator ) =>
             operand( args(0), priority + 1 ) + operator.name + operand( args(1), priority )
+          case Operator( _, assoc, _ ) => sys.error( s"unknown associativity: $assoc" )
         }
       case Structure( Indicator(Symbol(name), _), args ) => s"$name(${args.map(display(_, flags)).mkString(",")})"
-      case s: String => '"' + string( s ) + '"'
+      case s: String => s""""${string( s )}""""
       case v => v.toString
     }
   }

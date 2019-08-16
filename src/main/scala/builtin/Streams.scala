@@ -14,10 +14,10 @@ object Streams {
   var output: SinkStream = UserOutput
   val aliases =
     mutable.HashMap[Symbol, DataStream] (
-      'user_input -> UserInput,
-      'user_output -> UserOutput,
-      'stdin -> SystemInput,
-      'stdout -> SystemOutput
+      Symbol("user_input") -> UserInput,
+      Symbol("user_output") -> UserOutput,
+      Symbol("stdin") -> SystemInput,
+      Symbol("stdout") -> SystemOutput
     )
 
   def apply( s: Any ) =
@@ -55,20 +55,20 @@ object Streams {
 
   def open( vm: VM, pos: IndexedSeq[Reader], file: Any, mode: Any, stream: Any, options: Any ) =
     (file, mode, stream, list2array(options) map (_.toList)) match {
-      case (f: String, m@('read|'write|'append), s: vm.Variable, o) =>
+      case (f: String, m@(Symbol("read")|Symbol("write")|Symbol("append")), s: vm.Variable, o) =>
         val s1 =
           m match {
-            case 'read =>
+            case Symbol("read") =>
               new TextSourceStream( new BufferedReader(new FileReader(f)) ) {
                 val file_name = Some( f )
                 val alias = None
               }
-            case 'write =>
+            case Symbol("write") =>
               new TextSinkStream( new PrintWriter(f), false ) {
                 val file_name = Some( f )
                 val alias = None
               }
-            case 'append =>
+            case Symbol("append") =>
               new TextSinkStream( new PrintWriter( new FileWriter(f, true) ), true ) {
                 val file_name = Some( f )
                 val alias = None

@@ -3,9 +3,8 @@ package xyz.hyperreal.prolog
 import java.io._
 import java.nio.file.{Files, Paths}
 
-import scala.collection.generic.Growable
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{Growable, ArrayBuffer}
 
 
 class Program extends Growable[Instruction] {
@@ -331,7 +330,7 @@ class Program extends Growable[Instruction] {
                     case NATIVE_MATH => Math function func
                     case NATIVE_RUNTIME =>
                       func.name match {
-                        case '$compile => Runtime.compileCall _
+                        case Symbol("$compile") => Runtime.compileCall _
                       }
                   }
 
@@ -385,7 +384,7 @@ class Program extends Growable[Instruction] {
     code(ptr) = f( ptr, code.length )
   }
 
-  def +=( inst: Instruction ) = {
+  def addOne( inst: Instruction ) = {
     code += inst
     this
   }

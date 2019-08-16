@@ -8,8 +8,8 @@ object Misc {
 
   def between( vm: VM, pos: IndexedSeq[Reader], lower: Any, upper: Any, value: Any ) =
     (lower, upper) match {
-      case (_: vm.Variable, _) => instantiationError( pos(0), "lower must be given", 'between, 3 )
-      case (_, _: vm.Variable) => instantiationError( pos(1), "upper must be given", 'between, 3 )
+      case (_: vm.Variable, _) => instantiationError( pos(0), "lower must be given", "between", 3 )
+      case (_, _: vm.Variable) => instantiationError( pos(1), "upper must be given", "between", 3 )
       case (l: Int, u: Int) if l <= u =>
         value match {
           case v: vm.Variable =>
@@ -37,7 +37,7 @@ object Misc {
               v bind l
             }
           case x: Int => l <= x || x <= u
-          case _ => typeError( pos(2), "value must be a variable or an integer", 'integer, value, 'between, 3 )
+          case _ => typeError( pos(2), "value must be a variable or an integer", "integer", value, "between", 3 )
         }
       case (l: Int, u: Int) => sys.error( "lower must be less than or equal to upper" )
     }
@@ -47,7 +47,7 @@ object Misc {
       case (f: String, a@Structure( CONS, _ )) =>
         list2array(a) match {
           case None => sys.error( s"printf: not a proper list: $args" )
-          case Some( array ) => Streams.output.print( f.format(array: _*) )
+          case Some( array ) => Streams.output.print( f.format(array.toIndexedSeq: _*) )
         }
       case _ => sys.error( s"printf: expected format string and list of arguments: $format, $args" )
     }

@@ -317,7 +317,7 @@ object Compilation {
         prog += PushInst( s )
     }
 
-  def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) {
+  def compileArithmetic( expr: TermAST )( implicit prog: Program, vars: Vars ) = {
     val seen = new mutable.HashMap[String, VariableAST]
     val exprvars = new mutable.HashMap[String, (Reader, Int, Int)]
 
@@ -426,7 +426,7 @@ object Compilation {
         dbg( s"call (compile)", r )
         prog += PushFrameInst
         prog += PushVarInst( vars.num(name) )
-        prog += NativeInst( Runtime.compileCall, Vector(), Indicator('$compileCall, 0), NATIVE_RUNTIME )
+        prog += NativeInst( Runtime.compileCall, Vector(), Indicator(Symbol("$compileCall"), 0), NATIVE_RUNTIME )
         prog += MarkInst( 2 )
         prog += CallBlockInst
         prog += UnmarkInst
@@ -440,7 +440,7 @@ object Compilation {
         dbg( s"once (compile)", r )
         prog += PushFrameInst
         prog += PushVarInst( vars.num(name) )
-        prog += NativeInst( Runtime.compileCall, Vector(), Indicator('$compileCall, 0), NATIVE_RUNTIME )
+        prog += NativeInst( Runtime.compileCall, Vector(), Indicator(Symbol("$compileCall"), 0), NATIVE_RUNTIME )
         prog += MarkInst( 2 )
         prog += CallBlockInst
         prog += UnmarkInst
@@ -712,10 +712,10 @@ object Compilation {
           compileGoal( left, lookup ) }
         prog.patch( (ptr, len) => BranchInst(len - ptr - 1) ) {
           compileGoal( right, lookup ) }
-      case 'true =>  // no code to emit for true/0
-      case 'false|'fail => prog += FailInst
+      case Symbol("true") =>  // no code to emit for true/0
+      case Symbol("false")|Symbol("fail") => prog += FailInst
       case Symbol( "!" ) => prog += CutInst
-      case 'repeat => prog += ChoiceInst( -1 )
+      case Symbol("repeat") => prog += ChoiceInst( -1 )
 //      case Structure( Functor(Symbol("="), 2), Array(v: VM#Variable, right) ) =>
 //        compileTerm( right )
 //        prog += VarUnifyInst( vars.num(lname) )

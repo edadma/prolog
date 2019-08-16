@@ -8,6 +8,14 @@ import scala.collection.mutable.ListBuffer
 
 object PrologParser {
 
+  val assocMap =
+    Map(
+      "xfx" -> XFX,
+      "xfy" -> XFY,
+      "yfx" -> YFX,
+      "fx" -> FX,
+      "fy" -> FY
+    )
   val parser1200 = new ParserRef[TermAST]
   val parser900 = new ParserRef[TermAST]
   val integer = new TokenClassParser( _.isInstanceOf[IntegerToken], (r, s) => IntegerAST(r, s.toInt), "expected integer" )
@@ -122,7 +130,7 @@ object PrologParser {
   def parseSource( r: Reader ) = {
     val clauses = new ListBuffer[ClauseAST]
 
-    def clause( t: Stream[Token] ): Result[SourceAST] =
+    def clause( t: LazyList[Token] ): Result[SourceAST] =
       if (t.head.isInstanceOf[EOIToken])
         Success( SourceAST(clauses.toList), t )
       else
@@ -132,7 +140,7 @@ object PrologParser {
               val next =
                 result match {
                   case StructureAST( _, ":-", List(StructureAST(pos, "op", List(IntegerAST(_, priority), AtomAST(_, specifier), AtomAST(_, operator)))) ) =>
-                    Operators.add( priority, Symbol(specifier), Symbol(operator) )
+                    Operators.add( priority, assocMap(specifier), Symbol(operator) )
                     PrologParser.build
                     lexer.tokenStream( rest.tail.head.pos )
                   case _ =>
